@@ -49,19 +49,52 @@ def learn_from_failures(task_name: str, error_details: str):
     """Analyzes task failures and suggests or creates new handlers dynamically."""
     logger.warning(f"Learning from failure in task '{task_name}': {error_details}")
     proposed_handler_name = f"auto_generated_{task_name}_handler"
-    if proposed_handler_name not in ACTION_HANDLERS:
-        logger.info(f"Proposing new handler: {proposed_handler_name}")
 
-        def auto_generated_handler(task_data: Dict, project_root: Path):
-            logger.info(f"Executing auto-generated handler for task: {task_name}")
-            # Implement logic to handle the task dynamically
-            if "retry" in task_data:
-                logger.info("Retrying task dynamically.")
-                return True, f"Task '{task_name}' retried successfully."
-            return False, f"Dynamic handler for '{task_name}' could not resolve the issue."
+    # Cache to prevent redundant refinements
+    if hasattr(learn_from_failures, "_cache"):
+        cache = learn_from_failures._cache
+    else:
+        cache = learn_from_failures._cache = {}
 
-        ACTION_HANDLERS[proposed_handler_name] = auto_generated_handler
-        logger.info(f"Auto-generated handler '{proposed_handler_name}' registered.")
+    if proposed_handler_name in cache and cache[proposed_handler_name] == error_details:
+        logger.info(f"Skipping redundant refinement for handler '{proposed_handler_name}'.")
+        return
+
+    cache[proposed_handler_name] = error_details
+
+    if proposed_handler_name in ACTION_HANDLERS:
+        logger.info(f"Handler '{proposed_handler_name}' already exists. Refining logic.")
+        existing_handler = ACTION_HANDLERS[proposed_handler_name]
+
+        def refined_handler(task_data: Dict, project_root: Path):
+            logger.info(f"Refined handler for task: {task_name}")
+            try:
+                return existing_handler(task_data, project_root)
+            except Exception as e:
+                logger.error(f"Refined handler failed: {e}")
+                return False, f"Refined handler for '{task_name}' failed."
+
+        ACTION_HANDLERS[proposed_handler_name] = refined_handler
+        return
+
+    logger.info(f"Proposing new handler: {proposed_handler_name}")
+
+    def auto_generated_handler(task_data: Dict, project_root: Path):
+        logger.info(f"Executing auto-generated handler for task: {task_name}")
+        if "retry" in task_data:
+            logger.info("Retrying task dynamically.")
+            return True, f"Task '{task_name}' retried successfully."
+        return False, f"Dynamic handler for '{task_name}' could not resolve the issue."
+
+    ACTION_HANDLERS[proposed_handler_name] = auto_generated_handler
+    logger.info(f"Auto-generated handler '{proposed_handler_name}' registered.")
+
+    user_input = input(f"Do you approve the auto-generated handler for '{task_name}'? (yes/no): ").strip().lower()
+    if user_input != "yes":
+        logger.warning(f"User rejected the auto-generated handler for '{task_name}'.")
+        del ACTION_HANDLERS[proposed_handler_name]
+        return
+
 
 # Extend the handler decorator to support versioning and dynamic updates
 def handler(name: str, version: Optional[str] = None):
@@ -1245,86 +1278,148 @@ def execute_plan(plan: Dict[str, Any]) -> List[Dict[str, Any]]:
     return results
 
 
+# --- Interactive Configuration and Execution ---
+def interactive_mode():
+    """Provides an interactive mode for configuring and executing tasks."""
+    logger.info("Entering interactive mode for Ex-Work Agent.")
+
+    while True:
+        print("\n--- Ex-Work Agent Interactive Mode ---")
+        print("1. Add a new task")
+        print("2. View registered handlers")
+        print("3. Execute tasks from a JSON file")
+        print("4. Exit interactive mode")
+
+        choice = input("Select an option (1-4): ").strip()
+
+        if choice == "1":
+            task_name = input("Enter task name: ").strip()
+            parameters = input("Enter task parameters as JSON: ").strip()
+            try:
+                task_params = json.loads(parameters)
+                logger.info(f"Adding task: {task_name} with parameters: {task_params}")
+                proposed_handler_name = f"auto_generated_{task_name}_handler"
+                if proposed_handler_name not in ACTION_HANDLERS:
+                    learn_from_failures(task_name, "Interactive task addition")
+                else:
+                    logger.info(f"Handler for task '{task_name}' already exists.")
+            except json.JSONDecodeError:
+                print("Invalid JSON format for parameters. Please try again.")
+
+        elif choice == "2":
+            print("\n--- Registered Handlers ---")
+            for handler_name in ACTION_HANDLERS.keys():
+                print(f"- {handler_name}")
+
+        elif choice == "3":
+            file_path = input("Enter the path to the JSON file with tasks: ").strip()
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    tasks = json.load(f)
+                    logger.info(f"Loaded tasks from {file_path}: {tasks}")
+                    for task in tasks.get("tasks", []):
+                        action_name = task.get("action")
+                        if action_name in ACTION_HANDLERS:
+                            handler = ACTION_HANDLERS[action_name]
+                            success, message = handler(task.get("parameters", {}), PROJECT_ROOT)
+                            print(f"Task '{action_name}' executed: {message}")
+                        else:
+                            print(f"No handler found for action: {action_name}")
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error loading tasks: {e}")
+
+        elif choice == "4":
+            print("Exiting interactive mode.")
+            break
+
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+# Modify main execution to include interactive mode
 def main():
-    global PROJECT_ROOT
-    PROJECT_ROOT = Path.cwd().resolve()
+    """Main entry point for the Ex-Work Agent."""
+    if len(sys.argv) > 1 and sys.argv[1] == "--interactive":
+        interactive_mode()
+    else:
+        logger.info("Running Ex-Work Agent in normal mode.")
+        PROJECT_ROOT = Path.cwd().resolve()
 
-    if not shutil.which(RUFF_EXECUTABLE) and RUFF_EXECUTABLE == "ruff":
-        logger.warning(
-            f"Command '{RUFF_EXECUTABLE}' not found in PATH. `LINT_FORMAT_FILE` action may fail. Please install Ruff or set RUFF_EXECUTABLE env var."
-        )
-    if not shutil.which("patch"):
-        logger.warning(
-            "Command 'patch' not found in PATH. `APPLY_PATCH` action will fail. Please install 'patch'."
-        )
-
-    logger.info(f"--- Agent Ex-Work V2.1 Initialized in {PROJECT_ROOT} ---")
-    logger.info(
-        "Expecting one JSON instruction block from stdin. Send EOF (Ctrl+D Linux/macOS, Ctrl+Z+Enter Windows) after JSON."
-    )
-
-    json_input_lines = []
-    try:
-        for line in sys.stdin:
-            json_input_lines.append(line)
-    except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt during stdin read. Exiting.")
-        sys.stdout.write(
-            json.dumps(
-                {
-                    "overall_success": False,
-                    "status_message": "Interrupted by user during input.",
-                }
+        if not shutil.which(RUFF_EXECUTABLE) and RUFF_EXECUTABLE == "ruff":
+            logger.warning(
+                f"Command '{RUFF_EXECUTABLE}' not found in PATH. `LINT_FORMAT_FILE` action may fail. Please install Ruff or set RUFF_EXECUTABLE env var."
             )
-            + "\n"
-        )
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Error reading from stdin: {e}", exc_info=True)
-        sys.stdout.write(
-            json.dumps(
-                {"overall_success": False, "status_message": f"Stdin read error: {e}"}
+        if not shutil.which("patch"):
+            logger.warning(
+                "Command 'patch' not found in PATH. `APPLY_PATCH` action will fail. Please install 'patch'."
             )
-            + "\n"
+
+        logger.info(f"--- Agent Ex-Work V2.1 Initialized in {PROJECT_ROOT} ---")
+        logger.info(
+            "Expecting one JSON instruction block from stdin. Send EOF (Ctrl+D Linux/macOS, Ctrl+Z+Enter Windows) after JSON."
         )
-        sys.exit(1)
 
-    json_input = "".join(json_input_lines)
-
-    if not json_input.strip():
-        logger.warning("No input received from stdin. Exiting.")
-        sys.stdout.write(
-            json.dumps(
-                {"overall_success": False, "status_message": "No input from stdin."}
+        json_input_lines = []
+        try:
+            for line in sys.stdin:
+                json_input_lines.append(line)
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt during stdin read. Exiting.")
+            sys.stdout.write(
+                json.dumps(
+                    {
+                        "overall_success": False,
+                        "status_message": "Interrupted by user during input.",
+                    }
+                )
+                + "\n"
             )
-            + "\n"
+            sys.exit(1)
+        except Exception as e:
+            logger.error(f"Error reading from stdin: {e}", exc_info=True)
+            sys.stdout.write(
+                json.dumps(
+                    {"overall_success": False, "status_message": f"Stdin read error: {e}"}
+                )
+                + "\n"
+            )
+            sys.exit(1)
+
+        json_input = "".join(json_input_lines)
+
+        if not json_input.strip():
+            logger.warning("No input received from stdin. Exiting.")
+            sys.stdout.write(
+                json.dumps(
+                    {"overall_success": False, "status_message": "No input from stdin."}
+                )
+                + "\n"
+            )
+            sys.exit(0)
+
+        logger.info(f"Processing {len(json_input)} bytes of instruction...")
+        start_process_time = time.time()
+
+        overall_success, action_results = process_instruction_block(
+            json_input, PROJECT_ROOT
         )
-        sys.exit(0)
 
-    logger.info(f"Processing {len(json_input)} bytes of instruction...")
-    start_process_time = time.time()
+        end_process_time = time.time()
+        duration = round(end_process_time - start_process_time, 3)
 
-    overall_success, action_results = process_instruction_block(
-        json_input, PROJECT_ROOT
-    )
+        final_status_message = f"Instruction block processing finished. Overall Success: {overall_success}. Duration: {duration}s"
+        logger.info(final_status_message)
 
-    end_process_time = time.time()
-    duration = round(end_process_time - start_process_time, 3)
+        output_payload = {
+            "overall_success": overall_success,
+            "status_message": final_status_message,
+            "duration_seconds": duration,
+            "action_results": action_results,
+        }
+        sys.stdout.write(json.dumps(output_payload) + "\n")
+        sys.stdout.flush()
 
-    final_status_message = f"Instruction block processing finished. Overall Success: {overall_success}. Duration: {duration}s"
-    logger.info(final_status_message)
-
-    output_payload = {
-        "overall_success": overall_success,
-        "status_message": final_status_message,
-        "duration_seconds": duration,
-        "action_results": action_results,
-    }
-    sys.stdout.write(json.dumps(output_payload) + "\n")
-    sys.stdout.flush()
-
-    if not overall_success:
-        sys.exit(1)
+        if not overall_success:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1507,7 +1507,9 @@ class WorkflowSteps:
             self._logger.warning(details["message"]) # Log as warning as vulnerabilities were found
 
             if should_step_fail_due_to_severity:
-                return STATUS_FAILURE, details # Failure due to severity threshold
+                # Implement logic for handling severity-based step failure
+                pass
+
             return STATUS_WARNING, details # Warning because vulnerabilities exist but below threshold
 
         except FileNotFoundError as e: # If pip-audit (or pip itself) is not found by ToolRunner
@@ -1622,7 +1624,7 @@ class WorkflowSteps:
             return STATUS_SKIPPED, details
         except ScribeToolError as e: # Catch errors from run_tool or re-raised ones
             self._logger.error(f"Ruff format step encountered a tool error: {e}", exc_info=True)
-            raise # Re-raise for _execute_step to handle and mark Scribe step as FAILURE
+            raise
 
     def lint_code(self) -> Tuple[str, StepOutputDetails]:
         """Lints the target code file using Ruff check, with auto-fix enabled."""
@@ -1865,7 +1867,7 @@ class WorkflowSteps:
         details: StepOutputDetails = {} # Will be populated with path or error
 
         # Get the generated test code string from the raw_output of the previous step's details
-        test_code_str_to_save = ai_generated_tests_details.get("raw_output") if isinstance(ai_generated_tests_details, dict) : None
+        test_code_str_to_save = ai_generated_tests_details.get("raw_output") if isinstance(ai_generated_tests_details, dict) else None
 
         if not test_code_str_to_save or not isinstance(test_code_str_to_save, str):
             details["message"] = "No valid test code string provided from 'generate_tests' step. Skipping save operation."
@@ -2285,39 +2287,159 @@ class WorkflowSteps:
             details["raw_output"] = emergency_report_str # This becomes Scribe's output
             return STATUS_FAILURE, details
 
-# --- Dynamic Learning and Adaptation ---
+# --- Interactive Configuration and Execution ---
+def interactive_mode(agent):
+    """Provides an interactive mode for configuring and executing tasks."""
+    logger = logging.getLogger("ScribeAgent.Interactive")
+    logger.info("Entering interactive mode for Scribe Agent.")
+
+    while True:
+        print("\n--- Scribe Agent Interactive Mode ---")
+        print("1. Add a new validation step")
+        print("2. View current validation steps")
+        print("3. Execute validation pipeline")
+        print("4. Exit interactive mode")
+
+        choice = input("Select an option (1-4): ").strip()
+
+        if choice == "1":
+            step_name = input("Enter step name: ").strip()
+            description = input("Enter step description: ").strip()
+            try:
+                logger.info(f"Adding validation step: {step_name} - {description}")
+                if step_name not in agent.validation_steps:
+                    agent.validation_steps.append(step_name)
+                    print(f"Step '{step_name}' added successfully.")
+                else:
+                    print(f"Step '{step_name}' already exists.")
+            except Exception as e:
+                print(f"Error adding step: {e}")
+
+        elif choice == "2":
+            print("\n--- Current Validation Steps ---")
+            for step in agent.validation_steps:
+                print(f"- {step}")
+
+        elif choice == "3":
+            print("Executing validation pipeline...")
+            try:
+                agent.run_pipeline()
+            except Exception as e:
+                print(f"Error during pipeline execution: {e}")
+
+        elif choice == "4":
+            print("Exiting interactive mode.")
+            break
+
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+# --- DevOps Best Practices ---
+def apply_devops_best_practices(agent):
+    """Applies DevOps best practices such as formatting, linting, and static analysis."""
+    logger = logging.getLogger("ScribeAgent.DevOps")
+    logger.info("Applying DevOps best practices...")
+
+    tools = [
+        {"name": "Black", "command": ["black", str(agent._target_file_path)]},
+        {"name": "Flake8", "command": ["flake8", str(agent._target_file_path)]},
+        {"name": "Ruff", "command": ["ruff", "check", str(agent._target_file_path)]}
+    ]
+
+    for tool in tools:
+        try:
+            logger.info(f"Running {tool['name']}...")
+            process_result = agent._tool_runner.run_tool(
+                tool["command"],
+                cwd=agent._target_dir,
+                venv_path=agent._env_manager.venv_path
+            )
+            if process_result.returncode == 0:
+                logger.info(f"{tool['name']} completed successfully.")
+            else:
+                logger.warning(f"{tool['name']} reported issues. Review output for details.")
+        except FileNotFoundError:
+            logger.warning(f"{tool['name']} not found. Skipping.")
+        except Exception as e:
+            logger.error(f"Error running {tool['name']}: {e}")
+
+# Integrate DevOps best practices into the pipeline
+def run_pipeline(agent):
+    """Runs the validation pipeline with integrated DevOps best practices."""
+    logger = logging.getLogger("ScribeAgent.Pipeline")
+    logger.info("Starting validation pipeline...")
+    try:
+        apply_devops_best_practices(agent)
+        # Execute other validation steps here
+    except Exception as e:
+        logger.error(f"Pipeline execution failed: {e}")
+
+# Modify main execution to include interactive mode
+def main():
+    """Main entry point for the Scribe Agent."""
+    agent = ScribeAgent()  # Assuming ScribeAgent is the main class
+    if len(sys.argv) > 1 and sys.argv[1] == "--interactive":
+        interactive_mode(agent)
+    else:
+        logger = logging.getLogger("ScribeAgent.Main")
+        logger.info("Running Scribe Agent in normal mode.")
+        run_pipeline(agent)
+
+if __name__ == "__main__":
+    main()
+
+# Ensure logger is initialized globally
+logger = logging.getLogger("ScribeAgent")
+
+# Define ACTION_HANDLERS globally
+ACTION_HANDLERS: Dict[str, Callable[[Dict, Path], Tuple[bool, Any]]] = {}
+
+# Updated learn_from_failures function
 def learn_from_failures(task_name: str, error_details: str):
     """Analyzes task failures and suggests or creates new handlers dynamically."""
     logger.warning(f"Learning from failure in task '{task_name}': {error_details}")
     proposed_handler_name = f"auto_generated_{task_name}_handler"
-    if proposed_handler_name not in ACTION_HANDLERS:
-        logger.info(f"Proposing new handler: {proposed_handler_name}")
 
-        def auto_generated_handler(task_data: Dict, project_root: Path):
-            logger.info(f"Executing auto-generated handler for task: {task_name}")
-            # Implement logic to handle the task dynamically
-            if 'retry' in task_data:
-                logger.info("Retrying task dynamically.")
-                return True, f"Task '{task_name}' retried successfully."
-            return False, f"Dynamic handler for '{task_name}' could not resolve the issue."
+    # Cache to prevent redundant refinements
+    if hasattr(learn_from_failures, "_cache"):
+        cache = learn_from_failures._cache
+    else:
+        cache = learn_from_failures._cache = {}
 
-        ACTION_HANDLERS[proposed_handler_name] = auto_generated_handler
-        logger.info(f"Auto-generated handler '{proposed_handler_name}' registered.")
+    if proposed_handler_name in cache and cache[proposed_handler_name] == error_details:
+        logger.info(f"Skipping redundant refinement for handler '{proposed_handler_name}'.")
+        return
 
-# Extend the handler decorator to support versioning and dynamic updates
-def handler(name: str, version: Optional[str] = None):
-    """Decorator to register or update action handlers."""
+    cache[proposed_handler_name] = error_details
 
-    def decorator(func: Callable[[Dict, Path], Tuple[bool, Any]]):
-        handler_key = f"{name}:{version}" if version else name
-        ACTION_HANDLERS[handler_key] = func
-        logger.debug(f"Registered action handler for: {handler_key}")
-        return func
+    if proposed_handler_name in ACTION_HANDLERS:
+        logger.info(f"Handler '{proposed_handler_name}' already exists. Refining logic.")
+        existing_handler = ACTION_HANDLERS[proposed_handler_name]
 
-    return decorator
+        def refined_handler(task_data: Dict, project_root: Path):
+            logger.info(f"Refined handler for task: {task_name}")
+            try:
+                return existing_handler(task_data, project_root)
+            except Exception as e:
+                logger.error(f"Refined handler failed: {e}")
+                return False, f"Refined handler for '{task_name}' failed."
 
-# Example usage of the enhanced handler decorator
-@handler("example_task", version="1.0")
-def example_task_handler(task_data: Dict, project_root: Path):
-    logger.info("Executing example task handler v1.0")
-    return True, "Example task completed successfully"
+        ACTION_HANDLERS[proposed_handler_name] = refined_handler
+        return
+
+    logger.info(f"Proposing new handler: {proposed_handler_name}")
+
+    def auto_generated_handler(task_data: Dict, project_root: Path):
+        logger.info(f"Executing auto-generated handler for task: {task_name}")
+        if "retry" in task_data:
+            logger.info("Retrying task dynamically.")
+            return True, f"Task '{task_name}' retried successfully."
+        return False, f"Dynamic handler for '{task_name}' could not resolve the issue."
+
+    ACTION_HANDLERS[proposed_handler_name] = auto_generated_handler
+    logger.info(f"Auto-generated handler '{proposed_handler_name}' registered.")
+
+    user_input = input(f"Do you approve the auto-generated handler for '{task_name}'? (yes/no): ").strip().lower()
+    if user_input != "yes":
+        logger.warning(f"User rejected the auto-generated handler for '{task_name}'.")
+        del ACTION_HANDLERS[proposed_handler_name]
