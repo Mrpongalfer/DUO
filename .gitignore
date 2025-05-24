@@ -1,0 +1,28 @@
+# Python virtual environments
+agent_dev_env/
+*.venv/
+.venv/
+
+# Python bytecode and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE and OS specific files
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# Test execution artifacts (if any are generated outside test_workspace)
+# htmlcov/
+# .pytest_cache/
+
+# Temporary local test workspace (from test_runner.sh)
+test_workspace/
+
+# Sensitive files (add any specific ones you might create)
+# .env
+# secrets.json
+# *.key

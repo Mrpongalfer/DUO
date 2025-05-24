@@ -33,7 +33,7 @@ PROJECT_ROOT = Path.cwd().resolve()
 HISTORY_FILE = PROJECT_ROOT / ".exwork_history.jsonl"
 DEFAULT_OLLAMA_ENDPOINT_BASE = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 DEFAULT_OLLAMA_MODEL = os.environ.get(
-    "OLLAMA_MODEL", "mistral-nemo:12b-instruct-2407-q4_k_m"
+    "OLLAMA_MODEL", "gemma:2b"
 )
 RUFF_EXECUTABLE = shutil.which("ruff") or "ruff"
 
@@ -1423,5 +1423,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()
