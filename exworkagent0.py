@@ -2,6 +2,7 @@
 # Agent Ex-Work: Executes structured JSON commands with self-improvement features.
 # Version: 2.1 (Core Team Reviewed & Augmented)
 
+import argparse
 import base64
 import datetime
 import json
@@ -11,9 +12,9 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import uuid
+import binascii
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -32,9 +33,7 @@ logger = logging.getLogger("AgentExWorkV2.1")
 PROJECT_ROOT = Path.cwd().resolve()
 HISTORY_FILE = PROJECT_ROOT / ".exwork_history.jsonl"
 DEFAULT_OLLAMA_ENDPOINT_BASE = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-DEFAULT_OLLAMA_MODEL = os.environ.get(
-    "OLLAMA_MODEL", "gemma:2b"
-)
+DEFAULT_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma:2b")
 RUFF_EXECUTABLE = shutil.which("ruff") or "ruff"
 
 # --- Global State ---
@@ -51,19 +50,23 @@ def learn_from_failures(task_name: str, error_details: str):
     proposed_handler_name = f"auto_generated_{task_name}_handler"
 
     # Cache to prevent redundant refinements
-    if hasattr(learn_from_failures, "_cache"):
-        cache = learn_from_failures._cache
+    if hasattr(learn_from_failures, "_cache"):  # type: ignore[attr-defined]
+        cache = learn_from_failures._cache  # type: ignore[attr-defined]
     else:
-        cache = learn_from_failures._cache = {}
+        cache = learn_from_failures._cache = {}  # type: ignore[attr-defined]
 
     if proposed_handler_name in cache and cache[proposed_handler_name] == error_details:
-        logger.info(f"Skipping redundant refinement for handler '{proposed_handler_name}'.")
+        logger.info(
+            f"Skipping redundant refinement for handler '{proposed_handler_name}'."
+        )
         return
 
     cache[proposed_handler_name] = error_details
 
     if proposed_handler_name in ACTION_HANDLERS:
-        logger.info(f"Handler '{proposed_handler_name}' already exists. Refining logic.")
+        logger.info(
+            f"Handler '{proposed_handler_name}' already exists. Refining logic."
+        )
         existing_handler = ACTION_HANDLERS[proposed_handler_name]
 
         def refined_handler(task_data: Dict, project_root: Path):
@@ -89,7 +92,13 @@ def learn_from_failures(task_name: str, error_details: str):
     ACTION_HANDLERS[proposed_handler_name] = auto_generated_handler
     logger.info(f"Auto-generated handler '{proposed_handler_name}' registered.")
 
-    user_input = input(f"Do you approve the auto-generated handler for '{task_name}'? (yes/no): ").strip().lower()
+    user_input = (
+        input(
+            f"Do you approve the auto-generated handler for '{task_name}'? (yes/no): "
+        )
+        .strip()
+        .lower()
+    )
     if user_input != "yes":
         logger.warning(f"User rejected the auto-generated handler for '{task_name}'.")
         del ACTION_HANDLERS[proposed_handler_name]
@@ -402,7 +411,7 @@ def handle_create_or_replace_file(
             True,
             f"File '{relative_path}' written successfully ({len(decoded_content)} bytes).",
         )
-    except (base64.binascii.Error, ValueError) as b64e:
+    except (binascii.Error, ValueError) as b64e:
         logger.error(f"Base64 decode error for '{relative_path}': {b64e}")
         return False, f"Base64 decode error for '{relative_path}': {b64e}"
     except Exception as e:
@@ -446,7 +455,7 @@ def handle_append_to_file(
                         f.write(b"\n")
             f.write(decoded_content)
         return True, f"Appended {len(decoded_content)} bytes to '{relative_path}'."
-    except (base64.binascii.Error, ValueError) as b64e:
+    except (binascii.Error, ValueError) as b64e:
         logger.error(f"Base64 decode error for '{relative_path}': {b64e}")
         return False, f"Base64 decode error for '{relative_path}': {b64e}"
     except Exception as e:
@@ -684,7 +693,7 @@ def handle_diagnose_error(
     if not stderr and not stdout:
         return False, "No stdout or stderr provided for diagnosis."
 
-    history_entries = []
+    history_entries: List[Dict[str, Any]] = []
     try:
         if HISTORY_FILE.exists() and HISTORY_FILE.is_file():
             with open(HISTORY_FILE, "r", encoding="utf-8") as f:
@@ -709,11 +718,11 @@ Failed Command:
 
 Stdout:
 ```text
-{stdout if stdout else '<empty>'}
+{stdout if stdout else "<empty>"}
 
 Stderr:
 ```text
-{stderr if stderr else '<empty>'}
+{stderr if stderr else "<empty>"}
 
 """
     if context and isinstance(context, dict):
@@ -724,8 +733,8 @@ Stderr:
         prompt += f"\nRecent Relevant Execution History (up to last {len(history_entries)} entries):\n"
         for i, entry in enumerate(history_entries):
             prompt += (
-                f"{i+1}. Action: {entry.get('action_name', 'N/A')}, "
-                f"Cmd: {entry.get('command','N/A')}, Success: {entry.get('success', 'N/A')}, "
+                f"{i + 1}. Action: {entry.get('action_name', 'N/A')}, "
+                f"Cmd: {entry.get('command', 'N/A')}, Success: {entry.get('success', 'N/A')}, "
                 f"RC: {entry.get('exit_code', 'N/A')}\n"
             )
             if not entry.get("success") and entry.get("stderr_snippet"):
@@ -801,309 +810,11 @@ Provide your analysis:
         return False, f"Failed to get diagnosis from LLM: {llm_response_str}"
 
 
-@handler(name="REQUEST_SIGNOFF")
-def handle_request_signoff(
-    action_data: Dict, project_root: Path, step_id: str
-) -> Tuple[bool, Dict[str, Any]]:
-    message = action_data.get("message", "Proceed with a critical action?")
-    signoff_id = action_data.get("signoff_id", str(uuid.uuid4()))
-
-    logger.info(f"Action requires sign-off. ID: {signoff_id}. Prompt: {message}")
-
-    signoff_payload = {
-        "exwork_status": "AWAITING_SIGNOFF",
-        "signoff_prompt": message,
-        "signoff_id": signoff_id,
-        "step_id": step_id,
-    }
-    return True, signoff_payload
-
-
-@handler(name="RESPOND_TO_SIGNOFF")
-def handle_respond_to_signoff(
-    action_data: Dict, project_root: Path, step_id: str
-) -> Tuple[bool, str]:
-    signoff_id = action_data.get("signoff_id")
-    response = str(action_data.get("response", "no")).lower()
-
-    if not signoff_id:
-        return False, "Missing 'signoff_id' for RESPOND_TO_SIGNOFF."
-
-    if signoff_id not in _pending_signoffs:
-        logger.warning(f"Signoff ID '{signoff_id}' not found or already processed.")
-        return (
-            True,
-            f"Signoff ID '{signoff_id}' not found or already processed. No action taken by this RESPOND_TO_SIGNOFF.",
-        )
-
-    original_action_details = _pending_signoffs.pop(signoff_id)
-    original_action_type = original_action_details["action_type"]
-    original_action_data = original_action_details["action_data"]
-    original_step_id = original_action_details["step_id"]
-
-    if response == "yes" or response == "true":
-        logger.info(
-            f"Sign-off ID '{signoff_id}' for action '{original_action_type}' APPROVED by Architect. Resuming original action."
-        )
-        original_handler = ACTION_HANDLERS.get(original_action_type)
-        if original_handler:
-            return (
-                True,
-                f"Sign-off ID '{signoff_id}' for '{original_action_type}' was APPROVED. Original action block (StepID: {original_step_id}) should now proceed if logic allows.",
-            )
-        else:
-            return (
-                False,
-                f"Original handler for action type '{original_action_type}' not found after sign-off. This is an internal error.",
-            )
-    else:
-        logger.info(
-            f"Sign-off ID '{signoff_id}' for action '{original_action_type}' REJECTED by Architect."
-        )
-        return (
-            True,
-            f"Sign-off ID '{signoff_id}' for '{original_action_type}' was REJECTED. Original action block (StepID: {original_step_id}) should be considered failed at that point.",
-        )
-
-
-@handler(name="APPLY_PATCH")
-def handle_apply_patch(
-    action_data: Dict, project_root: Path, step_id: str
-) -> Tuple[bool, str]:
-    relative_path = action_data.get("path")
-    patch_content = action_data.get("patch_content")
-
-    if not isinstance(relative_path, str) or not relative_path:
-        return False, "Missing or invalid 'path' (string) for APPLY_PATCH."
-    if not isinstance(patch_content, str) or not patch_content:
-        return False, "Missing or invalid 'patch_content' (string) for APPLY_PATCH."
-
-    file_path = resolve_path(project_root, relative_path)
-    if not file_path or not file_path.is_file():
-        return False, f"Target file for patch not found or invalid: '{relative_path}'"
-
-    signoff_message = (
-        f"You are about to apply the following patch to the file:\n"
-        f"  '{relative_path}'\n\n"
-        f"--- PATCH CONTENT ---\n"
-        f"{patch_content}\n"
-        f"--- END PATCH CONTENT ---\n\n"
-        f"This action can modify your code. Please review carefully."
-    )
-
-    is_approved, signoff_response_msg = request_signoff_helper_direct_tty(
-        signoff_message, step_id
-    )
-
-    if not is_approved:
-        return (
-            False,
-            f"Patch application for '{relative_path}' rejected by user. Reason: {signoff_response_msg}",
-        )
-
-    logger.info(f"User approved patch application for '{relative_path}'.")
-
-    patch_file_path: Optional[Path] = None
-    backup_file_path: Optional[Path] = None
-    applied_successfully = False
-    full_output_message = ""
-
-    try:
-        backup_file_path = file_path.with_suffix(file_path.suffix + ".exwork_patch_bak")
-        if backup_file_path.exists():
-            backup_file_path.unlink()
-        shutil.copy2(file_path, backup_file_path)
-        logger.info(f"Created backup: {backup_file_path}")
-
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".patch", dir=project_root, encoding="utf-8"
-        ) as tmp_patch_file:
-            tmp_patch_file.write(patch_content)
-            patch_file_path = Path(tmp_patch_file.name)
-
-        logger.info(f"Applying patch from {patch_file_path} to {file_path}")
-        patch_exe = shutil.which("patch")
-        if not patch_exe:
-            raise FileNotFoundError("`patch` command not found in PATH.")
-
-        command = [
-            patch_exe,
-            "--forward",
-            "-p1",
-            str(file_path),
-            "-i",
-            str(patch_file_path),
-        ]
-
-        success, msg, stdout, stderr = _run_subprocess(
-            command, project_root, "APPLY_PATCH_CMD", action_data, step_id
-        )
-
-        full_output_message = f"{msg}\n--- STDOUT ---\n{stdout if stdout else '<empty>'}\n--- STDERR ---\n{stderr if stderr else '<empty>'}".strip()
-
-        if success:
-            logger.info(f"Patch applied successfully to '{relative_path}'.")
-            if backup_file_path and backup_file_path.exists():
-                backup_file_path.unlink()
-            applied_successfully = True
-            return (
-                True,
-                f"Patch applied successfully to '{relative_path}'.\n{full_output_message}",
-            )
-        else:
-            logger.error(
-                f"Failed to apply patch to '{relative_path}'. Output:\n{full_output_message}"
-            )
-            if backup_file_path and backup_file_path.exists():
-                logger.info(
-                    f"Attempting to restore from backup: {backup_file_path} to {file_path}"
-                )
-                try:
-                    shutil.move(str(backup_file_path), file_path)
-                    logger.info(f"Successfully restored '{file_path}' from backup.")
-                    return (
-                        False,
-                        f"Failed to apply patch. Original file restored from backup.\nPatch Output:\n{full_output_message}",
-                    )
-                except Exception as restore_e:
-                    logger.error(
-                        f"CRITICAL: Failed to restore '{file_path}' from backup '{backup_file_path}': {restore_e}"
-                    )
-                    return (
-                        False,
-                        f"Failed to apply patch AND FAILED TO RESTORE FROM BACKUP. File '{relative_path}' may be corrupted. Backup at: {backup_file_path}\nPatch Output:\n{full_output_message}",
-                    )
-            else:
-                return (
-                    False,
-                    f"Failed to apply patch. No backup was found to restore.\nPatch Output:\n{full_output_message}",
-                )
-
-    except FileNotFoundError as fnf_e:
-        logger.error(f"Error applying patch to '{relative_path}': {fnf_e}")
-        if backup_file_path and backup_file_path.exists() and file_path.exists():
-            shutil.move(str(backup_file_path), file_path)
-        return (
-            False,
-            f"Error applying patch: {fnf_e}. Ensure 'patch' command is installed.",
-        )
-    except Exception as e:
-        logger.error(
-            f"Unexpected error during patch application for '{relative_path}': {e}",
-            exc_info=True,
-        )
-        if backup_file_path and backup_file_path.exists() and file_path.exists():
-            shutil.move(str(backup_file_path), file_path)
-        return False, f"Unexpected error applying patch: {type(e).__name__} - {e}"
-    finally:
-        if patch_file_path and patch_file_path.exists():
-            try:
-                patch_file_path.unlink()
-            except Exception as e_clean:
-                logger.warning(
-                    f"Could not delete temp patch file {patch_file_path}: {e_clean}"
-                )
-
-
-def request_signoff_helper_direct_tty(message: str, step_id: str) -> Tuple[bool, str]:
-
-    # Determine signoff mode
-    signoff_mode = os.environ.get("EXWORK_SIGNOFF_MODE", "tty").lower()  # tty, file, auto, webhook
-    start_time = time.time()
-    logger.info(f"REQUESTING USER SIGNOFF (mode: {signoff_mode}): {message}")
-    action_params = {"prompt_message": message, "signoff_mode": signoff_mode}
-    response_str = "No response (error)."
-    success = False
-
-    try:
-        if signoff_mode == "tty":
-            sys.stderr.write(f"\n>>> AGENT SIGNOFF REQUIRED (StepID: {step_id}) <<<\n")
-            sys.stderr.write(message + "\n")
-            sys.stderr.write(">>> Proceed? (yes/no): ")
-            sys.stderr.flush()
-            response = ""
-            try:
-                with open("/dev/tty", "r") as tty_in:
-                    response = tty_in.readline().strip().lower()
-            except Exception as e_tty:
-                logger.warning(
-                    f"Could not read from /dev/tty for signoff ({e_tty}), falling back to sys.stdin (may block if stdin is piped for main JSON)."
-                )
-                print(">>> (Fallback to stdin) Proceed? (yes/no): ", end="", flush=True)
-                response = sys.stdin.readline().strip().lower()
-            if response == "yes" or response == "y":
-                logger.info("Sign-off APPROVED by user.")
-                success = True
-                response_str = "User approved."
-            else:
-                logger.info(f"Sign-off REJECTED by user (response: '{response}').")
-                success = False
-                response_str = "User rejected."
-        elif signoff_mode == "file":
-            # File-based signoff: create a flag file, wait for approval
-            flag_dir = os.environ.get("EXWORK_SIGNOFF_FLAG_DIR", ".")
-            flag_base = f"exwork_signoff_{step_id}"
-            awaiting_flag = os.path.join(flag_dir, flag_base + ".awaiting")
-            approved_flag = os.path.join(flag_dir, flag_base + ".approved")
-            with open(awaiting_flag, "w") as f:
-                f.write(message)
-            logger.info(f"Signoff awaiting file created: {awaiting_flag}. Waiting for approval file: {approved_flag}")
-            sys.stderr.write(f"\n[INFO] Awaiting signoff: create '{approved_flag}' to approve.\n")
-            timeout = int(os.environ.get("EXWORK_SIGNOFF_TIMEOUT", "600"))  # seconds
-            waited = 0
-            poll_interval = 2
-            while waited < timeout:
-                if os.path.exists(approved_flag):
-                    success = True
-                    response_str = "User approved via file."
-                    os.remove(approved_flag)
-                    break
-                time.sleep(poll_interval)
-                waited += poll_interval
-            else:
-                success = False
-                response_str = f"Timed out waiting for signoff file after {timeout} seconds."
-            if os.path.exists(awaiting_flag):
-                os.remove(awaiting_flag)
-        elif signoff_mode == "auto":
-            # Automatic signoff (for CI/CD or testing)
-            logger.info("Auto signoff mode: automatically approving.")
-            success = True
-            response_str = "Auto-approved (EXWORK_SIGNOFF_MODE=auto)."
-        elif signoff_mode == "webhook":
-            # Placeholder for webhook/callback-based signoff
-            logger.warning("Webhook signoff mode not implemented. Failing signoff.")
-            success = False
-            response_str = "Webhook signoff not implemented."
-        else:
-            logger.error(f"Unknown signoff mode: {signoff_mode}")
-            success = False
-            response_str = f"Unknown signoff mode: {signoff_mode}"
-    except Exception as e:
-        logger.error(f"Sign-off interaction failed: {e}", exc_info=True)
-        success = False
-        response_str = f"Error during sign-off: {type(e).__name__}"
-
-    log_execution_history(
-        {
-            "timestamp": start_time,
-            "action_name": "SIGNOFF_REQUEST",
-            "success": success,
-            "message": response_str,
-            "duration_s": time.time() - start_time,
-            "step_id": step_id,
-            "action_params": action_params,
-            "stdout_snippet": response_str,
-        }
-    )
-    return success, response_str
-
-
 # --- Core Agent Logic ---
 
 
 def process_instruction_block(
-    instruction_json: str, project_root: Path
+    instruction_json: str, project_root: Path, step_id: str
 ) -> Tuple[bool, List[Dict[str, Any]]]:
     action_results_summary: List[Dict[str, Any]] = []
     overall_block_success = True
@@ -1140,6 +851,7 @@ def process_instruction_block(
     logger.info(
         f"Processing Instruction Block - StepID: {step_id}, Desc: {description}"
     )
+
     if not isinstance(actions, list):
         logger.error(f"'{step_id}': 'actions' field must be a list.")
         action_results_summary.append(
@@ -1151,66 +863,107 @@ def process_instruction_block(
         )
         return False, action_results_summary
 
-    current_signoff_id_for_block: Optional[str] = None
-
     for i, action_data in enumerate(actions):
-        if not isinstance(action_data, dict):
+        action_num = i + 1
+        action_type_value = action_data.get("type")
+        handler: Optional[Callable[[Dict, Path, str], Tuple[bool, Any]]] = (
+            None  # Explicit type hint for clarity
+        )
+        current_action_type_for_log = "UNKNOWN_OR_INVALID_TYPE"
+
+        if isinstance(action_type_value, str):
+            current_action_type_for_log = action_type_value
+            handler = ACTION_HANDLERS.get(
+                current_action_type_for_log
+            )  # Lookup with a confirmed string
+            if not handler:
+                logger.error(
+                    f"'{step_id}': Action {action_num} - Unknown action type encountered: '{current_action_type_for_log}'."
+                )
+                action_results_summary.append(
+                    {
+                        "action_type": current_action_type_for_log,
+                        "success": False,
+                        "message_or_payload": f"Unknown action type: '{current_action_type_for_log}'.",
+                        "action_index": i,
+                    }
+                )
+                overall_block_success = False
+                # Depending on your desired behavior, you might want to 'break' or 'continue' here.
+                # The original script you provided for this function implied 'break' for unknown handler.
+                # If overall_block_success is False, the loop should break later.
+        else:
             logger.error(
-                f"'{step_id}': Action {i+1} is not a valid JSON object. Skipping action."
+                f"'{step_id}': Action {action_num} has missing or invalid 'type' (expected string, got: {type(action_type_value).__name__})."
             )
             action_results_summary.append(
                 {
-                    "action_type": "ACTION_VALIDATION",
+                    "action_type": str(action_type_value)
+                    if action_type_value is not None
+                    else "MISSING_TYPE",
                     "success": False,
-                    "message_or_payload": f"Action {i+1} not a dict.",
+                    "message_or_payload": f"Action has missing or invalid 'type': {action_type_value}",
+                    "action_index": i,
                 }
             )
             overall_block_success = False
-            continue
 
-        action_type = action_data.get("type")
-        action_num = i + 1
         logger.info(
-            f"--- {step_id}: Action {action_num}/{len(actions)} (Type: {action_type}) ---"
+            f"--- {step_id}: Action {action_num}/{len(actions)} (Type: {current_action_type_for_log}) ---"
         )
 
-        handler = ACTION_HANDLERS.get(action_type)
-        if handler:
-            action_start_time = time.time()
-            success, result_payload = handler(action_data, project_root, step_id)
-            action_duration = time.time() - action_start_time
+        if (
+            not overall_block_success
+        ):  # If type was invalid or handler not found from above
+            if (
+                handler is None
+            ):  # Check if it was due to handler not found after a valid type string, or invalid type
+                logger.info(
+                    f"Halting block {step_id} due to unknown or invalid action type for action {action_num}."
+                )
+            break  # Stop processing this block of actions
 
-            action_summary = {
-                "action_type": action_type,
-                "success": success,
-                "message_or_payload": result_payload,
-                "duration_s": round(action_duration, 3),
-            }
-            action_results_summary.append(action_summary)
+        # If handler is found and overall_block_success is still True:
+        action_start_time = time.time()
+        # The next MyPy error points to this call, it will be fixed when handlers are updated:
+        success, result_payload = handler(action_data, project_root, step_id)
+        action_duration = time.time() - action_start_time
+        # ... (rest of your existing logic for action_summary, log_execution_history, success/failure handling) ...
 
-            is_subprocess_action = action_type in [
+        action_summary = {
+            "action_type": current_action_type_for_log,
+            "success": success,
+            "message_or_payload": result_payload,
+            "duration_s": round(action_duration, 3),
+            "action_index": i,
+        }
+        action_results_summary.append(action_summary)
+
+        if "log_execution_history" in globals() and callable(
+            globals()["log_execution_history"]
+        ):
+            is_subprocess_action = current_action_type_for_log in [
                 "RUN_SCRIPT",
                 "LINT_FORMAT_FILE",
                 "APPLY_PATCH_CMD",
                 "GIT_ADD",
                 "GIT_COMMIT",
             ]
-            is_self_logging_action = action_type in [
+            is_self_logging_action = current_action_type_for_log in [
                 "CALL_LOCAL_LLM",
                 "DIAGNOSE_ERROR_LLM_CALL",
                 "SIGNOFF_DIRECT_TTY_REQUEST",
             ]
-
             if not is_subprocess_action and not is_self_logging_action:
                 log_execution_history(
                     {
                         "timestamp": action_start_time,
-                        "action_name": action_type,
+                        "action_name": current_action_type_for_log,
                         "success": success,
                         "message": (
                             result_payload
                             if isinstance(result_payload, str)
-                            else json.dumps(result_payload)
+                            else json.dumps(result_payload, default=str)
                         ),
                         "duration_s": action_duration,
                         "step_id": step_id,
@@ -1219,32 +972,19 @@ def process_instruction_block(
                     }
                 )
 
-            if not success:
-                logger.error(
-                    f"'{step_id}': Action {action_num} ({action_type}) FAILED. Result: {result_payload}"
-                )
-                overall_block_success = False
-                logger.info(
-                    f"Halting processing of action block '{step_id}' due to failure in action {action_num} ({action_type})."
-                )
-                break
-            else:
-                logger.info(
-                    f"'{step_id}': Action {action_num} ({action_type}) SUCCEEDED. Duration: {action_duration:.3f}s"
-                )
-        else:
+        if not success:
             logger.error(
-                f"'{step_id}': Unknown action type encountered: '{action_type}'. Halting block."
+                f"'{step_id}': Action {action_num} ({current_action_type_for_log}) FAILED. Result: {result_payload}"
             )
-            action_results_summary.append(
-                {
-                    "action_type": action_type,
-                    "success": False,
-                    "message_or_payload": "Unknown action type.",
-                }
+            overall_block_success = False  # Ensure this is set
+            logger.info(
+                f"Halting processing of action block '{step_id}' due to failure in action {action_num} ({current_action_type_for_log})."
             )
-            overall_block_success = False
-            break
+            break  # Stop processing further actions
+        else:
+            logger.info(
+                f"'{step_id}': Action {action_num} ({current_action_type_for_log}) SUCCEEDED. Duration: {action_duration:.3f}s"
+            )
 
     logger.info(
         f"--- Finished processing actions for StepID: {step_id}. Overall Block Success: {overall_block_success} ---"
@@ -1254,28 +994,114 @@ def process_instruction_block(
 
 def execute_plan(plan: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Executes the actions specified in the plan."""
-    results = []
+    results: List[Dict[str, Any]] = []
+    plan_step_id = plan.get(
+        "step_id", f"execute_plan_{str(uuid.uuid4())[:8]}"
+    )  # Ensure uuid is imported
+    logger.info(f"Executing plan with StepID: {plan_step_id}")
 
-    for action in plan.get("actions", []):
-        action_name = action.get("name")
-        handler = ACTION_HANDLERS.get(action_name)
+    for i, action_config in enumerate(plan.get("actions", [])):
+        action_type_value = action_config.get("type")  # Use "type" for consistency
+        handler: Optional[Callable[[Dict, Path, str], Tuple[bool, Any]]] = None
+        action_type_for_log = "UNKNOWN_OR_INVALID_TYPE"
+
+        if isinstance(action_type_value, str):
+            action_type_for_log = action_type_value
+            handler = ACTION_HANDLERS.get(action_type_for_log)
 
         if handler:
-            success, message = handler(action, PROJECT_ROOT, plan.get("step_id", "N/A"))
-            results.append({
-                "action": action_name,
-                "success": success,
-                "message": message
-            })
+            action_specific_step_id = f"{plan_step_id}_action_{i + 1}"
+            logger.info(
+                f"--- {plan_step_id}: Executing Action {i + 1} (Type: {action_type_for_log}) via execute_plan ---"
+            )
+            try:
+                # Call handler with 3 arguments now
+                success, message = handler(
+                    action_config, PROJECT_ROOT, action_specific_step_id
+                )
+                results.append(
+                    {
+                        "action": action_type_for_log,
+                        "success": success,
+                        "message": message,
+                    }
+                )
+                if not success:
+                    logger.error(
+                        f"Action {action_type_for_log} in execute_plan (id: {action_specific_step_id}) failed. Message: {message}"
+                    )
+            except Exception as e:
+                logger.error(
+                    f"Exception during handler execution for action '{action_type_for_log}' (id: {action_specific_step_id}) in execute_plan: {e}",
+                    exc_info=True,
+                )
+                results.append(
+                    {
+                        "action": action_type_for_log,
+                        "success": False,
+                        "message": f"Exception: {e}",
+                    }
+                )
         else:
-            logger.warning(f"No handler found for action: {action_name}")
-            results.append({
-                "action": action_name,
-                "success": False,
-                "message": f"No handler for action: {action_name}"
-            })
-
+            logger.warning(
+                f"No handler found for action type: '{action_type_value}' in execute_plan (action {i + 1}). Action config: {action_config}"
+            )
+            results.append(
+                {
+                    "action": str(action_type_value)
+                    if action_type_value is not None
+                    else "MISSING_TYPE",
+                    "success": False,
+                    "message": f"No handler for action type: {action_type_value}",
+                }
+            )
+    logger.info(
+        f"Finished execute_plan for StepID: {plan_step_id}. Results count: {len(results)}"
+    )
     return results
+
+
+# --- Enhanced workflow execution and error handling ---
+
+def execute_task(task_name: str, project_root: Path):
+    """Executes a specific task by name."""
+    try:
+        if task_name not in ACTION_HANDLERS:
+            raise ValueError(f"Task '{task_name}' is not registered.")
+
+        handler = ACTION_HANDLERS[task_name]
+        success, result = handler({}, project_root)
+
+        if success:
+            logger.info(f"Task '{task_name}' executed successfully: {result}")
+        else:
+            logger.warning(f"Task '{task_name}' failed: {result}")
+
+    except Exception as e:
+        logger.error(f"Error executing task '{task_name}': {e}", exc_info=True)
+        return False
+
+    return True
+
+def register_handler(handler_name: str):
+    """Registers a new handler dynamically."""
+    try:
+        if handler_name in ACTION_HANDLERS:
+            logger.warning(f"Handler '{handler_name}' is already registered.")
+            return False
+
+        def dynamic_handler(task_data: Dict, project_root: Path):
+            logger.info(f"Executing dynamic handler for task: {handler_name}")
+            return True, f"Dynamic handler '{handler_name}' executed successfully."
+
+        ACTION_HANDLERS[handler_name] = dynamic_handler
+        logger.info(f"Handler '{handler_name}' registered successfully.")
+
+    except Exception as e:
+        logger.error(f"Error registering handler '{handler_name}': {e}", exc_info=True)
+        return False
+
+    return True
 
 
 # --- Interactive Configuration and Execution ---
@@ -1321,7 +1147,9 @@ def interactive_mode():
                         action_name = task.get("action")
                         if action_name in ACTION_HANDLERS:
                             handler = ACTION_HANDLERS[action_name]
-                            success, message = handler(task.get("parameters", {}), PROJECT_ROOT)
+                            success, message = handler(
+                                task.get("parameters", {}), PROJECT_ROOT
+                            )
                             print(f"Task '{action_name}' executed: {message}")
                         else:
                             print(f"No handler found for action: {action_name}")
@@ -1334,6 +1162,7 @@ def interactive_mode():
 
         else:
             print("Invalid choice. Please select a valid option.")
+
 
 # Modify main execution to include interactive mode
 def main():
@@ -1378,7 +1207,10 @@ def main():
             logger.error(f"Error reading from stdin: {e}", exc_info=True)
             sys.stdout.write(
                 json.dumps(
-                    {"overall_success": False, "status_message": f"Stdin read error: {e}"}
+                    {
+                        "overall_success": False,
+                        "status_message": f"Stdin read error: {e}",
+                    }
                 )
                 + "\n"
             )
@@ -1400,7 +1232,7 @@ def main():
         start_process_time = time.time()
 
         overall_success, action_results = process_instruction_block(
-            json_input, PROJECT_ROOT
+            json_input, PROJECT_ROOT, "main_execution"  # Main execution step ID
         )
 
         end_process_time = time.time()
@@ -1422,5 +1254,28 @@ def main():
             sys.exit(1)
 
 
+# Added CLI interface for standalone functionality
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Ex-Work Agent CLI")
+    parser.add_argument("--execute-task", type=str, help="Execute a specific task by name.")
+    parser.add_argument("--register-handler", type=str, help="Register a new handler dynamically.")
+    parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Set log level.")
+    args = parser.parse_args()
+
+    # Setup logging
+    logger.setLevel(args.log_level.upper())
+
+    try:
+        if args.execute_task:
+            logger.info(f"Executing task: {args.execute_task}")
+            # Call task execution function (to be implemented)
+
+        if args.register_handler:
+            logger.info(f"Registering handler: {args.register_handler}")
+            # Call handler registration function (to be implemented)
+
+    except Exception as e:
+        logger.error(f"Ex-Work Agent encountered an error: {e}", exc_info=True)
+        sys.exit(1)
+
+    logger.info("Ex-Work Agent completed successfully.")

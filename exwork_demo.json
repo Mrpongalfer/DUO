@@ -1,0 +1,5 @@
+{
+    "task_name": "example_task",
+    "requested_path": "./test_workspace/example_file.py",
+    "retry": true
+}

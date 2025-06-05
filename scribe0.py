@@ -36,6 +36,7 @@ from pathlib import Path
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Tuple,
                     TypedDict, Union, cast)
 from urllib.parse import urlparse  # V1.1: Added for URL validation
+from vectorize_constitution import ReportGenerator
 
 # --- Dependency Check for HTTP Library ---
 HTTP_LIB: Optional[str] = None
@@ -298,9 +299,33 @@ class ScribeConfig:
     def get(self, key: str, default: Any = None) -> Any: return self._config.get(key, default)
     def get_list(self, key: str, default: Optional[List[Any]] = None) -> List[Any]: v=self._config.get(key,default or []); return v if isinstance(v,list) else (default or [])
     def get_str(self, key: str, default: str = "") -> str: v=self._config.get(key,default); return str(v) if v is not None else default
-    def get_bool(self, key: str, default: bool = False) -> bool: v=self._config.get(key,default); return v if isinstance(v,bool) else (str(v).lower()=='true' if isinstance(v,str) else default)
-    def get_float(self, key: str, default: float = 0.0) -> float: try: return float(self._config.get(key,default)) except: return default
-    def get_int(self, key: str, default: int = 0) -> int: try: return int(float(self._config.get(key,default))) except: return default # Allow float->int
+    def get_bool(self, key: str, default: bool = False) -> bool: 
+        value = self._config.get(key,default); 
+        return value if isinstance(value,bool) else (str(value).lower()=='true' if isinstance(value,str) else default)
+    
+    def get_float(self, key: str, default: float = 0.0) -> float:
+        value = self._config.get(key, default)
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            # self._logger should be available here if __init__ initializes it
+            if hasattr(self, '_logger') and self._logger:
+                 self._logger.warning(f"Could not parse config value for '{key}' ('{value}') as float. Using default: {default}.")
+            else: # Fallback print if logger isn't ready (shouldn't happen if config is used after full init)
+                print(f"ScribeConfig WARNING: Could not parse config value for '{key}' ('{value}') as float. Using default: {default}.", file=sys.stderr)
+            return default
+
+    def get_int(self, key: str, default: int = 0) -> int:
+        value = self._config.get(key, default)
+        try:
+            return int(float(value)) # Allow float string to be parsed as int after conversion
+        except (ValueError, TypeError):
+            if hasattr(self, '_logger') and self._logger:
+                self._logger.warning(f"Could not parse config value for '{key}' ('{value}') as int. Using default: {default}.")
+            else:
+                print(f"ScribeConfig WARNING: Could not parse config value for '{key}' ('{value}') as int. Using default: {default}.", file=sys.stderr)
+            return default
+        
     @property
     def config_path(self) -> Optional[Path]: return self._config_path
     @property
@@ -651,7 +676,7 @@ class ScribeAgent:
         elif self._no_commit: 
             self._do_commit = False 
         else:
-            self._do_commit = self._args.commit_intent # Use the resolved intent
+            self._do_commit = self._args.commit # Use the resolved intent from _parse_arguments
         
         # Setup logging using the parsed log_level and log_file
         setup_logging(self._args.log_level, self._args.log_file)
@@ -706,7 +731,7 @@ class ScribeAgent:
         # (Your _print_minimal_error_report method)
         start_time_iso = datetime.now(timezone.utc).isoformat()
         if hasattr(self, '_report_data') and self._report_data and self._report_data.get("start_time"): start_time_iso = self._report_data["start_time"]
-        report: Dict[str, Any] = {"scribe_version": APP_VERSION, "run_id": getattr(self, '_run_id', 'unknown'), "start_time": start_time_iso, "end_time": datetime.now(timezone.utc).isoformat(), "total_duration_seconds": 0.0, "overall_status": STATUS_FAILURE, "error_message": error_msg, "steps": [{"name": "initialization_failure", "status": STATUS_FAILURE, "error_message": error_msg, "start_time": start_time_iso, "end_time": datetime.now(timezone.utc).isoformat(), "duration_seconds": 0.0}]}
+        report: Dict[str, Any] = {"scribe_version": APP_VERSION, "run_id": getattr(self, '_run_id', 'unknown'), "start_time": start_time_iso, "end_time": datetime.now(timezone.utc).isoformat(), "total_duration_seconds": 0.0, "overall_status": STATUS_FAILURE, "target_project_dir": str(self._target_dir) if hasattr(self, '_target_dir') else "Unset", "target_file_relative": self._args.target_file if hasattr(self, '_args') else "Unset", "language": "python", "python_version": sys.version.split()[0], "commit_attempted": self._do_commit, "commit_sha": None, "steps": [{"name": "initialization_failure", "status": STATUS_FAILURE, "error_message": error_msg, "start_time": start_time_iso, "end_time": datetime.now(timezone.utc).isoformat(), "duration_seconds": 0.0}]}
         if error_details: report["steps"][0]["details"] = error_details
         if include_traceback: report["steps"][0].setdefault("details", {})["traceback"] = traceback.format_exc()
         try: print(json.dumps(report, indent=2, default=str))
@@ -933,55 +958,34 @@ class ScribeAgent:
         else: print(json.dumps(self._report_data, indent=2, default=str))
 
 
-# (Your ReportGenerator class as provided in turn 35)
-class ReportGenerator:
-    def __init__(self, format_str: str):
-        self._format = format_str # This was 'format_str' in your original
-        if self._format not in REPORT_FORMATS:
-            raise ScribeConfigurationError(f"Unsupported report format: {self._format}. Supported: {REPORT_FORMATS}")
-    def generate(self, report_data: FinalReport) -> str:
-        if self._format == 'json':
-            try: return json.dumps(report_data, indent=2, default=str)
-            except TypeError as e: logging.getLogger(APP_NAME).error(f"JSON serialize error: {e}"); return json.dumps({"error":"JSON serialize failed", "details":str(e)})
-        elif self._format == 'text': 
-            lines = [f"Scribe Report ID: {report_data.get('run_id', 'N/A')}"]
-            lines.append(f"Overall Status: {report_data.get('overall_status', 'UNKNOWN')}")
-            # (Add more details for text report if desired)
-            return "\n".join(lines)
-        return f"Error: Unknown report format '{self._format}'."
-
-# (Your main function and if __name__ block as provided in turn 35)
-def main():
-    """Main entry point for the Scribe Agent."""
-    # Initial checks for critical dependencies (HTTP_LIB_AVAILABLE and tomllib should be set globally)
-    if not HTTP_LIB_AVAILABLE:
-        print("FATAL ERROR: Scribe requires either 'httpx' or 'requests' for LLM features.", file=sys.stderr)
-        print("Please run: pip install httpx", file=sys.stderr)
-        sys.exit(1) 
-    
-    if not tomllib: # This global variable is set at the top of the script
-        print("FATAL ERROR: Could not import 'tomllib' (Python 3.11+) or 'tomli' (fallback).\n"
-              "Project Scribe requires one of these. For Python < 3.11, please run: pip install tomli",
-              file=sys.stderr)
-        sys.exit(1)
-    
-    try:
-        agent = ScribeAgent() # Argument parsing is handled inside ScribeAgent.__init__ via _parse_arguments
-        agent.run() # The ScribeAgent.run() method now handles sys.exit() based on pipeline success/failure
-    except ScribeError as e: 
-        # This catch is for errors during ScribeAgent instantiation itself, if they occur
-        # before Scribe's own logger is fully operational.
-        print(f"CRITICAL SCRIBE ERROR (during agent instantiation or early setup): {e}", file=sys.stderr)
-        if hasattr(e, 'details') and e.details: print(f"Details: {e.details}", file=sys.stderr)
-        sys.exit(1) 
-    except SystemExit as e: # Allow sys.exit() from agent.run() to propagate
-        sys.exit(e.code)
-    except Exception as e: 
-        print(f"UNEXPECTED SYSTEM ERROR (during agent instantiation or Scribe lifecycle): {e}", file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(1) 
-
+# Added CLI interface for standalone functionality
 if __name__ == "__main__":
-    # All necessary imports should be at the very top of this file.
-    # This block correctly calls main().
-    main()
+    parser = argparse.ArgumentParser(description="Scribe Agent CLI")
+    parser.add_argument("--review-only", action="store_true", help="Perform review without committing changes.")
+    parser.add_argument("--no-commit", action="store_true", help="Skip commit step.")
+    parser.add_argument("--log-level", default="INFO", choices=LOG_LEVELS, help="Set log level.")
+    parser.add_argument("--config", type=str, help="Path to configuration file.")
+    args = parser.parse_args()
+
+    # Setup logging
+    logger = setup_logging(args.log_level)
+
+    try:
+        # Load configuration
+        config = ScribeConfig(config_path_override=args.config)
+
+        # Perform review
+        if args.review_only:
+            logger.info("Performing review only...")
+            # Call review function (to be implemented)
+
+        # Perform validation and commit
+        if not args.no_commit:
+            logger.info("Performing validation and commit...")
+            # Call validation and commit function (to be implemented)
+
+    except ScribeError as e:
+        logger.error(f"Scribe encountered an error: {e}", exc_info=True)
+        sys.exit(1)
+
+    logger.info("Scribe Agent completed successfully.")

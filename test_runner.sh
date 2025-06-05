@@ -38,6 +38,39 @@ print_error() {
 WORKSPACE="test_workspace"
 print_header "Setting Up Test Workspace"
 
+# Environment Variables
+export PYTHONPATH="$(pwd):$PYTHONPATH"
+export OLLAMA_HOST="http://localhost:11434"
+
+# Check Python version and environment
+print_info "Checking Python version..."
+if ! python -c "import sys; assert sys.version_info >= (3, 9), 'Python 3.9+ required'"; then
+    print_error "Python 3.9 or higher is required. Please run setup_xonsh.sh first."
+    exit 1
+fi
+
+# Ensure test environment is active
+if [ ! -d "test_env" ]; then
+    print_info "Creating Python test environment..."
+    python -m venv test_env
+    source test_env/bin/activate || . test_env/bin/activate  # Fallback for different shells
+    python -m pip install --upgrade pip
+    python -m pip install --no-cache-dir httpx tomli ruff mypy requests pytest
+else
+    print_info "Activating existing test environment..."
+    source test_env/bin/activate || . test_env/bin/activate  # Fallback for different shells
+fi
+
+# Log environment info
+print_info "Using Python: $(python --version)"
+print_info "Test environment activated: $VIRTUAL_ENV"
+
+# Check for Ollama
+if ! curl -s "$OLLAMA_HOST/api/tags" > /dev/null; then
+    print_warning "Ollama service not detected at $OLLAMA_HOST"
+    print_warning "Some tests requiring LLM features may fail"
+fi
+
 if [ -d "$WORKSPACE" ]; then
     print_warning "Workspace '$WORKSPACE' already exists. Reusing it."
 else
@@ -182,13 +215,24 @@ EOF
 # This assumes Python dependencies like 'ruff' and 'mypy' are installed in the environment running this script.
 print_info "Executing scribe0.py on the mock project..."
 print_info "This may take a minute as it sets up a venv and runs tools..."
-SCRIBE_OUTPUT=$(../scribe0.py \
-    "$PROJECT_DIR" \
-    --target-file "src/main.py" \
-    --source-file "new_code.py" \
-    --commit \
-    --log-level WARNING \
-    --report-format json)
+if [ "$1" == "--review-only" ]; then
+    print_info "Running in review-only mode..."
+    SCRIBE_OUTPUT=$(../scribe0.py \
+        "$PROJECT_DIR" \
+        --target-file "src/main.py" \
+        --source-file "new_code.py" \
+        --review-only \
+        --log-level WARNING \
+        --report-format json)
+else
+    SCRIBE_OUTPUT=$(../scribe0.py \
+        "$PROJECT_DIR" \
+        --target-file "src/main.py" \
+        --source-file "new_code.py" \
+        --commit \
+        --log-level WARNING \
+        --report-format json)
+fi
 
 echo -e "\n--- Scribe Agent Final Report ---"
 echo "$SCRIBE_OUTPUT"
