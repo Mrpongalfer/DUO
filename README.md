@@ -36,4 +36,4 @@ This is the unified, production-grade monorepo for the DUO autonomous agent ecos
 - All major changes must be SDSS-compliant and vector-aligned.
 
 ## License
-MIT License
+license To KILL
