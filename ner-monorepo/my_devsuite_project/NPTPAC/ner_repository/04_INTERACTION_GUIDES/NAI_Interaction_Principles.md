@@ -1,0 +1,6 @@
+# NAI Interaction Guide Principles
+
+This document summarizes core techniques for efficient and context-aware interaction...
+- PMA (Project Memory Architecture)
+- Semantic Compression
+...

@@ -1,0 +1,41 @@
+{
+    // Content for roles/wizardpro_bootstrap/files/vscode_config/settings.json
+    "python.defaultInterpreterPath": "${workspaceFolder}/orchestrator/venv/bin/python",
+    "python.formatting.provider": "ruff", // Use Ruff for formatting
+    "editor.formatOnSave": true,
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true, // Enable Ruff linter
+    "python.linting.lintOnSave": true,
+    "python.analysis.typeCheckingMode": "basic", // Enable basic type checking
+    "python.analysis.mypyEnabled": true, // Can enable mypy alongside ruff if desired
+    "editor.rulers": [
+        88,
+        100
+    ],
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff", // Specify Ruff formatter
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit" // Ruff can organize imports
+        }
+    },
+    // Exclude venv and contexts from file explorer view
+    "files.exclude": {
+        "**/.git": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "orchestrator/venv": true,
+        "project_contexts": true
+    },
+    // Exclude from search results as well
+    "search.exclude": {
+        "**/orchestrator/venv": true,
+        "**/project_contexts": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true
+    }
+}

@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs & Local Configs (if any stored directly in NER)
+*.log
+local_settings.*
+.env
+
+# NPT Specific (if needed)
+*.npt_backup

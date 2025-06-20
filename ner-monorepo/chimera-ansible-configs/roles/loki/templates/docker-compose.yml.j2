@@ -1,0 +1,29 @@
+# File: roles/loki/templates/docker-compose.yml.j2
+# Version: FINAL - Correct external network syntax
+
+volumes:
+  loki_data: {}
+
+networks:
+  # Define the existing external network created by Prometheus
+  monitoring_net: # Alias used by services below
+    name: prometheus_stack_monitoring_net # Actual Docker network name
+    external: true
+
+services:
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - "{{ loki_config_file_path }}:/etc/loki/local-config.yaml:ro" # Use correct host path var
+      - loki_data:/loki
+    ports:
+      - "{{ loki_port | default(3100) }}:{{ loki_port | default(3100) }}"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      # Connect service to the network defined above
+      - monitoring_net # Use the alias defined under top-level 'networks:'
+    labels:
+      org.label-schema.group: "monitoring"
+      managed-by: "ansible-chimera-prime"

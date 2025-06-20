@@ -1,0 +1,11 @@
+{
+  "step_id": "blueteam_syslog_check_001",
+  "description": "Check /var/log/syslog for recent errors.",
+  "actions": [
+    {
+      "type": "RUN_SCRIPT",
+      "script_path": "sh",
+      "args": ["-c", "grep -iE 'error|failed|critical' /var/log/syslog | tail -n 50"]
+    }
+  ]
+}

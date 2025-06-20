@@ -1,0 +1,138 @@
+/* Modern Theme for Nexus OmniEngine */
+:root {
+  --primary: #4e9cff;
+  --primary-dark: #2563eb;
+  --bg: #f8faff;
+  --card-bg: #23272e;
+  --card-fg: #f8f8f8;
+  --accent: #ffe082;
+  --danger: #e53935;
+  --success: #4caf50;
+  --border-radius: 18px;
+  --shadow: 0 4px 24px #0002;
+}
+body {
+  background: var(--bg);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #222;
+  margin: 0;
+}
+
+/* Sidebar */
+.nexus-sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 220px;
+  background: var(--card-bg);
+  color: var(--card-fg);
+  box-shadow: var(--shadow);
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5em 0 1.5em 0;
+}
+.nexus-sidebar .sidebar-logo {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 2em;
+  letter-spacing: 2px;
+}
+.nexus-sidebar .sidebar-menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+.nexus-sidebar .sidebar-menu .menu-section {
+  margin-bottom: 1.2em;
+}
+.nexus-sidebar .sidebar-menu .menu-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  color: var(--accent);
+}
+.nexus-sidebar .sidebar-menu .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.7em 1.2em;
+  border-radius: 10px;
+  color: var(--card-fg);
+  text-decoration: none;
+  font-size: 1.08em;
+  transition: background 0.13s, color 0.13s;
+  cursor: pointer;
+}
+.nexus-sidebar .sidebar-menu .menu-item:hover, .nexus-sidebar .sidebar-menu .menu-item.active {
+  background: var(--primary);
+  color: #fff;
+}
+.nexus-sidebar .sidebar-footer {
+  text-align: center;
+  font-size: 0.95em;
+  color: #aaa;
+  margin-top: 2em;
+}
+
+/* Main content area with sidebar offset */
+.nexus-main {
+  margin-left: 240px;
+  padding: 2.5em 2em 2em 2em;
+  min-height: 100vh;
+}
+
+/* Card panels */
+.nexus-card {
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 2em 2.5em 2em 2.5em;
+  margin-bottom: 2em;
+}
+
+/* Dynamic status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  margin-right: 0.5em;
+  background: var(--success);
+  border: 2px solid var(--card-bg);
+}
+.status-indicator.offline {
+  background: var(--danger);
+}
+.status-indicator.busy {
+  background: var(--accent);
+}
+
+/* Collapsible meta activity */
+.meta-activity-panel {
+  background: #fffbe6;
+  color: #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #ffb84e44;
+  padding: 1em 1.5em;
+  margin-bottom: 1.5em;
+  display: none;
+  position: absolute;
+  right: 2em;
+  top: 2em;
+  z-index: 200;
+}
+.meta-activity-panel.active {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .nexus-sidebar { width: 60px; }
+  .nexus-main { margin-left: 80px; padding: 1em; }
+  .nexus-card { padding: 1em; }
+}

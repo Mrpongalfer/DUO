@@ -1,0 +1,79 @@
+---
+# File: roles/prometheus/tasks/main.yml
+# Version: FINAL - Merged Local Fixes + Remote Volume Permission Fix + Hardcoded Src
+
+- name: Ensure Prometheus directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root # Let root create dirs initially
+    group: root
+    mode: '0755'
+  loop:
+    - "{{ prometheus_compose_dir }}"
+    - "{{ prometheus_config_dir }}"
+    - "{{ prometheus_data_dir }}"
+  become: true
+  tags: [prometheus, config]
+
+- name: Deploy Prometheus configuration file (prometheus.yml)
+  ansible.builtin.template:
+    src: prometheus.yml.j2 # HARDCODED src path
+    dest: "{{ prometheus_config_file_path }}"
+    owner: root # Config needs to be readable by container user
+    group: root # Group read often sufficient
+    mode: '0644'
+  become: true
+  notify: Restart Prometheus container # Notify handler on config change
+  tags: [prometheus, config]
+
+- name: Ensure Docker Compose V2 is available
+  ansible.builtin.command: docker compose version
+  register: compose_version_check
+  changed_when: false
+  failed_when: compose_version_check.rc != 0
+  become: true
+  tags: [prometheus, docker, config]
+
+- name: Deploy Prometheus docker-compose.yml file from template
+  ansible.builtin.template:
+    src: "{{ prometheus_template_name }}" # Var OK here
+    dest: "{{ prometheus_compose_file_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: Restart Prometheus container # Notify handler on compose file change
+  tags: [prometheus, config]
+
+# --- BEGIN VOLUME PERMISSION FIX (from Remote) ---
+- name: Ensure Prometheus data directory has correct permissions for container user
+  ansible.builtin.file:
+    path: "{{ prometheus_data_dir }}"
+    state: directory
+    owner: "65534" # UID for nobody (Prometheus container user)
+    group: "65534" # GID for nogroup
+    mode: '0775' # Writable by owner/group
+  become: true
+  tags: [prometheus, config, permissions]
+# --- END VOLUME PERMISSION FIX ---
+
+- name: Ensure potentially conflicting container is absent (Local Fix Re-applied)
+  community.docker.docker_container:
+    name: prometheus
+    state: absent
+    force_kill: yes
+  become: yes
+  ignore_errors: true
+  tags: [prometheus, docker, run]
+
+- name: Ensure Prometheus container is running via Docker Compose (Local Fix Re-applied)
+  community.docker.docker_compose_v2:
+    project_name: prometheus_stack
+    definition: "{{ lookup('template', 'docker-compose.yml.j2') | from_yaml }}"
+    state: present
+    pull: missing
+  become: yes
+  register: compose_result
+  # No notify needed here usually, config reload handled separately or via definition change
+  tags: [prometheus, docker, run]

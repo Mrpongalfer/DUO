@@ -1,0 +1,34 @@
+# File: roles/prometheus/templates/docker-compose.yml.j2
+# Version: FINAL - Merged Remote Changes + Correct Local Network Config
+
+# Define network locally scoped to this project (prometheus_stack)
+# Loki/Grafana will reference this as prometheus_stack_monitoring_net externally.
+networks:
+  monitoring_net: # This name gets prefixed by project_name ('prometheus_stack')
+    driver: bridge
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus # Explicit name
+    user: "65534:65534" # Run as nobody:nogroup
+    volumes:
+      # Mount config file rendered by Ansible (read-only)
+      - "{{ prometheus_config_file_path }}:/etc/prometheus/prometheus.yml:ro"
+      # Mount data volume from HOST - permissions handled by task in main.yml
+      - "{{ prometheus_data_dir }}:/prometheus"
+    ports:
+      # Use variable from play vars (site.yml) for host port
+      - "{{ prometheus_port }}:9090" # Uses 'prometheus_port' consistent with site.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks: # Connect service to the network defined above
+      - monitoring_net
+    labels:
+      org.label-schema.group: "monitoring"
+      managed-by: "ansible-chimera-prime"

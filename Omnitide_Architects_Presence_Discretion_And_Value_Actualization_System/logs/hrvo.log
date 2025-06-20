@@ -1,0 +1,19 @@
+CRITICAL:CPDDIAP_CORE:CRITICAL: ARCHITECT_DIGITAL_VAULT not set or is placeholder!
+Traceback (most recent call last):
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/hrvo/harmonized_resource_velocity_optimizer.py", line 131, in <module>
+    asyncio.run(main_hrvo())
+  File "/home/pong/.pyenv/versions/3.11.12/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/pong/.pyenv/versions/3.11.12/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pong/.pyenv/versions/3.11.12/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/hrvo/harmonized_resource_velocity_optimizer.py", line 125, in main_hrvo
+    cpdap_core_instance = await get_cpddiap_instance()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/cpddiap/cpddiap_core.py", line 117, in get_cpddiap_instance
+    raise ValueError("ARCHITECT_DIGITAL_VAULT not set or is placeholder!")
+ValueError: ARCHITECT_DIGITAL_VAULT not set or is placeholder!

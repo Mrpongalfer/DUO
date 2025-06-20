@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block title %}Meta Activity (Lily){% endblock %}
+{% block content %}
+<div class="nexus-card">
+  <h2 style="color:#ffe082;">Meta Activity (Lily)</h2>
+  <div id="meta-activity-panel" class="meta-activity-panel" style="display:block;max-height:350px;overflow:auto;background:#181b20;padding:1em 1.5em;border-radius:10px;margin-bottom:1em;">
+    {% if meta_events and meta_events|length > 0 %}
+      {% for entry in meta_events %}
+        <div class="meta-activity-entry" style="margin-bottom:0.7em;">
+          <span style="color:#ffe082;font-weight:bold;">[{{ entry.timestamp }}]</span>
+          <span style="color:#4e9cff;font-weight:bold;">{{ entry.sender }}</span>:
+          <span style="color:#fff;">{{ entry.message }}</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div style="color:#ffe082;">No meta activity from Lily yet.</div>
+    {% endif %}
+  </div>
+  <button class="dashboard-btn" onclick="toggleMetaActivity()">Show/Hide Meta Activity</button>
+</div>
+<script>
+function toggleMetaActivity() {
+  const panel = document.getElementById('meta-activity-panel');
+  panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+}
+// Real-time meta activity stream via SocketIO
+const panel = document.getElementById('meta-activity-panel');
+const socket = io({transports: ['websocket']});
+socket.on('connect', function() {
+  socket.emit('join', {room: 'meta-activity'});
+});
+socket.on('chat_message', function(data) {
+  if (data && data.type === 'meta' && data.persona === 'lily') {
+    const div = document.createElement('div');
+    div.className = 'meta-activity-entry';
+    div.style.marginBottom = '0.7em';
+    div.innerHTML = `<span style="color:#ffe082;font-weight:bold;">[${data.timestamp}]</span> <span style="color:#4e9cff;font-weight:bold;">${data.sender}</span>: <span style="color:#fff;">${data.message}</span>`;
+    panel.appendChild(div);
+    panel.scrollTop = panel.scrollHeight;
+  }
+});
+</script>
+{% endblock %}

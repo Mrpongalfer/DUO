@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}PAC CLI{% endblock %}
+{% block content %}
+<div class="nexus-card">
+  <h2 style="color:#ffe082;">PAC CLI</h2>
+  <form id="pac-cli-form" style="display:flex;gap:1em;align-items:center;margin-bottom:1.5em;">
+    <input type="text" id="pac-cli-input" placeholder="Enter PAC CLI command..." style="flex:1 1 300px;padding:0.7em 1em;border-radius:8px;border:1px solid #bcd;" />
+    <button class="dashboard-btn" type="submit">Run</button>
+    <button class="dashboard-btn" type="button" onclick="suggestPacCommand()">💡 Suggest</button>
+  </form>
+  <div id="pac-cli-output" style="background:#181b20;color:#ffe082;border-radius:10px;padding:1em 1.5em;min-height:80px;"></div>
+  <div id="pac-cli-history" style="margin-top:1.5em;"></div>
+</div>
+<script>
+document.getElementById('pac-cli-form').onsubmit = function(e) {
+  e.preventDefault();
+  // TODO: Implement PAC CLI command execution and show output/history
+};
+function suggestPacCommand() {
+  // TODO: Implement LLM-assisted PAC CLI command suggestion
+}
+</script>
+{% endblock %}

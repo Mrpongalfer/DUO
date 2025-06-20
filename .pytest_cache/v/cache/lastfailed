@@ -1,0 +1,9 @@
+{
+  "games/NPTPAC/pac_cli/tests/test_sample.py": true,
+  "games/nexus_omniengine_v3/tests/test_agent_forge.py": true,
+  "games/nexus_omniengine_v3/tests/test_workflow_handler.py": true,
+  "ner-monorepo/OmnitidePrimeFoundry/NPTPAC/pac_cli/tests/test_sample.py": true,
+  "ner-monorepo/duo/test_workspace/scribe_test_project/tests/scribe_generated/test_main_scribe.py": true,
+  "ner-monorepo/quantum_orchestrator_app/quantum_orchestrator/ai_agents/test_agent.py": true,
+  "Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/tests/test_oapdvas.py::test_root": true
+}

@@ -1,0 +1,36 @@
+Directive Omega: Quantum Transcendence Accelerated (13 Prompts)
+Prompt 1: Cognitive Fusion Core - Foundational Multi-Agent Architecture
+"Refactor core/agent.py to serve as the central Orchestrator. Design a robust framework for a Cognitive Fusion Core, where the Orchestrator manages and delegates tasks to specialized AI agents residing in ai_agents/. Create the following initial agent classes: PlanningAgent, CodeAgent, TestAgent, and OptimizationAgent. Define clear interfaces (methods) for each agent. The Orchestrator's execute_instruction should now parse user input and route the task to the appropriate agent based on the instruction 'type' or inferred intent. Implement a basic synchronous method for the Orchestrator to call the agents' primary execution methods."
+Prompt 2: Cognitive Fusion Core - Inter-Agent Communication Channel
+"Implement a dedicated inter-agent communication channel within the Orchestrator (core/agent.py). This can be a simple message queue (using Python's queue module) or a direct method invocation system. Modify the AI agent classes in ai_agents/ to include methods for sending (send_message) and receiving (receive_message) information through this channel. The Orchestrator should manage the routing of messages between agents based on predefined protocols or message types."
+Prompt 3: Intent-Driven Workflow Synthesis - Advanced Planning Agent Logic
+"Enhance the PlanningAgent in ai_agents/planning_agent.py. Implement a more sophisticated design_workflow(user_intent: str, available_tools: dict) method. This method should:
+ * Utilize the LLM (via agent.llm_service) to analyze the user intent and break it down into a sequence of high-level steps.
+ * Consult the available_tools dictionary (which the Orchestrator will provide, listing available handlers and meta-generated tools) to map these steps to executable actions.
+ * Generate a structured workflow in the Orchestrator's internal instruction format, including necessary parameters and data flow between steps. The Orchestrator should now use the PlanningAgent for 'intent' type instructions."
+Prompt 4: Intent-Driven Workflow Synthesis - Tool and Service Awareness
+"Modify the Orchestrator in core/agent.py to maintain a registry of available handlers and a dynamically updated list of meta-generated tools. This registry should be passed to the PlanningAgent's design_workflow method as the available_tools parameter. The PlanningAgent should also be made aware of the available services (e.g., LLM, watcher, API) and consider their utilization when designing workflows."
+Prompt 5: Autonomous Code Refinement - Reinforcement Learning Framework
+"In ai_agents/optimization_agent.py, implement a basic reinforcement learning framework. Introduce a learn(code: str, reward: float) method to update the agent's internal model based on a reward signal. The refine_code method should now utilize this learned model to suggest code improvements. For this initial RL implementation, the 'reward' can be a simple metric like the output of flake8 (fewer errors = higher reward)."
+Prompt 6: Autonomous Code Refinement - Integration with Execution Feedback
+"Modify the Orchestrator to provide feedback to the OptimizationAgent. After a handler's code is executed, the Orchestrator should record performance metrics (e.g., execution time, resource usage). This data should be passed to the OptimizationAgent as part of the 'context' in the refine_code method, allowing the agent to consider runtime performance in its optimization strategies. The Orchestrator should also provide a simulated 'reward' to the OptimizationAgent based on these metrics."
+Prompt 7: Quantum-Inspired Optimization - Simplified Algorithm Integration
+"In utils/quantum_optimization.py, implement a simplified version of a quantum-inspired optimization algorithm, such as Quantum Annealing-inspired simulated annealing, for a specific task like workflow step ordering or resource allocation. The function should take a problem representation (e.g., a list of tasks with dependencies and resource needs) and return an optimized order or allocation. The Orchestrator should invoke this function for relevant instruction types."
+Prompt 8: Quantum-Inspired Optimization - Workflow Integration
+"Integrate the quantum_optimization.py module into the Orchestrator's Neural Flow Pipeline. Before executing a complex workflow designed by the PlanningAgent, the Orchestrator should use the quantum_inspired_schedule_optimization function to optimize the order of steps or allocate resources to handlers, aiming for maximum efficiency."
+Prompt 9: Zero-Touch Integration - Active Service Discovery Simulation
+"Enhance services/integration_service.py to simulate a more active service discovery process. Implement a function actively_scan(known_apis: list) that simulates probing known API endpoints (represented as URLs and basic descriptions) and attempting to understand their functionality (e.g., by sending basic requests and analyzing responses). The discover_services function should now use this active scanning simulation. The PlanningAgent should utilize the results of this discovery when designing workflows."
+Prompt 10: Zero-Touch Integration - Dynamic Tool Invocation
+"Modify the Orchestrator to include a mechanism for dynamically invoking discovered services. If the PlanningAgent designs a workflow that utilizes a discovered service, the Orchestrator should be able to make API calls to that service using the information obtained during discovery. Implement a generic invoke_service(service_url: str, api_endpoint: str, parameters: dict) function in the Orchestrator."
+Prompt 11: Meta-Generative Automation - Enhanced Tool Template Generation
+"Enhance the MetaAgent in ai_agents/meta_agent.py to generate more complete tool (handler) templates. The generate_tool(description: str) method should now:
+ * Use the LLM to understand the description and identify the required functionality, input parameters, and output.
+ * Generate a Python handler file with function signatures, basic docstrings adhering to TPC, and placeholder logic based on the description."
+Prompt 12: Meta-Generative Automation - Dynamic Tool Integration
+"Modify the Orchestrator to include a mechanism for dynamically integrating meta-generated tools. After the MetaAgent generates a new handler template, the Orchestrator should (for this stage, simulate) save this template to the handlers/ directory and register it as a new available handler, making it available for the PlanningAgent to use in future workflows."
+Prompt 13: Cognitive Fusion Core - Enhanced Orchestration and Learning
+"Refine the Orchestrator's core logic to improve the coordination and learning within the Cognitive Fusion Core. Implement mechanisms for the Orchestrator to:
+ * Monitor the performance and success rate of workflows designed by the PlanningAgent.
+ * Provide feedback to the PlanningAgent based on these metrics, allowing it to learn and improve its workflow design strategies over time.
+ * Orchestrate more complex interactions between the AI agents, enabling them to collaboratively solve problems and adapt to new challenges."
+These thirteen prompts aim to guide the AI towards a more complete and advanced implementation of the Quantum Orchestrator's exponential enhancement vectors. Remember that the complexity

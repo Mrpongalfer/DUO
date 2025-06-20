@@ -1,0 +1,52 @@
+```toml
+[tool.poetry]
+name = "{{ project_slug }}"
+version = "{{ project_version }}"
+description = "{{ description }}"
+authors = ["{{ author_name }} <{{ author_email }}>"]
+license = "{{ tpc_standards.default_license | default('MIT') }}" # Use value from primed state
+readme = "README.md"
+packages = [{include = "{{ project_module_name }}"}]
+
+[tool.poetry.dependencies]
+python = "^{{ python_version | default('3.11') }}"
+typer = {extras = ["all"], version = "^0.12.3"} # Pinned for example stability
+rich = "^13.7.1" # Pinned
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0" # Pinned
+pytest-cov = "^5.0.0"
+ruff = "^0.4.4"
+mypy = "^1.10.0"
+pre-commit = "^3.7.1"
+pip-audit = "^2.7.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+{{ project_slug }} = "{{ project_module_name }}.main:app"
+
+# --- Tool Configurations ---
+[tool.ruff]
+line-length = 119 # Example
+select = ["E", "W", "F", "I", "C", "B", "Q", "RUF"]
+ignore = ["B008", "E501"] # Ignore function calls in default args, line length handled by formatter
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "lf"
+
+[tool.mypy]
+python_version = "{{ python_version | default('3.11') }}"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true # Start lenient
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov={{ project_module_name }} --cov-report=html --cov-report=term"
+testpaths = [
+    "tests",
+]

@@ -1,0 +1,114 @@
+---
+# File: roles/quantum_orchestrator/tasks/main.yml
+# Version: FINAL v2.3 - DEFINITIVELY Corrected Copy Src Path
+
+- name: Ensure required Vault variables are defined (placeholders)
+  ansible.builtin.assert:
+    that:
+      - vault_qo_db_user is defined
+      - vault_qo_db_password is defined
+      - vault_qo_db_name is defined
+      - vault_qo_flask_secret_key is defined
+    fail_msg: "Required Vault variables (vault_qo_db_*) are not defined. Please define them in inventory/group_vars/all/vault.yml"
+    quiet: true
+  tags: [quantum_orchestrator, config, prerequisites]
+
+- name: Define deployment base directory variable
+  ansible.builtin.set_fact:
+    qo_deploy_dir: "{{ qo_base_dir | default('/opt/docker/quantum_orchestrator') }}"
+  tags: [quantum_orchestrator, config]
+
+- name: Ensure Quantum Orchestrator deployment directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0755'
+  loop:
+    - "{{ qo_deploy_dir }}"
+    - "{{ qo_deploy_dir }}/app_code"
+    - "{{ qo_deploy_dir }}/ollama_data"
+  become: true
+  tags: [quantum_orchestrator, config]
+
+- name: Ensure app_code directory is initially absent (forces clean copy)
+  ansible.builtin.file:
+    path: "{{ qo_deploy_dir }}/app_code"
+    state: absent
+  become: true
+  tags: [quantum_orchestrator, config, code_sync]
+
+- name: Recreate app_code directory for source code
+  ansible.builtin.file:
+    path: "{{ qo_deploy_dir }}/app_code"
+    state: directory
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0755'
+  become: true
+  tags: [quantum_orchestrator, config, code_sync]
+
+# --- Start: Corrected Copy Tasks ---
+- name: Copy essential application files to server build context
+  ansible.builtin.copy:
+    src: "{{ qo_local_code_path }}/{{ item }}" # CORRECTED: Use variable path pointing to ~/Projects/quantum_orchestrator_app
+    dest: "{{ qo_deploy_dir }}/app_code/"
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0644'
+  become: true
+  loop:
+    - main.py
+    - run_api.py
+    - setup.py
+    - pyproject.toml
+    - uv.lock
+    - config.json
+    - instruction_schema.json
+  ignore_errors: true # Still ignore errors for optional files like uv.lock
+  tags: [quantum_orchestrator, config, code_sync]
+
+- name: Copy application package directory to server build context
+  ansible.builtin.copy:
+    src: "{{ qo_local_code_path }}/quantum_orchestrator/" # CORRECTED: Use variable path pointing to ~/Projects/quantum_orchestrator_app
+    dest: "{{ qo_deploy_dir }}/app_code/quantum_orchestrator/"
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0755' # Dirs/executables might need execute
+  become: true
+  tags: [quantum_orchestrator, config, code_sync]
+# --- End: Corrected Copy Tasks ---
+
+- name: Ensure Ollama data directory permissions
+  ansible.builtin.file:
+    path: "{{ qo_deploy_dir }}/ollama_data"
+    state: directory
+    owner: "101" # Common default Ollama UID - REVIEW and adjust if needed
+    group: "102" # Common default Ollama GID - REVIEW and adjust if needed
+    mode: '0755'
+  become: yes
+  tags: [quantum_orchestrator, config, permissions]
+
+- name: Template Docker Compose file for Quantum Orchestrator Stack
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ qo_deploy_dir }}/docker-compose.yml" # Render to final location
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0644'
+  become: true
+  notify: Restart Quantum Orchestrator stack
+  tags: [quantum_orchestrator, config]
+
+# Use project_src now that compose file is templated correctly
+- name: Ensure Quantum Orchestrator stack is running via Docker Compose (uses volume mount)
+  community.docker.docker_compose_v2:
+    project_name: qo_stack
+    project_src: "{{ qo_deploy_dir }}" # Point to dir containing docker-compose.yml and app_code
+    # build: ... REMOVED ...
+    state: present
+    pull: always # Pull base images like python, postgres, ollama
+  become: yes
+  notify: Restart Quantum Orchestrator stack
+  tags: [quantum_orchestrator, docker, run]

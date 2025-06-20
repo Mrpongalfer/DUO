@@ -1,0 +1,7 @@
+# lazymonorepo_config.yaml
+vectorizer_script: python3 vectorize_constitution.py
+nexus_agent: python3 games/nexus_omniengine_v3/installer.py
+omnitide_dashboard: python3 omnitide-vscode-bridge/main.py
+heal_script: python3 heal_project.py
+rules_dir: /home/pong/Projects/games/NPTPAC/ner_repository
+goal_vectors_dir: /home/pong/Projects/DUO/goal_vectors

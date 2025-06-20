@@ -1,0 +1,15 @@
+# Ignore Python virtual environments
+.venv/
+test_env/
+
+# Ignore temporary Ansible directories that cause build context issues
+.ansible/
+
+# Ignore other common temporary/config/cache files
+.git/
+.vscode/
+__pycache__/
+*.pyc
+*.swp
+*.tmp
+*.log

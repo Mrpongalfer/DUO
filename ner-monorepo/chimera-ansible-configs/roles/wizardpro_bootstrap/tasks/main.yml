@@ -1,0 +1,153 @@
+---
+# tasks file for roles/wizardpro_bootstrap
+# Creates project structure, copies skeletons, installs deps for WizardPro
+
+- name: Define Target Paths and User Info
+  ansible.builtin.set_fact:
+    wp_project_root: "/home/{{ ansible_user }}/wizardpro" # Target user is 'aiseed' via inventory
+    wp_agent_dir: "/home/{{ ansible_user }}/ex-work-agent"
+    wp_target_user: "{{ ansible_user }}" # 'aiseed'
+    wp_target_group: "{{ ansible_user }}" # 'aiseed'
+
+- name: Ensure Agent Ex-Work directory exists
+  ansible.builtin.file:
+    path: "{{ wp_agent_dir }}"
+    state: directory
+    owner: "{{ wp_target_user }}"
+    group: "{{ wp_target_group }}"
+    mode: "0755"
+
+- name: Ensure project base directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ wp_target_user }}"
+    group: "{{ wp_target_group }}"
+    mode: "0755"
+  loop:
+    - "{{ wp_project_root }}"
+    - "{{ wp_project_root }}/orchestrator"
+    - "{{ wp_project_root }}/orchestrator/core"
+    - "{{ wp_project_root }}/orchestrator/phases"
+    - "{{ wp_project_root }}/orchestrator/tui"
+    - "{{ wp_project_root }}/orchestrator/prompt_templates"
+    - "{{ wp_project_root }}/scripts"
+    - "{{ wp_project_root }}/project_contexts" # Will be ignored by git
+    - "{{ wp_project_root }}/.vscode"
+    - "{{ wp_project_root }}/.github"
+    - "{{ wp_project_root }}/.github/workflows"
+
+- name: Copy static configuration/skeleton files
+  ansible.builtin.copy:
+    src: "{{ item.src }}" # Files inside roles/wizardpro_bootstrap/files/
+    dest: "{{ wp_project_root }}/{{ item.dest }}"
+    owner: "{{ wp_target_user }}"
+    group: "{{ wp_target_group }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop:
+    # Configs
+    - { src: "gitignore_tmpl", dest: ".gitignore" }
+    - { src: "requirements.txt", dest: "orchestrator/requirements.txt" }
+    - { src: "vscode_config/settings.json", dest: ".vscode/settings.json" }
+    - { src: "vscode_config/extensions.json", dest: ".vscode/extensions.json" }
+    - { src: "github_workflows/ci.yaml", dest: ".github/workflows/ci.yaml" }
+    # Prompt Placeholders
+    - {
+        src: "prompt_templates/main_prompts.yaml",
+        dest: "orchestrator/prompt_templates/main_prompts.yaml",
+      }
+    - {
+        src: "prompt_templates/wrapper_prompts.yaml",
+        dest: "orchestrator/prompt_templates/wrapper_prompts.yaml",
+      }
+    - {
+        src: "prompt_templates/sub_injection_prompts.yaml",
+        dest: "orchestrator/prompt_templates/sub_injection_prompts.yaml",
+      }
+    # Python Skeletons (CORRECTED src paths - removed 'python_skeletons/')
+    - { src: "config.py", dest: "orchestrator/config.py" }
+    - { src: "data_types.py", dest: "orchestrator/core/data_types.py" }
+    - { src: "utils.py", dest: "orchestrator/core/utils.py" }
+    - { src: "llm_tools.py", dest: "orchestrator/core/llm_tools.py" }
+    - { src: "prompts.py", dest: "orchestrator/core/prompts.py" }
+    - { src: "main.py", dest: "orchestrator/main.py" }
+    - { src: "phase_1.py", dest: "orchestrator/phases/phase_1.py" }
+    - { src: "phase_2.py", dest: "orchestrator/phases/phase_2.py" }
+    - { src: "phase_3.py", dest: "orchestrator/phases/phase_3.py" }
+    - { src: "phase_4.py", dest: "orchestrator/phases/phase_4.py" }
+    - { src: "phase_5.py", dest: "orchestrator/phases/phase_5.py" }
+    - { src: "tui_app.py", dest: "orchestrator/tui/app.py" }
+    - { src: "tui_app.css", dest: "orchestrator/tui/app.css" }
+    # Helper Scripts
+    - {
+        src: "scripts/install_deps.sh",
+        dest: "scripts/install_deps.sh",
+        mode: "0755",
+      }
+    - {
+        src: "scripts/run_wizardpro.sh",
+        dest: "scripts/run_wizardpro.sh",
+        mode: "0755",
+      }
+    - { src: "scripts/run_tui.sh", dest: "scripts/run_tui.sh", mode: "0755" }
+    - {
+        src: "scripts/run_checks.sh",
+        dest: "scripts/run_checks.sh",
+        mode: "0755",
+      }
+
+- name: Create empty __init__.py files
+  ansible.builtin.file:
+    path: "{{ wp_project_root }}/{{ item }}/__init__.py"
+    state: touch
+    owner: "{{ wp_target_user }}"
+    group: "{{ wp_target_group }}"
+    mode: "0644"
+  loop:
+    - orchestrator
+    - orchestrator/core
+    - orchestrator/phases
+    - orchestrator/tui
+
+- name: Copy Agent Ex-Work script
+  ansible.builtin.copy:
+    src: "ex_work_agent/ex_work_agent.py" # Source inside files/ex_work_agent/
+    dest: "{{ wp_agent_dir }}/ex_work_agent.py"
+    owner: "{{ wp_target_user }}"
+    group: "{{ wp_target_group }}"
+    mode: "0755" # Make it executable
+
+- name: Initialize Git repository in project root
+  ansible.builtin.command: git init
+  args:
+    chdir: "{{ wp_project_root }}"
+    creates: "{{ wp_project_root }}/.git" # Run only if .git doesn't exist
+  become: yes
+  become_user: "{{ wp_target_user }}"
+  register: git_init_result
+  changed_when: "'Initialized empty Git repository' in git_init_result.stdout"
+
+- name: Install dependencies using the script (creates venv)
+  ansible.builtin.command: bash scripts/install_deps.sh
+  args:
+    chdir: "{{ wp_project_root }}"
+    creates: "{{ wp_project_root }}/orchestrator/venv/bin/activate" # Run only if venv doesn't seem to exist
+  become: yes
+  become_user: "{{ wp_target_user }}"
+  register: pip_install_result
+  changed_when: "'Successfully installed' in pip_install_result.stdout"
+  failed_when: pip_install_result.rc != 0
+
+- name: Ensure .env file exists (will be empty, user needs to populate)
+  ansible.builtin.file:
+    path: "{{ wp_project_root }}/orchestrator/.env"
+    state: touch
+    owner: "{{ wp_target_user }}"
+    group: "{{ wp_target_group }}"
+    mode: "0600" # Restrict permissions
+  notify: Notify user to populate .env # Handler defined below (or create handlers/main.yml)
+
+# handlers file content should be in roles/wizardpro_bootstrap/handlers/main.yml
+# - name: Notify user to populate .env
+#   ansible.builtin.debug:
+#     msg: "ACTION REQUIRED: Playbook complete. Please populate {{ wp_project_root }}/orchestrator/.env with API keys/config."

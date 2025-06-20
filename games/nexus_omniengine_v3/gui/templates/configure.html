@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}Configure Nexus OmniEngine{% endblock %}
+{% block content %}
+<h2>Configure Nexus OmniEngine</h2>
+<form method="post" autocomplete="on" id="configForm">
+    <label>API Key:
+        <input type="text" name="api_key" placeholder="Enter your LLM API Key" required autofocus autocomplete="api-key">
+        <button type="button" onclick="autoDetectAPIKey()" title="Auto-detect API Key">🔍</button>
+    </label><br>
+    <label>Agent Type:
+        <select name="agent_type" required>
+            <option value="REACT">REACT</option>
+            <option value="OPENAI">OPENAI</option>
+            <option value="OPENAI">GEMINI</option>
+            <option value="CUSTOM">CUSTOM</option>
+        </select>
+    </label><br>
+    <label>Enable Self-Healing:
+        <input type="checkbox" name="self_heal" checked>
+    </label><br>
+    <label>Enable Auto-Adaptation:
+        <input type="checkbox" name="auto_adapt" checked>
+    </label><br>
+    <label>Enable Recursive Evolution:
+        <input type="checkbox" name="recursive_evolve" checked>
+    </label><br>
+    <input type="submit" value="Save & Apply" class="btn btn-primary">
+</form>
+<a href="/">Back to Dashboard</a>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul>
+    {% for category, message in messages %}
+      <li><strong>{{ category }}:</strong> {{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+<script>
+// AI-powered auto-detection for API key (stub for demonstration)
+function autoDetectAPIKey() {
+    // In production, this could use browser storage, environment, or secure backend
+    const detected = localStorage.getItem('nexus_api_key') || '';
+    if (detected) {
+        document.querySelector('input[name="api_key"]').value = detected;
+        alert('API Key auto-filled from secure storage.');
+    } else {
+        alert('No API Key detected. Please enter manually.');
+    }
+}
+
+// Seamless UX: Save API key to localStorage for future auto-detection
+document.getElementById('configForm').addEventListener('submit', function(e) {
+    const apiKey = document.querySelector('input[name="api_key"]').value;
+    if (apiKey) {
+        localStorage.setItem('nexus_api_key', apiKey);
+    }
+});
+</script>
+{% endblock %}

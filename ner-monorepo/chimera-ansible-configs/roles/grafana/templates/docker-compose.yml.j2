@@ -1,0 +1,32 @@
+# File: roles/grafana/templates/docker-compose.yml.j2
+# Version: FINAL - Correct external network syntax
+
+volumes:
+  grafana_data: {}
+
+networks:
+  # Define the existing external network created by Prometheus
+  monitoring_net: # Alias used by services below
+    name: prometheus_stack_monitoring_net # Actual Docker network name
+    external: true
+
+services:
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # Optional: Mount custom configs if needed later
+      # - "{{ grafana_config_dir }}/grafana.ini:/etc/grafana/grafana.ini"
+    ports:
+      - "{{ grafana_port | default(3000) }}:3000"
+    environment:
+      # Use vault variable, provide clear default if unset
+      - GF_SECURITY_ADMIN_PASSWORD={{ vault_grafana_admin_password | default('ChangeMePlease!') }}
+    networks:
+      # Connect service to the network defined above
+      - monitoring_net # Use the alias defined under top-level 'networks:'
+    labels:
+      org.label-schema.group: "monitoring"
+      managed-by: "ansible-chimera-prime"

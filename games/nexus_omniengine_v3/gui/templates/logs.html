@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block title %}Live System Logs{% endblock %}
+{% block content %}
+<h2>Live System Logs</h2>
+<p>Recent events and agent activity (auto-refresh every 10s):</p>
+<pre id="logbox" style="background:#222;color:#b9f;font-size:1em;padding:1em;max-height:400px;overflow:auto;border-radius:8px;">{% for line in logs %}{{ line }}
+{% endfor %}</pre>
+<a href="/">Back to Dashboard</a>
+<script>
+setTimeout(function(){ location.reload(); }, 10000);
+</script>
+{% endblock %}

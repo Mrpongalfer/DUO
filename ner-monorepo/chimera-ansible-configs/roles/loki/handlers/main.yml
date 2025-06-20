@@ -1,0 +1,12 @@
+---
+# File: roles/loki/handlers/main.yml
+# Version: FINAL v2 - Using project_src only
+
+- name: Restart Loki container
+  # Ensures the QO stack defined by the compose file on disk is running/restarted.
+  community.docker.docker_compose_v2:
+    project_name: loki_stack # Use project name consistent with task
+    project_src: "{{ loki_compose_dir }}" # Use project_src consistent with task
+    state: present     # Ensure services are running per the file on disk
+    # recreate: always # Consider if more forceful restart needed
+  become: yes

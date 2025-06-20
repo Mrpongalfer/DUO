@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Run Omnitide VSCode Bridge",
+			"command": "python3 omnitide_vscode_bridge.py",
+			"group": "test",
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "start-nexus",
+			"command": "python3 start_nexus.py",
+			"group": "test",
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "Omnitide Nexus CLI",
+			"command": "python3 omnitide-vscode-bridge/main.py",
+			"group": "test",
+			"problemMatcher": []
+		}
+	]
+}

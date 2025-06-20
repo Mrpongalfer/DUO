@@ -1,0 +1,36 @@
+Genesis Directive: Omnitide Automaton Manifestation (Quantum Orchestrator - v4.0)
+Objective: Generate the complete, production-grade Quantum Orchestrator project within the Replit environment as a fully functional and immediately deployable artifact, adhering to the architectural blueprint and all prior edicts, with zero placeholders or manual completion required.
+Scope: The complete quantum_orchestrator/ directory structure, including all Python modules within core/, handlers/, services/, automation/, utils/, tests/, examples/, and docs/. All core and advanced logic, functions, and algorithms MUST be fully implemented and operational. Non-developer features (basic GUI, simplified file input) and advanced user options (direct JSON, RESTful API) must be complete. A functional setup.py for packaging, basic unit tests, and rudimentary documentation are mandatory.
+Execution Parameters:
+ * Core (core/):
+   * agent.py: Implement the complete Neural Flow Pipeline for asynchronous instruction processing. Include dynamic handler registration, robust error handling with detailed logging, and seamless interaction with state_manager. Implement parallel execution where dependencies allow.
+   * state_manager.py: Full implementation of persistent state management (load, save, get, update, rollback) using orchestrator_state.json. Ensure atomic operations and error handling.
+   * instruction_parser.py: Advanced JSON parsing with comprehensive schema validation (generate a basic initial schema in instruction_schema.json). Handle all potential JSON errors and schema violations.
+   * config.py: Complete configuration management loading from config.json, handling defaults, and providing secure access to configuration parameters.
+ * Handlers (handlers/): Fully implement all asynchronous handlers:
+   * file_operations.py: create_file, modify_file, read_file, delete_file, list_files. Implement all error handling for file system operations.
+   * execution.py: run_script (with secure subprocess execution and handling of various script types), run_python_code (in a sandboxed environment if feasible).
+   * git_operations.py: git_clone, git_pull, git_commit, git_push. Handle authentication and potential Git errors.
+   * llm_operations.py: generate_code, generate_documentation, analyze_text (integrate with a reliable free LLM API via llm_service with proper key management and error handling).
+   * quality_operations.py: run_linter (integrate with flake8 and black, parse output into a structured format), run_tests (integrate with pytest).
+ * Services (services/): Fully implement all services:
+   * llm_service.py: Robust interaction with the chosen free LLM API, including asynchronous requests, rate limiting, error handling, and secure API key management.
+   * watcher_service.py: Comprehensive file system monitoring with configurable directories and event handling.
+   * api_service.py: Production-ready Flask-based RESTful API with /execute endpoint (handling POST requests with JSON instructions, including authentication/authorization if feasible), and endpoints for status and configuration.
+   * quality_service.py: Execution and parsing of flake8, black, and pytest, providing structured reports.
+ * Automation (automation/):
+   * input_sources.py: Implement robust handling of manual JSON input, YAML-based simplified file input (with error handling), and API-driven input.
+   * scheduler.py: Advanced scheduling capabilities using APScheduler with persistent job storage and a user-configurable schedule.
+   * continuous_integration.py: Basic integration points for CI/CD pipelines (e.g., triggering workflows on Git events).
+ * Utilities (utils/): Full implementation of all utility functions with robust error handling and security considerations: security.py (advanced input sanitization, basic authentication), logging_utils.py (structured logging to file and console with configurable levels), path_resolver.py (secure and absolute path resolution with prevention of directory traversal), telemetry.py (comprehensive performance monitoring and error tracking).
+ * Non-Developer Features (gui/ and simplified files): Create a user-friendly web-based GUI (using Flask and Jinja2 templates) with:
+   * A template library showcasing all implemented handlers with intuitive input forms.
+   * Real-time feedback on workflow execution.
+   * Clear error messages.
+   * Implement the simplified YAML-based instruction format with clear syntax and examples.
+ * Advanced User Options: Ensure direct input of JSON instructions via API and files is fully supported and documented. The RESTful API must be complete and well-documented.
+ * Testing (tests/): Generate a comprehensive suite of unit tests using pytest to cover all core functionalities, handlers, and services. Aim for high code coverage.
+ * Documentation (docs/): Generate detailed markdown documentation covering architecture, installation, configuration, usage (for both non-developers and advanced users), API endpoints, and examples.
+ * Packaging (setup.py): Create a production-ready setup.py that correctly lists all dependencies, packages the entire project, defines a console script entry point, includes all necessary data files, and builds a clean and installable .whl package.
+Constraint: This single prompt MUST result in a complete, functional, production-grade Quantum Orchestrator project within the Replit environment, ready for immediate packaging and deployment without any further manual coding or configuration. The AI's generative capabilities are hereby directed to achieve this objective with maximal efficiency and adherence to all specified details and prior edicts.
+Execute.

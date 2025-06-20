@@ -1,0 +1,48 @@
+/* Persona Bar Styles */
+.persona-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5em;
+  background: #23272e;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px #0002;
+  padding: 0.7em 1.5em;
+  margin: 1.5em auto 2em auto;
+  max-width: 900px;
+}
+.persona-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.persona-avatar:hover {
+  transform: scale(1.08);
+}
+.persona-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid #4e9cff;
+  object-fit: cover;
+  background: #fff;
+}
+.persona-name {
+  margin-top: 0.3em;
+  font-size: 0.95em;
+  color: #f8f8f8;
+  font-weight: 500;
+}
+.persona-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 0.2em;
+  background: #4caf50;
+  border: 2px solid #23272e;
+}
+.persona-status.offline {
+  background: #e53935;
+}

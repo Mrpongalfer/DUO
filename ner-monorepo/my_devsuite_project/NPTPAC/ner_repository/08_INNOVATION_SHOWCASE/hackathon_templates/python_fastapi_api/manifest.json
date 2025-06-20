@@ -1,0 +1,7 @@
+{
+  "template_name": "Python FastAPI Basic API",
+  "description": "A minimal FastAPI application with a single endpoint, ready for hackathon development.",
+  "ex_work_setup_workflow": "python_fastapi_setup.exwork.json",
+  "estimated_setup_time": "2 minutes",
+  "tags": ["python", "fastapi", "api", "hackathon"]
+}

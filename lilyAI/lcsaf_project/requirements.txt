@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-jose[cryptography]
+llama-cpp-python
+ollama
+requests
+paramiko
+firejail
+chroma-hnswlib
+faiss-cpu
+sqlite3
+bleach
+langchain
+hnswlib

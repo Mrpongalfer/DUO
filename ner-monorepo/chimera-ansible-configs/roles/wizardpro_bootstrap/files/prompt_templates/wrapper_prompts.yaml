@@ -1,0 +1,25 @@
+# orchestrator/prompt_templates/wrapper_prompts.yaml
+# Wrappers modify prompts - Populate using Agent Ex-Work
+ExampleFunctionalWrapper:
+  prompt_text: |
+    FUNCTIONAL WRAPPER ACTIVE. Ensure all generated code adheres to strict security protocols (OWASP Top 10).
+    Scan for vulnerabilities like SQL injection, XSS, insecure configurations, and dependency issues.
+    Prioritize secure coding practices in all generated code and configuration.
+    Original Task follows:
+    ---
+  description: "Adds a strong security focus instruction layer."
+  arguments: [] # No extra args needed from assemble_prompt data
+
+GamifiedToneWrapper:
+  prompt_text: |
+    Listen up, Brave Architect! Your next quest awaits in the guise of a mundane task. Steel yourself and heed these instructions, for glory awaits! Remember your training from the Guild of Glyphs!
+    Your Assigned Role: {{ llm_role | default('Code Wizard') }}
+    Current Quest Chapter: {{ phase_title | default('The Mists of Requirement') }}
+    --- CORE MISSION OBJECTIVE ---
+    {{ core_prompt }}
+    --- END OBJECTIVE ---
+    Now, go forth and generate greatness! Fortune favors the bold (and syntactically correct)!
+  description: "Adds a gamified/fantasy/Omnitide tone to prompts."
+  arguments: [core_prompt, llm_role, phase_title] # Defined in assemble_prompt
+
+# Add more wrappers as needed

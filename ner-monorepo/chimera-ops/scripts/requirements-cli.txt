@@ -1,0 +1,11 @@
+# scripts/requirements-cli.txt
+# Dependencies for the main chimera_ops_cli.py tool
+prompt_toolkit>=3.0.0
+rich>=13.0.0
+python-dotenv>=1.0.0 # For managing the project's .env file within the tool
+keyring>=24.0.0 # For OS keychain interaction (secrets)
+keyrings.cryptfile>=1.3.4 # Optional: File backend for keyring (useful fallback)
+PyYAML>=6.0 # For potentially reading/writing YAML configs/templates if needed
+cookiecutter>=2.1.1 # For project templating feature
+GitPython>=3.1.30 # For Git operations within the tool (optional, could use subprocess)
+typer[all]>=0.9.0 # CLI framework (includes rich)

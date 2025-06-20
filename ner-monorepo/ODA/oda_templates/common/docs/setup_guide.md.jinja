@@ -1,0 +1,30 @@
+  ```markdown
+  # Detailed Setup Guide - {{ project_name }}
+
+  **Forged by {{ APP_NAME }} v{{ APP_VERSION }}**
+
+  This guide provides more detailed instructions for setting up your development environment beyond the quick start in the main `README.md`.
+
+  ## 1. System Prerequisites Verification
+
+  Ensure the core prerequisites listed in the main `README.md` are installed *correctly* on your system.
+
+  * **Git:** Verify installation: `git --version`
+  * **Docker & Docker Compose:** Verify installation: `docker --version` and `docker-compose --version` (or `docker compose version`). Ensure the Docker daemon is running.
+  {% if language == 'python' %}
+  * **Python:** Verify version: `python --version` or `python3 --version`. Ensure it meets the project requirement ({{ python_version | default('~3.11') }}). Consider using `pyenv` to manage multiple Python versions easily.
+  * **Poetry:** Verify installation: `poetry --version`. If installed via `pip`, ensure the Python environment where `pip` installed it is active or that Poetry's script directory is in your PATH. Follow official Poetry installation instructions if needed.
+  {% elif language == 'nodejs' %}
+  * **Node.js & npm:** Verify installation: `node --version` and `npm --version`. Ensure Node version meets project requirement ({{ node_version | default('20') }}.x or higher). Consider using `nvm` (Node Version Manager) to manage multiple Node versions.
+  * **(Optional) Yarn:** If the project uses yarn: `yarn --version`.
+  {% endif %}
+  * **pre-commit:** Verify installation: `pre-commit --version`.
+
+  ## 2. Cloning the Repository
+
+  If you haven't already, clone the project repository from your Git provider (GitHub, GitLab, etc.):
+
+  ```bash
+  git clone <your-repository-url>
+  cd {{ project_slug }}
+```

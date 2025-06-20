@@ -1,0 +1,50 @@
+# Ansible Vault Password File
+.ansible_vault_pass
+*vault_pass
+
+# Python Virtual Environments
+venv/
+ansible_venv/
+ansible_venv_server/
+*.pyc
+__pycache__/
+/site-packages/
+
+# Ansible temp files and backups
+*.retry
+*.bak*
+*~
+
+# Common OS files
+.DS_Store
+Thumbs.db
+
+# Large Files / Data Dirs
+*.iso
+*.img
+*.zip
+*.tar.gz
+*.so
+
+# Specific Data Dirs from project
+data/
+backups/
+large_files/
+/opt/docker/*/data/
+
+# Terraform state/plugin files
+.terraform/
+*.tfstate
+*.tfstate.*.backup
+
+# Tooling specific ignores
+.vscode/
+.idea/
+*.swp
+molecule/
+
+# Logs
+*.log
+
+# Python Requirements file (often managed separately)
+# requirements*.txt

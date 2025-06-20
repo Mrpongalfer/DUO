@@ -1,0 +1,18 @@
+INFO:     Started server process [1112701]
+INFO:     Waiting for application startup.
+CRITICAL:CPDDIAP_CORE:CRITICAL: ARCHITECT_DIGITAL_VAULT not set or is placeholder!
+ERROR:    Traceback (most recent call last):
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/venv/lib/python3.11/site-packages/starlette/routing.py", line 692, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/venv/lib/python3.11/site-packages/starlette/routing.py", line 569, in __aenter__
+    await self._router.startup()
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/venv/lib/python3.11/site-packages/starlette/routing.py", line 669, in startup
+    await handler()
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/main_oapdvas_service.py", line 69, in startup_event
+    app.state.cpdap_instance = await get_cpddiap_instance()
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pong/Projects/Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/cpddiap/cpddiap_core.py", line 117, in get_cpddiap_instance
+    raise ValueError("ARCHITECT_DIGITAL_VAULT not set or is placeholder!")
+ValueError: ARCHITECT_DIGITAL_VAULT not set or is placeholder!
+
+ERROR:    Application startup failed. Exiting.

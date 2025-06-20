@@ -1,0 +1,25 @@
+# .github/workflows/ci.yaml
+name: Ekko Code Forge
+
+on: [push, pull_request]
+
+jobs:
+  stark_validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stark's Code Review
+        run: |
+          ekko validate --strict \
+            --pylint .ekko/core_team/stark.yaml \
+            --coverage 95
+
+  sanchez_chaos:
+    runs-on: ubuntu-self-hosted  # Needs bare metal
+    steps:
+      - uses: actions/checkout@v4
+      - name: Chaos Inoculation
+        run: |
+          ekko chaos --profile=extreme \
+            --duration=12h \
+            --failure-rate=35%

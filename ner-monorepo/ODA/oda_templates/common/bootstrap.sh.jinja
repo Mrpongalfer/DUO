@@ -1,0 +1,203 @@
+  ```bash
+  #!/usr/bin/env bash
+  # bootstrap.sh - Setup script for {{ project_name }}
+  # Forged by {{ APP_NAME }} v{{ APP_VERSION }}
+
+  # Exit immediately if a command exits with a non-zero status.
+  set -e
+
+  # Determine the directory where this script resides
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+  cd "$SCRIPT_DIR" || exit 1 # Change to the project root
+
+  echo "🚀 Bootstrapping {{ project_name }} environment in '$SCRIPT_DIR'..."
+
+  # --- Helper Functions ---
+  command_exists() {
+      command -v "$1" >/dev/null 2>&1
+  }
+
+  echo_info() {
+      echo "<i> $1"
+  }
+
+  echo_warn() {
+      echo "⚠️ $1"
+  }
+
+  echo_success() {
+      echo "✅ $1"
+  }
+
+  echo_error() {
+      echo "❌ $1" >&2 # Print errors to stderr
+  }
+
+  # --- Check Prerequisites ---
+  if ! command_exists git; then
+      echo_warn "Git command not found. Some setup steps (like pre-commit hooks) require Git."
+  fi
+
+  {% if language == 'python' %}
+  if ! command_exists poetry; then
+      echo_error "Poetry command not found. Cannot set up Python environment."
+      echo_info "Please install Poetry: [https://python-poetry.org/docs/#installation](https://python-poetry.org/docs/#installation)"
+      exit 1
+  fi
+  PYTHON_VERSION_REQ="{{ python_version | default('3.11') }}"
+  echo_info "Checking Python version for Poetry..."
+  # Simple check, `poetry check` is more thorough but requires project install first
+  # This is a basic check, might not handle all version specifiers like ^ correctly
+  if command_exists python; then
+      CURRENT_PY_VER=$(python -V 2>&1 | sed 's/Python //;s/\.[^.]*$//') # Get major.minor
+      REQ_PY_VER=$(echo $PYTHON_VERSION_REQ | sed 's/\.[^.]*$//') # Get major.minor
+      if [[ "$CURRENT_PY_VER" != "$REQ_PY_VER" ]]; then
+           echo_warn "Current Python version ($CURRENT_PY_VER) might differ from project requirement (~$PYTHON_VERSION_REQ)."
+           echo_info "Poetry will manage the environment, but ensure a compatible base Python is available."
+      fi
+  else
+       echo_warn "Python command not found. Poetry might fail to find a suitable interpreter."
+  fi
+
+  {% elif language == 'nodejs' %}
+  PACKAGE_MANAGER="npm" # Default
+  if command_exists yarn; then
+      PACKAGE_MANAGER="yarn"
+      echo_info "Detected yarn package manager."
+  elif ! command_exists npm; then
+      echo_error "Neither npm nor yarn found. Cannot set up Node.js environment."
+      echo_info "Please install Node.js (which includes npm): [https://nodejs.org/](https://nodejs.org/)"
+      exit 1
+  fi
+  NODE_VERSION_REQ="{{ node_version | default('20') }}"
+  echo_info "Checking Node.js version..."
+  if command_exists node; then
+       CURRENT_NODE_VER=$(node -v | sed 's/v//')
+       # Simple major version check
+       CURRENT_NODE_MAJOR=$(echo $CURRENT_NODE_VER | cut -d. -f1)
+       REQ_NODE_MAJOR=$(echo $NODE_VERSION_REQ | cut -d. -f1)
+       if [[ "$CURRENT_NODE_MAJOR" -lt "$REQ_NODE_MAJOR" ]]; then
+            echo_warn "Current Node.js version (v$CURRENT_NODE_VER) is older than recommended (v$NODE_VERSION_REQ+)."
+       fi
+  else
+       echo_warn "Node command not found. $PACKAGE_MANAGER install might fail."
+  fi
+  {% endif %}
+
+  if ! command_exists pre-commit && [ -f ".pre-commit-config.yaml" ]; then
+       echo_warn "pre-commit command not found, but a config file exists."
+       echo_info "Pre-commit hooks will not be installed automatically."
+       echo_info "Install pre-commit (e.g., 'pip install pre-commit' or 'brew install pre-commit') and run 'pre-commit install'."
+  fi
+
+
+  # --- Environment Setup ---
+  {% if language == 'python' %}
+  echo_info "🐍 Setting up Python environment with Poetry..."
+  poetry install --no-root # Use --sync for stricter lockfile adherence if preferred after initial install
+  echo_success "Python dependencies installed via Poetry."
+  echo_info "Run 'poetry shell' to activate the virtual environment, or prefix commands with 'poetry run'."
+
+  {% elif language == 'nodejs' %}
+  echo_info "📦 Setting up Node.js environment using $PACKAGE_MANAGER..."
+  if [[ "$PACKAGE_MANAGER" == "npm" ]]; then
+      if [ -f "package-lock.json" ]; then
+          npm ci
+          echo_success "Node.js dependencies installed via npm ci (using lockfile)."
+      else
+          npm install
+          echo_success "Node.js dependencies installed via npm install."
+      fi
+  elif [[ "$PACKAGE_MANAGER" == "yarn" ]]; then
+       if [ -f "yarn.lock" ]; then
+           yarn install --frozen-lockfile
+           echo_success "Node.js dependencies installed via yarn install --frozen-lockfile."
+       else
+           yarn install
+           echo_success "Node.js dependencies installed via yarn install."
+       fi
+  fi
+  {% endif %}
+
+
+  # --- Pre-commit Hooks ---
+  if [ -f ".pre-commit-config.yaml" ] && command_exists pre-commit; then
+      echo_info "🔧 Installing pre-commit hooks..."
+      # Check if inside a git repo first
+      if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+          {% if language == 'python' %}
+          # Use poetry run if poetry exists and pre-commit might be managed by it
+          if command_exists poetry; then
+              poetry run pre-commit install
+          else
+              pre-commit install
+          fi
+          {% else %}
+          pre-commit install
+          {% endif %}
+          echo_success "Pre-commit hooks installed."
+          
+          echo_info "Running pre-commit checks on all files..."
+          # Allow this step to fail without exiting the bootstrap script, but report it
+          if command_exists poetry && [[ "{{ language }}" == "python" ]]; then
+              poetry run pre-commit run --all-files || echo_warn "Initial pre-commit run found issues. Please review and fix."
+          else
+               pre-commit run --all-files || echo_warn "Initial pre-commit run found issues. Please review and fix."
+          fi
+      else
+           echo_warn "Not inside a Git repository. Skipping pre-commit hook installation."
+      fi
+  elif [ -f ".pre-commit-config.yaml" ]; then
+      echo_warn "Pre-commit hooks not installed because 'pre-commit' command was not found."
+  else
+      echo_info "No .pre-commit-config.yaml found, skipping pre-commit setup."
+  fi
+
+
+  # --- Environment File ---
+  if [ ! -f ".env" ]; then
+      if [ -f ".env.example" ]; then
+          echo_info "📋 Copying .env.example to .env..."
+          cp .env.example .env
+          echo_success ".env file created. IMPORTANT: Review and update it with your specific configurations and secrets."
+      else
+          echo_info "ℹ️ No .env.example found. You may need to create a .env file manually."
+      fi
+  else
+      echo_success ".env file already exists."
+  fi
+
+
+  # --- Initial Security Audit (Python) ---
+  {% if language == 'python' %}
+  echo_info "🐍 Running initial security audit with pip-audit..."
+  AUDIT_CMD_FOUND=false
+  if command_exists poetry; then
+      if poetry export --without dev --without-hashes -f requirements.txt --output requirements.txt > /dev/null 2>&1; then
+          # Check if pip-audit is runnable directly or via poetry
+          if command_exists pip-audit; then
+              pip-audit -r requirements.txt --progress-spinner off --desc on --fix || echo_warn "pip-audit found issues or failed. Please review output."
+              AUDIT_CMD_FOUND=true
+          elif poetry run pip-audit --version > /dev/null 2>&1; then
+              poetry run pip-audit -r requirements.txt --progress-spinner off --desc on --fix || echo_warn "pip-audit found issues or failed. Please review output."
+              AUDIT_CMD_FOUND=true
+          fi
+          rm requirements.txt # Clean up
+      else
+          echo_warn "Could not export requirements for pip-audit."
+      fi
+  fi
+  if ! $AUDIT_CMD_FOUND; then
+      echo_warn "pip-audit command not found or accessible via Poetry. Skipping security audit."
+      echo_info "Consider installing it: 'pip install pip-audit' or 'poetry add --group dev pip-audit'"
+  fi
+  {% endif %}
+
+  echo "🎉 Bootstrap complete for {{ project_name }}!"
+  echo "Consult the README.md for next steps on running and developing the project."
+
+  # Reminder for Python venv activation
+  {% if language == 'python' %}
+  echo_info "Remember to activate the virtual environment using 'poetry shell' if you need to run commands directly."
+  {% endif %}
+```

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}LLM Playground{% endblock %}
+{% block content %}
+<h2>LLM Playground</h2>
+<p>Interact with your local Ollama or OpenAI LLM in real time. Try a prompt below!</p>
+<form method="post" class="llm-form">
+  <label>Model:
+    <select name="model">
+      <option value="Ollama" {% if model=="Ollama" %}selected{% endif %}>Ollama (local)</option>
+      <option value="OpenAI" {% if model=="OpenAI" %}selected{% endif %}>OpenAI (cloud)</option>
+    </select>
+  </label><br>
+  <label>Prompt:<br>
+    <textarea name="prompt" rows="5" cols="60" placeholder="Ask anything...">{{ prompt }}</textarea>
+  </label><br>
+  <input type="submit" value="Send" class="btn btn-primary">
+</form>
+{% if response %}
+  <div class="llm-response success">
+    <h3>LLM Response:</h3>
+    <pre>{{ response }}</pre>
+  </div>
+{% endif %}
+{% if error %}
+  <div class="llm-response error">
+    <h3>Error:</h3>
+    <pre>{{ error }}</pre>
+  </div>
+{% endif %}
+<a href="/">Back to Dashboard</a>
+{% endblock %}

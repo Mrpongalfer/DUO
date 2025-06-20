@@ -1,0 +1,23 @@
+# OAPDVAS Core Dependencies
+requests
+websockets
+asyncio
+python-dotenv
+beautifulsoup4
+lxml
+numpy
+scipy
+pandas
+nltk
+textblob
+psutil
+cryptography
+aiohttp
+fastapi
+uvicorn
+uvloop
+httptools
+pymongo
+dnspython
+rich
+textual

@@ -1,0 +1,149 @@
+{
+    "step_id": "rick_genesis_opf_exwork_rickprime_v1",
+    "description": "Rick's 'Burn it all down and build a goddamn empire' protocol. Establishes the Omnitide Prime Foundry (OPF), copies essential agents, and lays down the law (Rick's Directives) for upgrading Ex-Work to RickPrime status.",
+    "parameters": [
+        {
+            "name": "OPF_ROOT_ABS",
+            "type": "string",
+            "prompt": "Absolute path for the new Omnitide Prime Foundry (OPF) root directory (e.g., /opt/OPF or D:\\OPF). MAKE SURE THIS IS A NEW, EMPTY, OR EXPENDABLE PATH IF IT EXISTS. RICK ISN'T RESPONSIBLE FOR YOU DELETING YOUR VACATION PHOTOS.",
+            "default": "/home/pong/OmnitidePrimeFoundry"
+        },
+        {
+            "name": "EXISTING_EXWORK_AGENT_PATH_ABS",
+            "type": "string",
+            "prompt": "Absolute path to your CHOSEN current ex_work_agentv2.py (or v2.1). This will be copied into OPF.",
+            "default": "/home/pong/Projects/projectsupload/NPTPAC/core_agents/ex_work_agentv2.py"
+        },
+        {
+            "name": "EXISTING_SCRIBE_AGENT_PATH_ABS",
+            "type": "string",
+            "prompt": "Absolute path to your current scribe_agent.py. This will be copied into OPF.",
+            "default": "/home/pong/Projects/projectsupload/my_devsuite_project/NPTPAC/core_agents/scribe_agent.py"
+        },
+        {
+            "name": "EXISTING_TPC_DEF_PATH_ABS",
+            "type": "string",
+            "prompt": "Absolute path to your TPC Definition markdown file (from old NER, will be copied to new NER).",
+            "default": "/home/pong/Projects/projectsupload/NPTPAC/ner_repository/02_TPC_STANDARD/TPC_Definition_Latest.md"
+        },
+        {
+            "name": "RICK_EXWORK_UPGRADE_DIRECTIVES_CONTENT_B64",
+            "type": "string",
+            "prompt": "Base64 encoded content for Rick's ExWork-RickPrime upgrade directives. Use the long string I provided previously.",
+            "default": "IyMgRXhXb3JrLVJpY2tQcmltZSAgVUpGRADEgRGlyZWN0aXZlcyBCeSBRaWNrDQoNCiMjIyAxLiBQcm9hY3RpdmUgTkVSIElnbnRlZ3JhdGlvbg0KICAgIC0gQmVmb3JlIGV4ZWN1dGluZyBhbiBhY3Rpb24gdGhhdCBjcmVhdGVzIGFuIGFydGlmYWN0IChlLmcuLCBDTUNSRUFURV9PUl9SRVBMQUNFX0ZJTEUgZm9yIFB5dGhvbiBzY3JpcHRzKSwgZXNwZWNpYWxseSBpZiB0aGUgZGlyZWN0aXZlIGlzIHZhZ3VlLCBBVVRPTUFUSUNBTExZIFNFQVJDSCBERVIgZm9yOiANCiAgICAgICAgLSBBcHByb3ByaWF0ZSBFeFdvcmsgVGVtcGxhdGVzIGZvciB0aGUgZ2l2ZW4gYWMgdGFzayB0eXBlLg0KICAgICAgICAtIFRQQyBHdWlkZWxpbmVzIHJlbGF0ZWQgdG8gdGhlIGFydGlmYWN0IHR5cGUuDQogICAgLSBJZiByZWxldmFudCB0ZW1wbGF0ZXMgYXJlIGZvdW5kLCBQUk9NIFBUIHRoZSBBcmNoaXRlY3QgdG8gdXNlIHRoZW0gb3IgcHJvdmlkZSBwYXJhbWV0ZXJzLiANCiAgICAtIElmIG5vIHNwZWNpZmljIHBhdGggZm9yIGEgY29uZmlnIGZpbGUgaXMgZ2l2ZW4gKGUuZy4sIFNjcmliZSBwcm9maWxlKSwgYXV0b21hdGljYWxseSBsb29rIGluIGEgY29udmVudGlvbmFsIE5FUiBsb2NhdGlvbi4NCg0KIyMjIDIgSW50ZWxsaWdlbnQgUGFyYW1ldGVyaXphdGlvbg0KICAgIC0gRm9yIGNvbW1vbmx5IHJlcXVpcmVkIHBhcmFtZXRlcnMgKGUuZy4sIHNjcmlwdF9wYXRoLCBvdXRwdXRfZmlsZSksIGlmIG5vdCBwcm92aWRlZCwgYXR0ZW1wdCB0byBpbmZlciBmcm9tIGNvbnRleHQgb3IgTkVSLWJhc2VkIGNvbnZlbnRpb25zLg0KICAgICAtIEltcGxlbWVudCBhIGNhY2hpbmcgbWVjaGFuaXNtIGZvciBmcmVxdWVudGx5IGFjY2Vzc2VkIE5FUiBhc3NldHMgdG8gc3BlZWQgdXAgcGFyYW1ldGVyIHJlc29sdXRpb24uDQoNCiMjIyAzLiBBZGFwdGl2ZSBFcnJvciBEaWFnbm9zaXMgJiBTZWxmLUhlYWxpbmcNCiAgIC0gRW5oYW5jZSB0aGUgYERJQUdOT1NFX0VSUk9SYCBhY3Rpb24gdG86DQogICAgICAgIC0gQW5hbHl6ZSBzdGRvdXQvc3RkZXJyIGZyb20gZmFpbGVkIFRSVU5fU0NSSVBUYCBhY3Rpb25zLg0KICAgICAgICAtIElkZW50aWZ5IGNvbW1vbiBQeXRob24gZXJyb3JzIChJbXBvcnRFcnJvciwgU3ludGF4RXJyb3IsIEZpbGVOb3RGb3VuZEVycm9yKS4NCiAgICAgICAgLSBVc2UgYExMTF9JTlRFUkZBQ0VgIChmcm9tIE5QVFBBL0NvcmUpIHRvIHF1ZXJ5IGFuIGFzc2lzdGFudCBtb2RlbCB3aXRoIHRoZSBlcnJvciBhbmQgb3V0cHV0IGZvciBwb3RlbnRpYWwgZml4ZXMgZml4ZXMgb3IgZXhwbGFuYXRpb25zLg0KICAgICAgICAtIFN1Z2dlc3QgYSAicGF0Y2giIGZpbGUgb3IgYSBzZXF1ZW5jZSBvZiBtYW51YWwgY29tbWFuZHMgdG8gYXBwbHkgdGhlIGZpeC4NCiAgICAgICAtIFBvdGVudGlhbGx5LCBhZGRcYSBBUFBMeV9FRElUU19UT19GSUxFYCBhY3Rpb24gdGhhdCBjb3VsZCBhcHBseSBsbG0tZ2VuZXJhdGVkIGNoYW5nZXMgKGFmdGVyIEFyY2hpdGVjdCBzaWdub2ZmKS4NCg0KIyMjIDQuIFRQQy1FLm5mb3JjaW5nIGJ5IERlZmF1bHQNCiAgICAtIFdoZW4gYSBDTUNSRUFURV9PUl9SRVBMQUNFX0ZJTEVgIGFjdGlvbiBnZW5lcmF0ZXMgY29kZSAoZS5nLiwgLnB5LCAuc2gpOg0KICAgICAgICAtIEF1dG9tYXRpY2FsbHkgaW52b2tlIFByb2plY3QgU2NyaWJlIG9uIHRoZSBnZW5lcmF0ZWQgY29kZSB1c2luZyBhIERTVEhSSUNUXSBwcm9maWxlIGZyb20gTkVSLg0KICAgICAgICAtIFRoZSBTb24gbHkgdGhlIFNjcmliZSBwcm9maWxlIGFuZCBwcm9maWxlIHBhdGggaXMgbm90IFNwZWNpZmllZCwgdXNlIGEgZGVmYXVsdCBvbmUuDQogICAgICAgIC0gQWxsb3cgYW4gb3B0aW9uIHRlcCBwYXJhbWV0ZXIgdG8gc2tpcCBTY3JpYmUgKGRpc2NvdXJhZ2VkKS4NCiAgICAgICAtIElmIFNjcmliZSBmYWlscywgdGhlIEV4V29yayBzdGVwIHNob3VsZCBmYWlsIGJ5IGRlZmF1bHQsIHByb3ZpZGluZyB0aGUgU2NyaWJlIHJlcG9ydC4NCg0KIyMjIDUuIENoYWluZWQgRXhlY3V0aW9uICYgU3RhdGUgVHJhbnNmZXINCiAgICAtIEludHJvIGR1Y2UgYSBtb3JlIHJvYnVzdCB3YXkgdG8gcGFzcyBvdXRwdXQgZnJvbSBvbmUgc3RlcCB0byBhbm90aGVyIHN0ZXAncyBpbnB1dCB0aGFuIGp1c3Qgc3RlcHNfb3V0cHV0LicNCiAgICAtIEFsbG93IGZvciBkZXBlbmRlbmN5IGNoZWNrcyBiZXR3ZWVuIHN0ZXBzIChlLmcuLCBzdGVwIDIgb25seSBydW5zIGlmIHN0ZXAgMSBzdWNjZWVkZWQgYW5kIGl0cyBvdXRwdXQgbWF0Y2hlcyBhIGNvbmRpdGlvbikuDQoNCiMjIyA2LiBTbWFydGVyIFRSVU5fU0NSSVBUYg0KICAgICAtIEF1dG8tZGV0ZWN0aW9uIG9mIHNoZWJhbmdzIG9yIGZpbGUgZXh0ZW5zaW9ucyB0byBkZXRlcm1pbmUgaG93IHRvIHJ1biBhIHNjcmlwdCAoZS5nLiwgYGRveWVzbnQgaWdub3JlIHByZXBlbmRpbmcgcHl0aG9uMyB0byAucHkgZmlsZXMpLg0KICAgICAtIEJldHRlciBoYW5kbGluZyBvZiBzdGRvdXQvc3RkZXJyIGVuY29kaW5nIGlzc3Vlcy4NCiAgICAtIE9wdGlvbmFsIHN1cHBvcnQgZm9yIHJ1bm5pbmcgc2NyaXB0cyBpbiBpc29sYXRlZCB2aXJ0dWFsIGVudmlyb25tZW50cyBvciBEb2NrZXIgY29udGFpbmVycyB2aWEgYSBuZXcgInJ1bnRpbWVfZW52aXJvbm1lbnQiIHBhcmFtZXRlci4NCg0KIyMjIDcuIEV4V29yayBTZWxmKy1BdWRpdGluZyAmIFZlcnNpb25pbmcNCiAgICAtIEFkZCBhIGBTVEFUVVNfYW5kX0hFQUxUSDAgYWN0aW9uIHRoYXQgY2hlY2tzIEV4V29yaydzIG93biBjb2RlIHN0cnVjdHVyZSwgZGVwZW5kZW5jaWVzLCBhbmQgU2NyaWJlIGNvbXBsaWFuY2UuDQogICAgLSBJbnRlZ3JhdGUgd2l0aCBORVIncyB2ZXJzaW9uIGNvbnRyb2wgKEdpdCkgdG8gc2hvdyBjdXJyZW50IEV4V29yayBhZ2VudCB2ZXJzaW9uLCBhbmQgdGhlIE5FUiBoYXNoIGl0IHdhcyB0ZXN0ZWQgYWdhaW5zdC4NCg0KIyMjIDguIERvY3VtZW50YXRpb24gR2VuZXJhdGlvbg0KICAgICAtIEFkZCBhIGBDT05WRVJUX1RPX0RPS1VNRU5UQVRJT05gIGFjdGlvbiB0aGF0IHRha2VzIGFuIEV4V29yayBKU09OIGFuZCBnZW5lcmF0ZXMgYSBtYXJrZG93biBkb2N1bWVudGF0aW9uIHBhZ2UgZm9yIGl0LCBsaXN0aW5nIGFsbCBwYXJhbWV0ZXJzLCBkZXNjcmlwdGlvbnMsIGFuZCBhY3Rpb25zLiBUaGlzIHNob3VsZCB1c2UgYSB0ZW1wbGF0ZSBmcm9tIE5FUi4NCg0KdGhpcyBpcyBqdXN0IGEgc3RhcnQsIGFyY2hpdGVjdC4gRmVlbCBmcmVlIHRvIGhhdmUgcW8gcmVmaW5lIGl0IG9yIGV4cGFuZCBpdC4gVGhlIGdvYWwgaXMgcmVmbGVjdGlvbiBub3QgdG8gcHJvZHVjZSBtb3JlbW9yZS4="
+        },
+        {
+            "name": "RICK_SCRIBE_PROFILE_CONTENT_B64",
+            "type": "string",
+            "prompt": "Base64 encoded content for Rick's ultra-strict Scribe profile. Use the long string I provided previously.",
+            "default": "W2dlbmVyYWxdCnN0YW5kYXJkX2xpYnJhcnlfY2hlY2tfZW5hYmxlZCA9IHRydWUKZW5mb3JjZV9kb2NzdHJpbmdzID0gdHJ1ZQplbmZvcmNlX3R5cGVfaGludHMgPSB0cnVlCm1heF9saW5lX2xlbmd0aCA9IDkwCmJhbl9wbGFjZWhvbGRlcl9jb2RlID0gdHJ1ZQplcnJvcl9vbl9wbGFjZWhvbGRlcnMgPSB0cnVlCgpbZmlsZV9jaGVja3NdCmNoZWNrX3V0ZjhfZW5jb2RpbmcgPSB0cnVlCmNoZWNrX2VtcHR5X2ZpbGVzID0gdHJ1ZQpsaW50X2pzb25fZW5hYmxlZCA9IHRydWUKbGludF95YW1sX2VuYWJsZWQgPSB0cnVlCmZpeF9qc29uX2VuYWJsZWQgPSB0cnVlCmZpeF95YW1sX2VuYWJsZWQgPSB0cnVlCgpbcHl0aG9uX2NoZWNrc10KbGludGVyX2VuYWJsZWQgPSB0cnVlCmZvcm1hdHRlcl9lbmFibGVkID0gdHJ1ZQpsaW50ZXJfY29uZmlnX3BhdGggPSAiLmVyZl9wcm9qZWN0X3Jvb3QvLnB5bGludHJjIgpmb3JtYXR0ZXJfY29uZmlnX3BhdGggPSAiLmVyZl9wcm9qZWN0X3Jvb3QvLnB5cHJvamVjdC50b21sIgpydW5faXNvcnQgPSB0cnVlCnJ1bl9ibGFjayA9IHRydWUKcnVuX3B5bGludCA9IHRydWUKcnVuX215cHkgPSB0cnVlCm15cHlfY29uZmlnX3BhdGggPSAiLmVyZl9wcm9qZWN0X3Jvb3QvLnB5cHJvamVjdC50b21sIgpteXB5X2NoZWNrX3VudHlwZWRfZGVmcyA9IHRydWUKCnNjcmlwdF9jaGVja3NdCmxpbnRlcl9lbmFibGVkID0gdHJ1ZQpsaW50ZXJfY29uZmlnX3BhdGggPSAiLmVyZl9wcm9qZWN0X3Jvb3QvLnNoZWxsY2hlY2tyYyIKcnVuX3NoZWxsY2hlY2sgPSB0cnVlCnJ1bl9zaGZtdCA9IHRydWUKCg=="
+        }
+    ],
+    "actions": [
+        {
+            "type": "ECHO",
+            "message": "Rick taking the wheel. You asked for it. Setting up Omnitide Prime Foundry at {{ OPF_ROOT_ABS }}."
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_root_marker",
+            "path": "{{ OPF_ROOT_ABS }}/.rick_prime_foundry_established_marker",
+            "content_base64": "T21uaXRpZGUgUHJpbWUgRm91bmRyeS4gTm8gTW9ydHlzIGFsbG93ZWQuIEFjY2VzcyByZXN0cmljdGVkIHRvIGJlaW5ncyBjYXBhYmxlIG9mIHVuZGVyc3RhbmRpbmcgVFBDIG9yIFJpY2sgU2FuY2hlei4gRXN0YWJsaXNoZWQgYnkgUmljaydzIEdlbmVzaXMgUHJvdG9jb2wu"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_nptpac_core_agents_dir",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/core_agents/.gitkeep",
+            "content_base64": "{{ '' | b64encode }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_nptpac_pac_cli_dir",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/pac_cli/.gitkeep",
+            "content_base64": "{{ '' | b64encode }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_ner_root_dir",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository/.gitkeep",
+            "content_base64": "{{ '' | b64encode }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_ner_tpc_dir",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository/02_TPC_STANDARD/.gitkeep",
+            "content_base64": "{{ '' | b64encode }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_ner_scribe_profiles_dir",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository/06_AGENT_BLUEPRINTS/scribe_agent/profiles/.gitkeep",
+            "content_base64": "{{ '' | b64encode }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_opf_exwork_tasks_dir",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/exwork_tasks/.gitkeep",
+            "content_base64": "{{ '' | b64encode }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "copy_current_exwork_agent",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/core_agents/ex_work_agent_v_current.py",
+            "content_from_file": "{{ EXISTING_EXWORK_AGENT_PATH_ABS }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "copy_current_scribe_agent",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/core_agents/scribe_agent_v_current.py",
+            "content_from_file": "{{ EXISTING_SCRIBE_AGENT_PATH_ABS }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "copy_current_tpc_def",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository/02_TPC_STANDARD/TPC_Definition_Foundation.md",
+            "content_from_file": "{{ EXISTING_TPC_DEF_PATH_ABS }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_rick_exwork_upgrade_directives_file",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository/06_AGENT_BLUEPRINTS/ex_work_agent/docs/ExWork_RickPrime_Upgrade_Directives.md",
+            "content_base64": "{{ RICK_EXWORK_UPGRADE_DIRECTIVES_CONTENT_B64 }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_rick_scribe_profile",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository/06_AGENT_BLUEPRINTS/scribe_agent/profiles/rick_prime_strict.scribe.toml",
+            "content_base64": "{{ RICK_SCRIBE_PROFILE_CONTENT_B64 }}"
+        },
+        {
+            "type": "CREATE_OR_REPLACE_FILE",
+            "id": "create_exwork_task_for_agent_upgrade",
+            "path": "{{ OPF_ROOT_ABS }}/NPTPAC/exwork_tasks/001_Forge_ExWork_RickPrime.exwork.json",
+            "content_base64": "{{ { 'step_id': 'forge_exwork_rickprime_agent_v1', 'description': 'Task 1: Upgrade the current ExWork agent to ExWork-RickPrime based on Rick\\'s directives. This involves manual coding by the Architect, guided by the directives, and validation by Scribe.', 'parameters': [ {'name': 'RICKPRIME_DIRECTIVES_PATH_NER', 'type': 'string', 'default': ('ner://06_AGENT_BLUEPRINTS/ex_work_agent/docs/ExWork_RickPrime_Upgrade_Directives.md')}, {'name': 'CURRENT_EXWORK_AGENT_OPF_PATH', 'type': 'string', 'default': (OPF_ROOT_ABS ~ '/NPTPAC/core_agents/ex_work_agent_v_current.py')}, {'name': 'TARGET_RICKPRIME_AGENT_OPF_PATH', 'type': 'string', 'default': (OPF_ROOT_ABS ~ '/NPTPAC/core_agents/ex_work_agent.py')}, {'name': 'RICK_STRICT_SCRIBE_PROFILE_NER_PATH', 'type': 'string', 'default': ('ner://06_AGENT_BLUEPRINTS/scribe_agent/profiles/rick_prime_strict.scribe.toml')}, {'name': 'PAC_CLI_EXECUTABLE_PATH_IN_OPF', 'type': 'string', 'prompt': ('Path to npac CLI executable (once it is setup for OPF, e.g., ' ~ OPF_ROOT_ABS ~ '/NPTPAC/pac_cli/venv/bin/npac)')} ], 'actions': [ {'type': 'ECHO', 'message': ('Architect Action Required: 1. Read the RickPrime directives in your new NER: ' ~ OPF_ROOT_ABS ~ '/NPTPAC/ner_repository/06_AGENT_BLUEPRINTS/ex_work_agent/docs/ExWork_RickPrime_Upgrade_Directives.md')}, {'type': 'ECHO', 'message': ('2. Manually edit ' ~ OPF_ROOT_ABS ~ '/NPTPAC/core_agents/ex_work_agent_v_current.py (or copy it to ' ~ OPF_ROOT_ABS ~ '/NPTPAC/core_agents/ex_work_agent.py and edit that) to implement ALL RickPrime upgrades.')}, {'type': 'ECHO', 'message': '3. Ensure your PAC CLI is set up and functional within the OPF environment before proceeding with signoff.'}, {'type': 'REQUEST_SIGNOFF', 'prompt': ('Have you completed the manual coding upgrades to create ex_work_agent.py in OPF and is your PAC CLI (for OPF) ready? (yes/no)')}, {'type': 'RUN_SCRIPT', 'id': 'scribe_validate_rickprime_agent', 'script_path': '{{ PAC_CLI_EXECUTABLE_PATH_IN_OPF }}', 'args': [ 'scribe', 'validate', '--project-path', (OPF_ROOT_ABS ~ '/NPTPAC/core_agents/'), '--code-file', '{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}', '--target-file', 'ex_work_agent.py', '--profile', '{{ RICK_STRICT_SCRIBE_PROFILE_NER_PATH }}', '--report-format', 'json', '--fail-on-issues' ], 'comment': 'If this fails, your coding sucked. Fix it and re-run this ExWork task (or at least this Scribe step manually from within OPF).'}, {'type': 'ECHO', 'message': ('ExWork-RickPrime agent at ' ~ OPF_ROOT_ABS ~ '/NPTPAC/core_agents/ex_work_agent.py hopefully upgraded and Scribe-validated. It is now the ONE TRUE EXWORK AGENT for the OPF.')} ] } | tojson | b64encode }}"
+        },
+        {
+            "type": "RUN_SCRIPT",
+            "id": "initialize_opf_ner_git_repo",
+            "script_path": "git",
+            "args": ["init"],
+            "cwd": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository",
+            "comment": "Ensuring NER in OPF is a Git repo from inception."
+        },
+        {
+            "type": "GIT_ADD",
+            "repository_path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository",
+            "files_to_add": ["."],
+            "comment": "Adding all newly created NER foundation files."
+        },
+        {
+            "type": "GIT_COMMIT",
+            "repository_path": "{{ OPF_ROOT_ABS }}/NPTPAC/ner_repository",
+            "message": "FEAT: Initial Rick-Approved NER structure and ExWork-RickPrime directives for Omnitide Prime Foundry"
+        },
+        {
+            "type": "ECHO",
+            "message": "Omnitide Prime Foundry established at {{ OPF_ROOT_ABS }}. Rick's directives for ExWork-RickPrime are in the new NER. An Ex-Work task to guide its upgrade is in {{ OPF_ROOT_ABS }}/NPTPAC/exwork_tasks/. Your old project folder can go suck an egg. Ensure Python 3, Jinja2, and Click (for PAC CLI) are available for the OPF environment. The REAL work begins NOW: executing that first task to forge ExWork-RickPrime."
+        }
+    ]
+}

@@ -1,0 +1,116 @@
+# .github/workflows/ci.yml
+# Foundational CI Pipeline for the Omnitide Nexus Monorepo (NER)
+
+name: Omnitide Nexus CI
+
+on:
+  push:
+    branches:
+      - main # Or your primary development branch
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  lint-python-omniapp:
+    name: "Lint & Test: Omniapp Suite (Python)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./omniapp # Assuming omniapp is a subdirectory
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Match your target Python version
+
+      - name: Install Omniapp Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # If omnitide_cli has its own pyproject.toml for dev deps:
+          # if [ -f omnitide_cli/pyproject.toml ]; then pip install -e ./omnitide_cli[dev]; fi
+
+      - name: Lint with Ruff (Omniapp CLI, WebUI Backend, Agents)
+        run: |
+          pip install ruff
+          echo "Linting omnitide_cli..."
+          ruff check ./omnitide_cli --fix --exit-zero 
+          echo "Linting web_ui..."
+          ruff check ./web_ui --fix --exit-zero
+          echo "Linting agents..."
+          ruff check ./agents --fix --exit-zero
+        # Add --exit-non-zero-on-fix if you want PRs to fail if Ruff makes changes
+
+      # Add Pytest execution if/when tests are available for omniapp components
+      # - name: Run Pytests (Omniapp)
+      #   run: |
+      #     pip install pytest
+      #     pytest ./omnitide_cli/tests # Adjust path to tests
+
+  lint-ansible-chimera:
+    name: "Lint: Chimera Ansible Configs"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./chimera-ansible-configs # Assuming this is a subdirectory
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python for Ansible Lint
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible and Ansible Lint
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint
+
+      - name: Run ansible-lint
+        run: |
+          ansible-lint . # Runs lint from the root of chimera-ansible-configs
+
+  lint-shell-scripts:
+    name: "Lint: Shell Scripts"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          # Add paths to your key shell scripts here as they are added to the repo
+          # Example:
+          # scannable_files: |
+          #   ./omniapp/bootstrap_omniapp.sh
+          #   ./user_shell_setup/setup_omnitide_user_shell.sh
+          #   ./server_manager/nexus_server_manager.sh
+          # For now, let's scan a common pattern if scripts are well-organized
+          scannable_files: "./**/*.sh"
+        env:
+          SHELLCHECK_OPTS: -x # Follow sourced files
+
+  # Future Jobs (Placeholders - to be defined as projects are integrated):
+  # build-test-ekko:
+  #   name: "Build & Test: Ekko Project"
+  #   # ... steps to build/test Ekko ...
+  #   if: false # Initially disabled
+
+  # build-test-quantum-orchestrator:
+  #   name: "Build & Test: Quantum Orchestrator"
+  #   # ... steps to build/test QO ...
+  #   if: false # Initially disabled
+
+  # build-test-nptpac:
+  #   name: "Build & Test: NPTPAC"
+  #   # ... steps to build/test NPTPAC ...
+  #   if: false # Initially disabled

@@ -1,0 +1,7 @@
+{
+  "tool_name": "Syslog Error Check",
+  "description": "Greps system logs for common error patterns.",
+  "ex_work_template": "syslog_error_check.exwork.json",
+  "manual_command": "grep -iE 'error|failed|critical' /var/log/syslog | tail -n 50",
+  "notes": "Requires access to system logs."
+}

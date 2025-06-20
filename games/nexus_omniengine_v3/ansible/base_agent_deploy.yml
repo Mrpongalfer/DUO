@@ -1,0 +1,49 @@
+---
+# Ansible playbook: Base Agent Deployment
+# Drake v0.3 protocol, TPC-compliant
+- name: Deploy Nexus OmniEngine Agent
+  hosts: all
+  become: yes
+  vars_files:
+    - ../config/main_config.json
+  tasks:
+    - name: Ensure Python is installed
+      apt:
+        name: python3
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Ensure pip is installed
+      apt:
+        name: python3-pip
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Clone Nexus OmniEngine repository
+      git:
+        repo: "{{ nexus_repo_url }}"
+        dest: "{{ agent_deploy_path }}"
+        version: "{{ nexus_repo_branch }}"
+        force: yes
+      when: nexus_repo_url is defined
+
+    - name: Install Python requirements
+      pip:
+        requirements: "{{ agent_deploy_path }}/requirements.txt"
+        executable: pip3
+      when: agent_deploy_path is defined
+
+    - name: Copy configuration files
+      copy:
+        src: ../config/
+        dest: "{{ agent_deploy_path }}/config/"
+        mode: 0644
+      when: agent_deploy_path is defined
+
+    - name: Start agent service
+      shell: |
+        cd {{ agent_deploy_path }}
+        nohup xonsh -c 'python3 -m core.ai_agent_forge.agent_forge' &
+      async: 10
+      poll: 0
+      when: agent_deploy_path is defined

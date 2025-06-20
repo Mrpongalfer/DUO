@@ -1,0 +1,21 @@
+{
+    // Content for roles/wizardpro_bootstrap/files/vscode_config/extensions.json
+    "recommendations": [
+        // Core Python Development
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        // Version Control
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        // Config Files
+        "redhat.vscode-yaml",
+        // Remote Development (Install Locally, recommend here)
+        "ms-vscode-remote.remote-ssh",
+        // Container Development
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        // TUI Development
+        "textualize.textual-dev"
+    ]
+}

@@ -1,0 +1,10 @@
+{
+  "step_id": "exwork_echo_001",
+  "description": "A simple echo command.",
+  "actions": [
+    {
+      "type": "ECHO",
+      "message": "Hello from Ex-Work via PAC!"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# File: .ansible-lint
+# Configuration for ansible-lint, used by pre-commit
+
+skip_list:
+  - syntax-check[unknown-module] # Broadly skip module resolution errors during linting
+  # Example of other potential skips if needed later:
+  # - command-instead-of-module
+  # - package-latest

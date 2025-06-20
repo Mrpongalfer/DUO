@@ -1,0 +1,12 @@
+name: Quantum Validation
+
+on: [push, pull_request]
+
+jobs:
+  quantum_verify:
+    runs-on: [ubuntu-latest, ibm-quantum]
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          pip install qiskit ekko-core
+          ekko qvalidate --shots=5000

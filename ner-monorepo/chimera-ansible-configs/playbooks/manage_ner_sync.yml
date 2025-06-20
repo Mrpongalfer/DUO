@@ -1,0 +1,32 @@
+---
+- name: Synchronize NER with GitHub Remote
+  hosts: localhost
+  connection: local
+  gather_facts: yes # To get ansible_date_time
+
+  vars:
+    npt_base_dir: "{{ lookup('env', 'NPT_BASE_DIR') | default(lookup('env', 'HOME') + '/Projects/projectsupload/NPTPAC', true) }}" # Get from env or default
+    ner_repo_path: "{{ npt_base_dir }}/ner_repository"
+    pac_launcher_path: "/home/pong/Projects/projectsupload/NPTPAC/pac_cli/app/main.py" # Path to the PAC launcher
+    exwork_template_ner_ref: "ner://06_AGENT_BLUEPRINTS/ex_work_agent/templates/sync_ner_git.exwork.json"
+
+  tasks:
+    - name: Ensure NPT_BASE_DIR is set for PAC execution
+      ansible.builtin.assert:
+        that:
+          - npt_base_dir is defined and npt_base_dir | length > 0
+        fail_msg: "NPT_BASE_DIR environment variable must be set or defaulted correctly."
+
+    - name: Run Ex-Work task to sync NER via PAC
+      ansible.builtin.command:
+        cmd: >
+          {{ pac_launcher_path }} exwork run
+          --template "{{ exwork_template_ner_ref }}"
+          --vars '{ "NER_REPO_PATH_VAR": "{{ ner_repo_path }}", "ansible_date_time": "{{ ansible_date_time }}" }'
+      register: ner_sync_result
+      changed_when: "'changed' in ner_sync_result.stdout" # Heuristic
+      failed_when: ner_sync_result.rc != 0 and "nothing to commit" not in ner_sync_result.stdout.lower()
+
+    - name: Display NER Sync Result
+      ansible.builtin.debug:
+        var: ner_sync_result.stdout_lines

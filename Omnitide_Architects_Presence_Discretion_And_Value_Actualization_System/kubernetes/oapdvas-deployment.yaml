@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oapdvas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oapdvas
+  template:
+    metadata:
+      labels:
+        app: oapdvas
+    spec:
+      containers:
+      - name: oapdvas
+        image: oapdvas:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: oapdvas-secrets

@@ -1,0 +1,112 @@
+# File: roles/quantum_orchestrator/templates/docker-compose.yml.j2
+# Version: FINAL - Using Volume Mount for App Code
+
+networks:
+  # References the network created by the Prometheus stack
+  monitoring_net:
+    name: prometheus_stack_monitoring_net
+    external: true
+  # Internal network for this stack's services
+  qo_backend_net:
+    driver: bridge
+
+volumes:
+  # Define persistent volumes used by services
+  qo_postgres_data: {}
+  qo_ollama_data: {}
+
+services:
+  # --- Quantum Orchestrator Application ---
+  app:
+    container_name: quantum_orchestrator_app
+    image: python:3.11-slim # USE BASE IMAGE - code comes from volume mount
+    # build: ... REMOVED build section ...
+    working_dir: /app # Set working directory inside container
+    volumes:
+      # Mount the copied code directory from host directly into container
+      # HOST_PATH (relative to compose file): CONTAINER_PATH
+      - ./app_code:/app
+    restart: unless-stopped
+    ports:
+      # Map host port to container port
+      - "{{ qo_app_port | default(8000) }}:{{ qo_container_port | default(8000) }}"
+    environment:
+      # Inject secrets and config via environment variables
+      DATABASE_URL: "postgresql://{{ vault_qo_db_user }}:{{ vault_qo_db_password }}@postgres:5432/{{ vault_qo_db_name }}"
+      FLASK_SECRET_KEY: "{{ vault_qo_flask_secret_key }}"
+      LLM_API_BASE: "http://ollama:11434" # Internal Docker network hostname
+      LLM_MODEL_NAME: "{{ qo_llm_model | default('mistral-nemo:12b-instruct-2407-q4_k_m') }}" # Use specific model
+      PYTHONUNBUFFERED: "1" # Ensure logs appear immediately
+      # Add other necessary environment variables here
+    depends_on:
+      - postgres
+      - ollama
+    networks:
+      - qo_backend_net
+      - monitoring_net
+    labels:
+      org.label-schema.group: "application"
+      managed-by: "ansible-chimera-prime"
+    # Command to run the application (installs deps first)
+# Within the 'services:' -> 'app:' section:
+
+    # ... (image, working_dir, volumes, restart, ports, environment, etc.) ...
+
+    # CORRECTED Command: Use list syntax for multi-step shell command
+    command:
+      - /bin/sh # Explicitly invoke shell
+      - -c # Tell shell to read commands from next argument
+      - | # Use literal block scalar to preserve newlines in the script string
+        set -e # Exit immediately if a command exits with a non-zero status.
+        echo "--- Upgrading pip ---"
+        pip install --upgrade pip
+        echo "--- Installing project dependencies ---"
+        pip install --no-cache-dir .
+        echo "--- Starting Quantum Orchestrator ---"
+        python main.py
+
+    # ... (depends_on, networks, labels sections follow) ...
+
+  # --- PostgreSQL Database ---
+  postgres:
+    container_name: quantum_orchestrator_db
+    image: postgres:latest
+    restart: unless-stopped
+    volumes:
+      - qo_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "{{ vault_qo_db_user }}"
+      POSTGRES_PASSWORD: "{{ vault_qo_db_password }}"
+      POSTGRES_DB: "{{ vault_qo_db_name }}"
+    networks:
+      - qo_backend_net
+    expose:
+      - "5432"
+    labels:
+      org.label-schema.group: "database"
+      managed-by: "ansible-chimera-prime"
+
+  # --- Ollama LLM Service ---
+  ollama:
+    container_name: quantum_orchestrator_ollama
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - qo_ollama_data:/root/.ollama
+    networks:
+      - qo_backend_net
+      - monitoring_net
+    expose:
+      - "11434"
+    # ports: # Uncomment if direct host access needed
+    #  - "11434:11434"
+    # deploy: # Uncomment and adjust if GPU needed/available
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    labels:
+      org.label-schema.group: "ai_service"
+      managed-by: "ansible-chimera-prime"

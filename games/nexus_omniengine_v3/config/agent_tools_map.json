@@ -1,0 +1,32 @@
+{
+  "web_scraping": {
+    "name": "Web Scraper",
+    "type": "custom",
+    "description": "A tool to scrape content from web pages."
+  },
+  "code_gen": {
+    "name": "Code Generator",
+    "type": "custom",
+    "description": "A tool to generate code snippets or modules based on a prompt."
+  },
+  "threat_hunting": {
+    "name": "Threat Hunter",
+    "type": "custom",
+    "description": "A tool to perform threat intelligence lookups and analysis."
+  },
+  "ci_cd": {
+    "name": "CI/CD Orchestrator",
+    "type": "custom",
+    "description": "A tool to trigger and monitor CI/CD pipelines."
+  },
+  "data_analysis": {
+    "name": "Data Analyzer",
+    "type": "custom",
+    "description": "A tool for performing data analysis tasks."
+  },
+  "wikipedia": {
+    "name": "Wikipedia Search",
+    "type": "langchain_builtin",
+    "description": "A tool for general knowledge lookup via Wikipedia."
+  }
+}

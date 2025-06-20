@@ -1,0 +1,10 @@
+# /opt/architect_configs/group_vars/clients.yml
+---
+# Client Specific UFW Rules - MINIMAL SECURE DEFAULTS
+
+client_ufw_allow_rules:
+  # Allow SSH ONLY from the server IP and localhost for management
+  - { rule: allow, port: "{{ security_ssh_port | default(22) }}", proto: tcp, src: '192.168.0.95', comment: "Allow SSH from Server 'aiseed@thosedataguys-s'" }
+  - { rule: allow, port: "{{ security_ssh_port | default(22) }}", proto: tcp, src: '127.0.0.1', comment: "Allow SSH from Localhost" }
+
+  # No other incoming ports allowed by default for client workstation.

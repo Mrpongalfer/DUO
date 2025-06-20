@@ -1,0 +1,9 @@
+# /opt/architect_configs/roles/docker/handlers/main.yml
+---
+# Handlers for the docker role
+- name: Restart docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  listen: "Restart docker"
+

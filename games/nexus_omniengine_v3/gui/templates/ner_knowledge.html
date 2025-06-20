@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block title %}NER/Knowledge Browser (Librarian){% endblock %}
+{% block content %}
+<div class="nexus-card">
+  <h2 style="color:#ffe082;">NER/Knowledge Browser (Librarian)</h2>
+  <div class="tool-forge-actions" style="margin-bottom:1.5em;display:flex;gap:1em;align-items:center;">
+    <button class="dashboard-btn" onclick="showNERCreateModal()">➕ Add Knowledge/Tool</button>
+    <button class="dashboard-btn" onclick="cleanNER()">🧹 Clean/Organize NER</button>
+    <input type="text" id="ner-search" placeholder="Search NER..." style="flex:1 1 200px;padding:0.7em 1em;border-radius:8px;border:1px solid #bcd;" oninput="filterNER()" />
+  </div>
+  <div class="tool-list" id="ner-list">
+    <table style="width:100%;border-radius:12px;overflow:hidden;">
+      <thead>
+        <tr style="background:#e0e7ff;">
+          <th>Name</th>
+          <th>Description</th>
+          <th>Type</th>
+          <th>Creator</th>
+          <th>Last Modified</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- NER/Knowledge entries will be rendered here -->
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+function showNERCreateModal() { /* TODO: Implement modal logic */ }
+function cleanNER() { /* TODO: Implement NER cleaning logic */ }
+function filterNER() {
+  const q = document.getElementById('ner-search').value.toLowerCase();
+  document.querySelectorAll('#ner-list tbody tr').forEach(row => {
+    row.style.display = Array.from(row.children).some(td => td.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

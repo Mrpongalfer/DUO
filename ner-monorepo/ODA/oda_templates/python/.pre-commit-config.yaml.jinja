@@ -1,0 +1,25 @@
+  ```yaml
+  # .pre-commit-config.yaml
+  # Forged by ODA v0.1
+  repos:
+  - repo: [https://github.com/pre-commit/pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks)
+    rev: v4.6.0 # Use latest stable
+    hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: check-added-large-files
+    - id: check-toml
+  - repo: [https://github.com/astral-sh/ruff-pre-commit](https://github.com/astral-sh/ruff-pre-commit)
+    rev: v0.4.4 # Match ruff version in pyproject.toml
+    hooks:
+    - id: ruff # Linter
+      args: [--fix, --exit-non-zero-on-fix]
+    - id: ruff-format # Formatter
+  - repo: [https://github.com/pre-commit/mirrors-mypy](https://github.com/pre-commit/mirrors-mypy)
+    rev: v1.10.0 # Match mypy version in pyproject.toml
+    hooks:
+    - id: mypy
+      additional_dependencies: ["types-requests"] # Add any needed types stubs
+      # exclude: "^docs/|/migrations/" # Exclude files if needed
+  ```

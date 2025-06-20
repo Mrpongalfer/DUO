@@ -1,0 +1,7 @@
+{
+  "ansible_inventory_path": "nexus_ansible/inventory.ini",
+  "security_policy_path": "config/security_policy.json",
+  "sandbox_cpu_limit": "1",
+  "sandbox_memory_limit": "512m",
+  "llm_api_key": "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"
+}

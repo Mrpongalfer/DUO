@@ -1,0 +1,40 @@
+# File: .pre-commit-config.yaml
+# For mixed Python App + Ansible Infra repository
+
+repos:
+# Python Formatting & Linting (Targeted at QO code - relative path from this file)
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4 # Use a recent stable version
+    hooks:
+    -   id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^(quantum_orchestrator/|main\.py|run_api\.py|setup\.py) # Regex to target QO python files
+    -   id: ruff-format
+        files: ^(quantum_orchestrator/|main\.py|run_api\.py|setup\.py) # Regex to target QO python files
+
+# YAML Linting (For Ansible files, etc.)
+-   repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1 # Use a recent stable version
+    hooks:
+    -   id: yamllint
+        args: [--strict] # Use strict mode for better checking
+        # args: [--config-file, .yamllint.yaml] # Optional: Use if creating a custom yamllint config
+        files: \.(yaml|yml)$ # Target all YAML files
+
+# Ansible Linting
+-   repo: https://github.com/ansible/ansible-lint.git
+    rev: v6.22.2 # Use a specific stable tag (or latest)
+    hooks:
+    -   id: ansible-lint
+        files: \.(yaml|yml)$
+        args: ["-c", ".ansible-lint"] # Use the config file to apply skips
+
+# Standard file checks
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0 # Use a recent stable tag
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml # Basic YAML syntax check
+    -   id: check-json # Check config.json, etc.
+    -   id: check-added-large-files

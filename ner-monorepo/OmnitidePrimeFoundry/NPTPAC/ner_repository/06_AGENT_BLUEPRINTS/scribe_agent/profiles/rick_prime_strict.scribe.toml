@@ -1,0 +1,36 @@
+
+[general]
+
+standard_library_check_enabled = true
+enforce_docstrings = true
+enforce_type_hints = true
+max_line_length = 90
+ban_placeholder_code = true # No "pass", "# TODO: Implement", "..."
+error_on_placeholders = true
+
+[file_checks]
+check_utf8_encoding = true
+check_empty_files = true # No empty init.py unless explicitly allowed by rule
+lint_json_enabled = true
+lint_yaml_enabled = true
+fix_json_enabled = true # Auto-fix JSON formatting
+fix_yaml_enabled = true # Auto-fix YAML formatting
+
+[python_checks]
+linter_enabled = true
+formatter_enabled = true
+linter_config_path = ".project_root/.pylintrc" # Define these files!
+formatter_config_path = ".project_root/pyproject.toml" # Define these files!
+run_isort = true
+run_black = true
+run_pylint = true
+run_mypy = true
+mypy_config_path = ".project_root/pyproject.toml" # Define these files!
+mypy_check_untyped_defs = true
+
+[script_checks] # For .sh files
+linter_enabled = true
+linter_config_path = ".project_root/.shellcheckrc" # Define this!
+run_shellcheck = true
+run_shfmt = true
+

@@ -1,0 +1,28 @@
+{
+  "step_id": "hackathon_fastapi_setup_001",
+  "description": "Sets up a basic Python FastAPI project in subdirectory '{{project_name}}'.",
+  "parameters": [
+    {"name": "project_name", "prompt": "Enter new project directory name (e.g., my_api)"}
+  ],
+  "actions": [
+    {
+      "type": "CREATE_OR_REPLACE_FILE",
+      "path": "{{project_name}}/.gitignore",
+      "content_base64": "X19weWNhY2hlX18vCnZlbnYvCi52ZW52LwoqLnB5Ywpudm0tZGVlcC5jb25maWcKLmRzX3N0b3Jl"
+    },
+    {
+      "type": "CREATE_OR_REPLACE_FILE",
+      "path": "{{project_name}}/requirements.txt",
+      "content_base64": "ZmFzdGFwaVswLjEwMC4wXQp1dmljb3JuW3N0YW5kYXJkXVswLjIyLjBd"
+    },
+    {
+      "type": "CREATE_OR_REPLACE_FILE",
+      "path": "{{project_name}}/main.py",
+      "content_base64": "ZnJvbSBmYXN0YXBpIGltcG9ydCBGYXN0QVBJCgphcHAgPSBGYXN0QVBJKCkKCkBnZXQoIi8iKQphc3luYyBkZWYgcm9vdCgpOgogICAgcmV0dXJuIHsibWVzc2FnZSI6ICJIZWxsbyBOZXh1cyBBcmNoaXRlY3QhIFlvdXIgRmFzdEFQSSBpcyBydW5uaW5nISJ9CgpAaWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjoKICAgIGltcG9ydCB1dmljb3JuCiAgICB1dmljb3JuLnJ1bigiLi9tYWluOmFwcCIsIGhvc3Q9IjAuMC4wLjAiLCBwb3J0PTgwMDAsIHJlbG9hZD1UcnVlKQ=="
+    },
+    {
+      "type": "ECHO",
+      "message": "FastAPI project '{{project_name}}' structure created. Next steps: cd {{project_name}}, create venv, pip install -r requirements.txt, python main.py"
+    }
+  ]
+}

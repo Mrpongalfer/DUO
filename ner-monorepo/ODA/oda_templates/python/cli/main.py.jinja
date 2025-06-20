@@ -1,0 +1,53 @@
+  ```python
+  # {{ project_module_name }}/main.py
+  import typer
+  from rich.console import Console
+
+  from . import __version__
+  from .commands import items_app # Assuming commands are structured in commands.py
+
+  # Initialize Typer app and Rich console
+  app = typer.Typer(
+      name="{{ project_slug }}",
+      help="{{ description }}",
+      add_completion=False, # Disable shell completion for simplicity unless needed
+  )
+  console = Console()
+
+  def version_callback(value: bool):
+      """Prints the version of the application."""
+      if value:
+          console.print(f"[bold green]{{ project_name }} Version:[/bold green] {__version__}")
+          raise typer.Exit()
+
+  @app.callback()
+  def main_options(
+      version: bool = typer.Option(
+          None,
+          "--version",
+          "-V",
+          callback=version_callback,
+          is_eager=True,
+          help="Show the application's version and exit.",
+      ),
+  ):
+      """
+      {{ project_name }} CLI Tool
+      """
+      pass # Main callback can handle global options
+
+  # Add subcommands or command groups
+  # Example: Adding an 'items' command group from commands.py
+  app.add_typer(items_app, name="items", help="Commands for managing items.")
+
+  # Example simple command directly in main
+  @app.command("hello")
+  def hello(name: str = typer.Argument("World", help="The name to say hello to.")):
+      """Says hello."""
+      console.print(f"Hello [bold cyan]{name}[/bold cyan] from {{ project_name }}!")
+
+  if __name__ == "__main__":
+      # This allows running the script directly for debugging,
+      # but entry point is usually via `poetry run {{ project_slug }}`
+      app()
+```

@@ -1,0 +1,119 @@
+{
+  "scribe_version": "1.1.2",
+  "run_id": "scribe_20250524_194649",
+  "start_time": "2025-05-24T19:46:49.922417+00:00",
+  "end_time": "2025-05-24T19:46:53.656419+00:00",
+  "total_duration_seconds": 3.734,
+  "overall_status": "FAILURE",
+  "target_project_dir": "/home/pong/Projects/ner-monorepo/duo",
+  "target_file_relative": "exworkagent0.py",
+  "language": "python",
+  "python_version": "3.10.12",
+  "commit_attempted": false,
+  "commit_sha": null,
+  "steps": [
+    {
+      "name": "validate_inputs",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:49.922848+00:00",
+      "end_time": "2025-05-24T19:46:49.923262+00:00",
+      "duration_seconds": 0.0,
+      "details": {
+        "message": "Inputs OK. Target: /home/pong/Projects/ner-monorepo/duo/exworkagent0.py, Source: /home/pong/Projects/ner-monorepo/duo/exworkagent0.py"
+      },
+      "error_message": null
+    },
+    {
+      "name": "setup_environment",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:49.923358+00:00",
+      "end_time": "2025-05-24T19:46:51.329886+00:00",
+      "duration_seconds": 1.407,
+      "details": {
+        "message": "Venv at /home/pong/Projects/ner-monorepo/duo/.venv"
+      },
+      "error_message": null
+    },
+    {
+      "name": "install_deps",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:51.330022+00:00",
+      "end_time": "2025-05-24T19:46:51.330412+00:00",
+      "duration_seconds": 0.0,
+      "details": {
+        "message": "Deps installed or skipped."
+      },
+      "error_message": null
+    },
+    {
+      "name": "audit_deps",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:51.330517+00:00",
+      "end_time": "2025-05-24T19:46:52.587826+00:00",
+      "duration_seconds": 1.257,
+      "details": {
+        "tool_name": "pip-audit",
+        "return_code": 1,
+        "vulnerability_count": 0,
+        "message": "No vulnerabilities."
+      },
+      "error_message": null
+    },
+    {
+      "name": "apply_code",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:52.587973+00:00",
+      "end_time": "2025-05-24T19:46:52.588652+00:00",
+      "duration_seconds": 0.001,
+      "details": {
+        "bytes_written": 56031
+      },
+      "error_message": null
+    },
+    {
+      "name": "format_code",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:52.588807+00:00",
+      "end_time": "2025-05-24T19:46:52.611777+00:00",
+      "duration_seconds": 0.023,
+      "details": {
+        "tool_name": "ruff (format)",
+        "return_code": 0,
+        "message": "Formatted."
+      },
+      "error_message": null
+    },
+    {
+      "name": "lint_code",
+      "status": "SUCCESS",
+      "start_time": "2025-05-24T19:46:52.611915+00:00",
+      "end_time": "2025-05-24T19:46:52.630993+00:00",
+      "duration_seconds": 0.019,
+      "details": {
+        "tool_name": "ruff (check --fix)",
+        "return_code": 0,
+        "stdout_summary": "All checks passed!\n",
+        "message": "Lint OK."
+      },
+      "error_message": null
+    },
+    {
+      "name": "type_check",
+      "status": "FAILURE",
+      "start_time": "2025-05-24T19:46:52.631271+00:00",
+      "end_time": "2025-05-24T19:46:53.656192+00:00",
+      "duration_seconds": 1.025,
+      "details": {
+        "tool_name": "mypy",
+        "return_code": 1,
+        "stdout_summary": "exworkagent0.py:20: error: Library stubs not installed for \"requests\"  [import-untyped]\nexworkagent0.py:20: note: Hint: \"python3 -m pip install types-requests\"\nexworkagent0.py:20: note: (or run \"mypy \n...(1037 chars)...\ne\"; expected \"str\"  [arg-type]\nexworkagent0.py:1189: error: Too many arguments  [call-arg]\nexworkagent0.py:1273: error: Too many arguments  [call-arg]\nFound 8 errors in 1 file (checked 1 source file)\n",
+        "message": "MyPy type errors."
+      },
+      "error_message": null
+    }
+  ],
+  "audit_findings": [],
+  "ai_review_findings": null,
+  "test_results_summary": null,
+  "error_message": null
+}

@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block title %}Agent & Workflow Control{% endblock %}
+{% block content %}
+<div class="agent-control-container">
+  <h2 class="agent-title">Agent & Workflow Control Panel</h2>
+  <div class="agent-cards">
+    <div class="agent-card">
+      <h3>Agents</h3>
+      <table class="agent-table-modern">
+        <tr><th>Name</th><th>Status</th><th>Action</th></tr>
+        {% for agent in agents %}
+        <tr>
+          <td>{{ agent.name }}</td>
+          <td><span class="status-{{ agent.status|lower }}">{{ agent.status }}</span></td>
+          <td>
+            {% if agent.status == 'Stopped' %}
+              <form method="post" action="/agent/start/{{ agent.name }}"><button class="agent-btn" type="submit">Start</button></form>
+            {% else %}
+              <form method="post" action="/agent/stop/{{ agent.name }}"><button class="agent-btn agent-btn-stop" type="submit">Stop</button></form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="agent-card">
+      <h3>Workflows</h3>
+      <table class="agent-table-modern">
+        <tr><th>Name</th><th>Status</th><th>Action</th></tr>
+        {% for wf in workflows %}
+        <tr>
+          <td>{{ wf.name }}</td>
+          <td><span class="status-{{ wf.status|lower }}">{{ wf.status }}</span></td>
+          <td>
+            {% if wf.status == 'Stopped' %}
+              <form method="post" action="/workflow/start/{{ wf.name }}"><button class="agent-btn" type="submit">Start</button></form>
+            {% else %}
+              <form method="post" action="/workflow/stop/{{ wf.name }}"><button class="agent-btn agent-btn-stop" type="submit">Stop</button></form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+  <a class="agent-back-btn" href="/">Back to Dashboard</a>
+</div>
+{% endblock %}

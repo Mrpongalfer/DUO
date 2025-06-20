@@ -1,0 +1,217 @@
+# File: /home/pong/Projects/chimera-ansible-configs/site.yml
+# Version: 2.0 FINAL - Deploys Monitoring Stack & Quantum Orchestrator
+
+---
+- name: Pre-flight APT Cleanup and Validation on Server(s)
+  hosts: server
+  become: yes
+  gather_facts: no
+  tags: [always] # Ensure pre-flight runs even when tagging plays
+  tasks:
+    # --- LazyGit PPA Cleanup ---
+    - name: Attempt removal of problematic lazygit PPA via module
+      ansible.builtin.apt_repository:
+        repo: "ppa:lazygit-team/release"
+        state: absent
+      ignore_errors: true
+
+    - name: Force removal of lazygit PPA sources list file (.list format)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/lazygit-team-ubuntu-release-{{ ansible_distribution_release | default('noble') }}.list"
+        state: absent
+      ignore_errors: true
+
+    - name: Force removal of lazygit PPA sources file (.sources format)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/lazygit-team-ubuntu-release-{{ ansible_distribution_release | default('noble') }}.sources"
+        state: absent
+      ignore_errors: true
+
+    # --- Docker APT Config Cleanup ---
+    - name: Remove potential conflicting Docker sources file (.list)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/docker.list"
+        state: absent
+      ignore_errors: true
+
+    - name: Remove potential conflicting Docker sources file (.sources)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/docker.sources"
+        state: absent
+      ignore_errors: true
+
+    - name: Remove potential conflicting Docker keyring file (.gpg)
+      ansible.builtin.file:
+        path: "/etc/apt/keyrings/docker.gpg"
+        state: absent
+      ignore_errors: true
+
+    - name: Remove potential conflicting Docker keyring file (.asc)
+      ansible.builtin.file:
+        path: "/etc/apt/keyrings/docker.asc"
+        state: absent
+      ignore_errors: true
+    # --- End Docker Cleanup ---
+
+    - name: Clean APT package cache thoroughly
+      ansible.builtin.command: apt-get clean -y
+      changed_when: false
+
+    - name: Update APT cache explicitly AFTER cleanup to validate
+      ansible.builtin.apt:
+        update_cache: yes
+      register: preflight_apt_update_result
+      retries: 1
+      delay: 3
+      until: preflight_apt_update_result is succeeded
+
+# --- Main Configuration Play ---
+- name: Apply common configuration to all hosts
+  hosts: all
+  become: yes
+  gather_facts: yes
+  vars:
+    # --- Common Variables ---
+    system_timezone: "America/Denver"
+    admin_users:
+      - { username: aiseed, shell: /bin/bash }
+      - { username: pong, shell: /bin/bash }
+    common_pkgs:
+      - build-essential
+      - python3-dev
+      - curl
+      - wget
+      - git
+      - vim
+      - tmux
+      - htop
+      - net-tools
+      - dnsutils
+      - unzip
+      - ca-certificates
+      - gnupg
+      - python3-pip
+      - python3-venv
+      - chrony
+      - rsync # Required for synchronize (though replaced with copy)
+      - libpq-dev # Added for psycopg2 system dependency
+
+    # --- Security Variables ---
+    security_ssh_port: 22
+    security_fail2ban_enabled: false
+    fail2ban_ignoreip: "127.0.0.1/8 ::1 192.168.0.0/24"
+    monitoring_allowed_sources: "192.168.0.0/24"
+
+    # --- Port Definitions ---
+    prometheus_port: 9091
+    loki_port: 3100
+    grafana_port: 3000
+    node_exporter_port: 9100
+    qo_app_port: 8000 # Quantum Orchestrator API Port
+
+    # --- UFW Rules ---
+    # Rules applied by 'security' role based on group membership
+    server_ufw_allow_rules:
+      - { comment: "Allow SSH from Client", port: "{{ security_ssh_port }}", proto: tcp, rule: allow, src: "192.168.0.96" }
+      - { comment: "Allow SSH from Localhost", port: "{{ security_ssh_port }}", proto: tcp, rule: allow, src: "127.0.0.1" }
+      - { comment: "Allow Prometheus from Monitoring Subnet", port: "{{ prometheus_port }}", proto: tcp, rule: allow, src: "{{ monitoring_allowed_sources }}" }
+      - { comment: "Allow Loki from Monitoring Subnet", port: "{{ loki_port }}", proto: tcp, rule: allow, src: "{{ monitoring_allowed_sources }}" }
+      - { comment: "Allow Grafana from Monitoring Subnet", port: "{{ grafana_port }}", proto: tcp, rule: allow, src: "{{ monitoring_allowed_sources }}" }
+      - { comment: "Allow Node Exporter from Monitoring Subnet", port: "{{ node_exporter_port }}", proto: tcp, rule: allow, src: "{{ monitoring_allowed_sources }}" }
+      - { comment: "Allow Quantum Orchestrator API", port: "{{ qo_app_port }}", proto: tcp, rule: allow, src: "{{ monitoring_allowed_sources }}" }
+    client_ufw_allow_rules:
+      - { comment: "Allow SSH from Server", port: "{{ security_ssh_port }}", proto: tcp, rule: allow, src: "192.168.0.95" }
+      - { comment: "Allow SSH from Localhost", port: "{{ security_ssh_port }}", proto: tcp, rule: allow, src: "127.0.0.1" }
+      - { comment: "Allow Node Exporter from Monitoring Subnet", port: "{{ node_exporter_port }}", proto: tcp, rule: allow, src: "{{ monitoring_allowed_sources }}" }
+
+    # --- Docker Variables ---
+    docker_users_to_group:
+      - aiseed
+      - pong
+
+    # --- Promtail Variables ---
+    loki_server_url: "http://192.168.0.95:{{ loki_port }}/loki/api/v1/push"
+
+  roles:
+    - role: common
+      tags: [common]
+    - role: security
+      tags: [security]
+    - role: docker
+      tags: [docker]
+    - role: node_exporter
+      tags: [monitoring, node_exporter]
+    - role: promtail
+      tags: [monitoring, promtail]
+
+# --- Server-Specific Configuration ---
+- name: Configure server-specific services (Monitoring Stack & Quantum Orchestrator)
+  hosts: server
+  become: yes
+  gather_facts: no
+  vars:
+    # Explicitly define ports needed by roles in this play
+    prometheus_port: 9091
+    loki_port: 3100
+    grafana_port: 3000
+    node_exporter_port: 9100
+    qo_app_port: 8000
+
+    # User/Group for container files/processes on server
+    docker_run_user: "aiseed"
+    docker_run_group: "aiseed"
+
+    # Prometheus Paths & Config
+    prometheus_base_dir: "/opt/docker/prometheus"
+    prometheus_config_dir: "{{ prometheus_base_dir }}/config"
+    prometheus_data_dir: "{{ prometheus_base_dir }}/data"
+    prometheus_compose_dir: "{{ prometheus_base_dir }}"
+    prometheus_template_name: "docker-compose.yml.j2"
+    prometheus_compose_file_path: "{{ prometheus_compose_dir }}/docker-compose.yml"
+    prometheus_config_template: "prometheus.yml.j2"
+    prometheus_config_file_path: "{{ prometheus_config_dir }}/prometheus.yml"
+
+    # Loki Paths & Config
+    loki_base_dir: "/opt/docker/loki"
+    loki_config_dir: "{{ loki_base_dir }}/config"
+    loki_data_dir: "{{ loki_base_dir }}/data"
+    loki_compose_dir: "{{ loki_base_dir }}"
+    loki_compose_file_path: "{{ loki_compose_dir }}/docker-compose.yml"
+    loki_config_template: "loki-config.yml.j2"
+    loki_config_file_path: "{{ loki_config_dir }}/loki-config.yml"
+
+    # Grafana Paths & Config
+    grafana_base_dir: "/opt/docker/grafana"
+    grafana_config_dir: "{{ grafana_base_dir }}/config"
+    grafana_data_dir: "{{ grafana_base_dir }}/data"
+    grafana_compose_dir: "{{ grafana_base_dir }}"
+    grafana_compose_file_path: "{{ grafana_compose_dir }}/docker-compose.yml"
+    grafana_admin_password: "{{ vault_grafana_admin_password | default('ChangeMePlease!') }}"
+
+    # Quantum Orchestrator Vars
+    qo_local_code_path: "/home/pong/Projects/quantum_orchestrator_app" # CORRECTED PATH
+    qo_base_dir: "/opt/docker/quantum_orchestrator"
+    qo_deploy_dir: "{{ qo_base_dir }}"
+    qo_container_port: 8000 # Internal port defined in Dockerfile/App
+    qo_llm_model: "mistral-nemo:12b-instruct-2407-q4_k_m" # User preferred model
+
+  roles:
+    - role: prometheus
+      tags: [monitoring, prometheus]
+    - role: loki
+      tags: [monitoring, loki]
+    - role: grafana
+      tags: [monitoring, grafana]
+    - role: quantum_orchestrator
+      tags: [app, quantum_orchestrator]
+
+# --- Client-Specific Configuration ---
+- name: Configure client-specific settings
+  hosts: clients
+  become: yes
+  gather_facts: no
+  vars:
+    placeholder_client_var: true
+  roles:
+    - role: prompt_debug # Keeping placeholder for now
+      tags: [debug]

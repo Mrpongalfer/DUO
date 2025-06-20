@@ -1,0 +1,31 @@
+---
+# Ansible playbook: Agent Update
+# Drake v0.3 protocol, TPC-compliant
+- name: Update Nexus OmniEngine Agent
+  hosts: all
+  become: yes
+  vars_files:
+    - ../config/main_config.json
+  tasks:
+    - name: Pull latest code
+      git:
+        repo: "{{ nexus_repo_url }}"
+        dest: "{{ agent_deploy_path }}"
+        version: "{{ nexus_repo_branch }}"
+        force: yes
+      when: nexus_repo_url is defined
+
+    - name: Install/Update Python requirements
+      pip:
+        requirements: "{{ agent_deploy_path }}/requirements.txt"
+        executable: pip3
+      when: agent_deploy_path is defined
+
+    - name: Restart agent service
+      shell: |
+        pkill -f core.ai_agent_forge.agent_forge || true
+        cd {{ agent_deploy_path }}
+        nohup xonsh -c 'python3 -m core.ai_agent_forge.agent_forge' &
+      async: 10
+      poll: 0
+      when: agent_deploy_path is defined

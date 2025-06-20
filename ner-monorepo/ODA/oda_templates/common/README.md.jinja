@@ -1,0 +1,166 @@
+```markdown
+# {{ project_name }}
+
+[![License: {{ tpc_standards.default_license | default('MIT') }}](https://img.shields.io/badge/License-{{ tpc_standards.default_license | default('MIT') | replace('-', '--') }}-yellow.svg)](https://opensource.org/licenses/{{ tpc_standards.default_license | default('MIT') }}) [![CI Pipeline](https://github.com/<YOUR_GITHUB_USERNAME>/{{ project_slug }}/actions/workflows/ci.yml/badge.svg)](https://github.com/<YOUR_GITHUB_USERNAME>/{{ project_slug }}/actions/workflows/ci.yml) > {{ description }}
+
+Forged by {{ APP_NAME }} v{{ APP_VERSION }} for The Supreme Master Architect {{ author_name }}. <br>
+Project Version: **{{ project_version }}**
+
+---
+
+## Overview
+
+This project implements a `{{ language }}` based `{{ template_type }}` application. It serves as [briefly state the main purpose or goal].
+
+It has been bootstrapped using Omnitide Nexus principles, emphasizing True Prime Code (TPC) standards including optimal functionality, minimal complexity, maximum efficiency, absolute reliability, perfect readability, complete documentation, maximum automation, AI-enhanced optimization, future-proofing, and security by design.
+
+## Prerequisites
+
+Ensure these tools are installed on your system before proceeding:
+
+* **Docker & Docker Compose:** For containerized development and deployment. [Install Docker](https://docs.docker.com/get-docker/)
+* **Git:** For version control. [Install Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+{% if language == 'python' %}
+* **Python:** Version `{{ python_version | default('~3.11') }}` (check `pyproject.toml` for exact specifier). [Install Python](https://www.python.org/downloads/)
+* **Poetry:** For Python dependency management and virtual environments. [Install Poetry](https://python-poetry.org/docs/#installation)
+{% elif language == 'nodejs' %}
+* **Node.js:** Version `{{ node_version | default('20') }}.x` (LTS Recommended). [Install Node.js](https://nodejs.org/) (Comes with npm)
+* **npm** (or **yarn** if you prefer and configure the project accordingly).
+{% endif %}
+* **pre-commit:** For managing Git hooks (linting, formatting). (`pip install pre-commit` or `brew install pre-commit`). [Install pre-commit](https://pre-commit.com/#installation)
+
+Refer to `docs/setup_guide.md` for potentially more detailed environment setup guidance.
+
+## Getting Started: Quick Setup
+
+1.  **Clone the Repository (if needed):**
+    ```bash
+    git clone <your-repository-url>
+    cd {{ project_slug }}
+    ```
+
+2.  **Run the Bootstrap Script:**
+    This is the primary setup command. It initializes Git (if not already done), installs dependencies, sets up pre-commit hooks, copies the environment file, and runs initial checks.
+    ```bash
+    ./bootstrap.sh
+    ```
+    * **Important:** On Windows, use Git Bash or WSL to run `.sh` scripts.
+    * **Python Users:** After bootstrap, activate the virtual environment created by Poetry: `poetry shell`
+
+3.  **Configure Environment:**
+    The bootstrap script copies `.env.example` to `.env`. **You MUST edit `.env** to provide any necessary API keys, database credentials, or other configuration specific to your environment.
+    ```bash
+    cp .env.example .env # Only if bootstrap didn't run or you need to reset
+    # nano .env  OR  code .env  OR  vim .env
+    ```
+    **Never commit the actual `.env` file.**
+
+## Development
+
+{% if language == 'python' and template_type == 'fastapi' %}
+**Running the FastAPI Server Locally:**
+
+* **Activate venv:** `poetry shell` (if not already active)
+* **Run dev server (with auto-reload):**
+    ```bash
+    # Check pyproject.toml [tool.poetry.scripts] for the exact command, often 'dev' or similar
+    poetry run uvicorn {{ project_module_name }}.main:app --reload --host 0.0.0.0 --port 8000
+    # Or if a 'dev' script is defined:
+    # poetry run dev
+    ```
+The API should be accessible at `http://localhost:8000` (or configured port). Interactive API docs are usually at `http://localhost:8000/docs`.
+
+{% elif language == 'python' and template_type == 'cli' %}
+**Running the CLI Tool Locally:**
+
+* **Activate venv:** `poetry shell` (if not already active)
+* **Execute commands:** Use the script name defined in `pyproject.toml` (`[tool.poetry.scripts]`):
+    ```bash
+    {{ project_slug }} --help
+    {{ project_slug }} hello --name Architect
+    {{ project_slug }} items list
+    # etc.
+    ```
+* Alternatively, invoke directly via `poetry run`:
+    ```bash
+    poetry run python -m {{ project_module_name }}.main --help
+    ```
+
+{% elif language == 'nodejs' and template_type == 'express' %}
+**Running the Express.js Server Locally:**
+
+* **Run dev server (often uses `nodemon` for auto-reload, check `package.json`):**
+    ```bash
+    npm run dev
+    ```
+The API should be accessible at `http://localhost:3000` (or configured port).
+
+{% endif %}
+
+### Development Workflow
+
+1.  Create a feature branch: `git checkout -b feature/my-new-feature`
+2.  Make code changes.
+3.  Write or update tests in the `tests/` directory.
+4.  Run tests locally: {% if language == 'python' %}`poetry run test`{% elif language == 'nodejs' %}`npm test`{% endif %}
+5.  Commit changes: `git add . && git commit -m "feat: Implement my new feature"`
+    *(Pre-commit hooks will automatically run linters/formatters.)*
+6.  Push and create a Pull Request.
+
+## Testing
+
+Automated tests are crucial for TPC compliance.
+
+{% if language == 'python' %}
+* **Run all tests:** `poetry run test`
+* **Run tests with coverage:** `poetry run coverage:html` (then open `htmlcov/index.html`)
+{% elif language == 'nodejs' %}
+* **Run all tests:** `npm test`
+* **Run tests with coverage:** `npm run test:coverage` (if configured)
+{% endif %}
+Refer to the testing framework's documentation (Pytest/Jest/etc.) for more advanced options.
+
+## Containerization (Docker)
+
+This project is configured for containerization using Docker.
+
+* **Build the image:**
+    ```bash
+    docker build -t {{ project_slug }}:{{ project_version }} .
+    ```
+* **Run using Docker Compose (Recommended for local multi-container setups):**
+    *(Ensure `.env` file is configured as `docker-compose.yml` often reads from it)*
+    ```bash
+    docker-compose up --build -d # Build and run in detached mode
+    docker-compose logs -f        # View logs
+    docker-compose down           # Stop and remove containers
+    ```
+* **Run the image directly:**
+    Refer to the Development section above for specific `docker run` examples tailored to the application type. Remember to pass environment variables securely.
+
+## CI/CD
+
+A Continuous Integration pipeline is defined in `.github/workflows/ci.yml`. It automatically runs checks (linting, formatting, testing, optionally security audits and docker builds) on pushes and pull requests to main branches.
+
+Expand this workflow for Continuous Deployment (CD) to your target environments (staging, production) using appropriate tools and secrets management.
+
+## Project Structure
+
+*(This section is identical to the structure provided in the ODA blueprint's README template - see previous responses)*
+
+{{ project_slug }}/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+... (rest of structure) ...
+└── README.md
+
+Refer to `docs/architecture.md` for more details on the project's design.
+
+## Contributing
+
+Contributions that adhere to the TPC standards are welcome. Please ensure tests pass and linting/formatting is applied via pre-commit before submitting Pull Requests. Consider creating a `CONTRIBUTING.md` for detailed guidelines.
+
+## License
+
+This project is licensed under the {{ tpc_standards.default_license | default('MIT') }} License - see the [LICENSE](LICENSE) file for details.

@@ -1,0 +1,4 @@
+argon2_cffi
+jaraco.classes
+keyring>=20.0.0
+pycryptodome

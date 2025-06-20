@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Orchestrator - Documentation</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        pre {
+            background-color: var(--bs-gray-800);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <header class="d-flex flex-wrap justify-content-between py-3 mb-4 border-bottom">
+            <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto">
+                <span class="fs-4 fw-bold">Quantum Orchestrator</span>
+            </div>
+            <ul class="nav nav-pills">
+                <li class="nav-item"><a href="/" class="nav-link">Dashboard</a></li>
+                <li class="nav-item"><a href="/chat" class="nav-link">Interactive Chat</a></li>
+                <li class="nav-item"><a href="/console" class="nav-link">Console</a></li>
+                <li class="nav-item"><a href="/docs" class="nav-link active" aria-current="page">Documentation</a></li>
+                <li class="nav-item"><a href="/about" class="nav-link">About</a></li>
+            </ul>
+        </header>
+
+        <div class="row">
+            <div class="col-md-3">
+                <nav id="navbar-docs" class="sticky-top pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#getting-started">Getting Started</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#instructions">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#handlers">Handlers</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#agents">AI Agents</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#api">API Reference</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#examples">Examples</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="col-md-9">
+                <div id="getting-started" class="doc-section">
+                    <h2>Getting Started</h2>
+                    <p class="lead">The Quantum Orchestrator provides a powerful system for workflow orchestration, automation, and meta-generation.</p>
+
+                    <h4>Installation</h4>
+                    <p>You can install the Quantum Orchestrator using pip:</p>
+                    <pre><code>pip install quantum-orchestrator</code></pre>
+
+                    <h4>Quick Start</h4>
+                    <p>Here's a simple example to get you started:</p>
+                    <pre><code>from quantum_orchestrator import orchestrator
+
+# Process an intent-based instruction
+result = await orchestrator.execute_instruction({
+    "type": "intent",
+    "intent": "Generate a Python function to calculate the Fibonacci sequence"
+})
+
+# Print the result
+print(result)</code></pre>
+                </div>
+
+                <div id="instructions" class="doc-section">
+                    <h2>Instructions</h2>
+                    <p>
+                        The Quantum Orchestrator processes tasks through instructions, which are structured JSON objects
+                        that define what actions to perform. The system supports several types of instructions.
+                    </p>
+
+                    <h4>Intent Instructions</h4>
+                    <p>
+                        Intent instructions allow you to express what you want to accomplish in natural language.
+                        The Planning Agent will convert this intent into an executable workflow.
+                    </p>
+                    <pre><code>{
+    "type": "intent",
+    "intent": "Generate a Python function to calculate prime numbers and write it to a file"
+}</code></pre>
+
+                    <h4>Direct Instructions</h4>
+                    <p>
+                        Direct instructions specify exactly which handler to use and with what parameters.
+                    </p>
+                    <pre><code>{
+    "type": "direct",
+    "handler": "generate_code",
+    "params": {
+        "description": "A function to calculate prime numbers",
+        "language": "python"
+    }
+}</code></pre>
+
+                    <h4>Workflow Instructions</h4>
+                    <p>
+                        Workflow instructions define a sequence of steps to execute, with optional parallelism
+                        and workflow optimization.
+                    </p>
+                    <pre><code>{
+    "type": "workflow",
+    "steps": [
+        {
+            "type": "direct",
+            "handler": "generate_code",
+            "params": {
+                "description": "Function to calculate prime numbers",
+                "language": "python"
+            },
+            "store_result": true,
+            "result_key": "prime_function"
+        },
+        {
+            "type": "direct",
+            "handler": "write_file",
+            "params": {
+                "path": "primes.py",
+                "content": "{{prime_function.code}}"
+            }
+        }
+    ],
+    "optimize_workflow": true
+}</code></pre>
+                </div>
+
+                <div id="handlers" class="doc-section">
+                    <h2>Handlers</h2>
+                    <p>
+                        Handlers are functions that implement specific operations in the Quantum Orchestrator.
+                        The system includes built-in handlers for common tasks and supports dynamic registration
+                        of custom handlers.
+                    </p>
+
+                    <h4>Code Generation Handlers</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Handler</th>
+                                    <th>Description</th>
+                                    <th>Parameters</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>generate_code</code></td>
+                                    <td>Generates code based on a description</td>
+                                    <td><code>description</code>, <code>language</code>, <code>context</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>refactor_code</code></td>
+                                    <td>Refactors existing code</td>
+                                    <td><code>code</code>, <code>language</code>, <code>requirements</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4>File Operation Handlers</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Handler</th>
+                                    <th>Description</th>
+                                    <th>Parameters</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>read_file</code></td>
+                                    <td>Reads content from a file</td>
+                                    <td><code>path</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>write_file</code></td>
+                                    <td>Writes content to a file</td>
+                                    <td><code>path</code>, <code>content</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="agents" class="doc-section">
+                    <h2>AI Agents</h2>
+                    <p>
+                        The Cognitive Fusion Core is composed of specialized AI agents that work together
+                        to process complex tasks.
+                    </p>
+
+                    <div class="accordion" id="agentsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#planningAgentCollapse">
+                                    Planning Agent
+                                </button>
+                            </h2>
+                            <div id="planningAgentCollapse" class="accordion-collapse collapse show" data-bs-parent="#agentsAccordion">
+                                <div class="accordion-body">
+                                    <p>The Planning Agent converts high-level intent into executable workflows. It analyzes the intent, determines the necessary steps, and creates a structured workflow that can be executed by the orchestrator.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#codeAgentCollapse">
+                                    Code Agent
+                                </button>
+                            </h2>
+                            <div id="codeAgentCollapse" class="accordion-collapse collapse" data-bs-parent="#agentsAccordion">
+                                <div class="accordion-body">
+                                    <p>The Code Agent generates and improves code based on requirements. It can create new code from descriptions, refactor existing code, and implement specific functionality as needed.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#testAgentCollapse">
+                                    Test Agent
+                                </button>
+                            </h2>
+                            <div id="testAgentCollapse" class="accordion-collapse collapse" data-bs-parent="#agentsAccordion">
+                                <div class="accordion-body">
+                                    <p>The Test Agent creates and runs tests to ensure code quality. It can generate test cases, execute tests, and provide feedback on test coverage and passing status.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#optimizationAgentCollapse">
+                                    Optimization Agent
+                                </button>
+                            </h2>
+                            <div id="optimizationAgentCollapse" class="accordion-collapse collapse" data-bs-parent="#agentsAccordion">
+                                <div class="accordion-body">
+                                    <p>The Optimization Agent refines and optimizes code using reinforcement learning. It analyzes code for efficiency, readability, and best practices, then suggests improvements.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metaAgentCollapse">
+                                    Meta Agent
+                                </button>
+                            </h2>
+                            <div id="metaAgentCollapse" class="accordion-collapse collapse" data-bs-parent="#agentsAccordion">
+                                <div class="accordion-body">
+                                    <p>The Meta Agent dynamically generates new tools and handlers to extend the system. It can create custom handlers for specific tasks based on descriptions of desired functionality.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="api" class="doc-section">
+                    <h2>API Reference</h2>
+                    <p>
+                        The Quantum Orchestrator provides both synchronous and asynchronous APIs for
+                        executing instructions and interacting with the system.
+                    </p>
+
+                    <h4>Core API</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                    <th>Parameters</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>execute_instruction</code></td>
+                                    <td>Executes a single instruction</td>
+                                    <td><code>instruction</code> (dict or JSON string)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>register_handler</code></td>
+                                    <td>Registers a new handler function</td>
+                                    <td><code>name</code>, <code>handler_func</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>get_status</code></td>
+                                    <td>Gets the current status of the orchestrator</td>
+                                    <td>None</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="examples" class="doc-section">
+                    <h2>Examples</h2>
+                    <h4>Generate and Optimize Code</h4>
+                    <pre><code>from quantum_orchestrator import orchestrator
+
+# Generate Python code for a sorting algorithm
+result = await orchestrator.execute_instruction({
+    "type": "direct",
+    "handler": "generate_code",
+    "params": {
+        "description": "Implement quicksort algorithm",
+        "language": "python"
+    },
+    "optimize": True  # Apply optimization
+})
+
+# Print the optimized code
+print(result["result"]["optimized_code"])</code></pre>
+
+                    <h4>Create a Custom Tool</h4>
+                    <pre><code>from quantum_orchestrator import orchestrator
+
+# Request a new tool for data validation
+result = await orchestrator.execute_instruction({
+    "type": "tool_request",
+    "description": "A handler to validate JSON data against a schema",
+    "name": "validate_json"
+})
+
+# The new tool is now available
+validation_result = await orchestrator.execute_instruction({
+    "type": "direct",
+    "handler": "validate_json",
+    "params": {
+        "data": {"name": "Test", "value": 123},
+        "schema": {"type": "object", "properties": {...}}
+    }
+})</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-dark">
+        <div class="container">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Quantum Orchestrator &copy; 2025</span>
+                <span class="text-muted">Neural Flow Pipeline with Cognitive Fusion Core</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

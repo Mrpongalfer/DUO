@@ -1,0 +1,72 @@
+---
+# File: roles/common/tasks/main.yml
+# Version: Added Grafana repo cleanup to run on ALL hosts first
+
+# --- BEGIN Grafana APT Config Cleanup (Moved Here) ---
+- name: Remove potentially conflicting old Grafana GPG key location
+  ansible.builtin.file:
+    path: /usr/share/keyrings/grafana.gpg
+    state: absent
+  become: true
+  ignore_errors: true # Ignore if file doesn't exist
+  tags: [common, packages, apt, cleanup]
+
+- name: Remove potentially conflicting old Grafana sources list file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/grafana.list
+    state: absent
+  become: true
+  ignore_errors: true # Ignore if file doesn't exist
+  tags: [common, packages, apt, cleanup]
+# --- END Grafana Cleanup ---
+
+# Existing common tasks follow:
+- name: Update apt cache if older than 1 hour
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600 # Only update if cache is > 1 hour old
+  changed_when: false # Prevent this task alone from reporting 'changed' status
+  become: true # Added become: yes, apt update needs it
+  tags: [common, packages, apt]
+
+
+- name: Install common packages defined in vars
+  ansible.builtin.apt:
+    name: "{{ common_pkgs }}" # Uses the variable list
+    state: present
+  become: true # Ensure become is used for package installation
+  tags: [common, packages, apt]
+
+- name: Set system timezone
+  community.general.timezone:
+    name: "{{ system_timezone }}" # Uses the variable
+  become: true # timezone module often needs root
+  tags: [common, system, timezone]
+
+# --- NTP Configuration (using Chrony) ---
+- name: Ensure chrony NTP client is installed
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+  become: true
+  tags: [common, system, ntp]
+
+- name: Ensure chrony service is enabled and running
+  ansible.builtin.service:
+    name: chrony # Service name might be chronyd on some systems
+    state: started
+    enabled: true
+  become: true
+  tags: [common, system, ntp]
+
+# Basic user check - ensures specified users exist with correct shell
+- name: Ensure admin users exist
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    shell: "{{ item.shell }}"
+    state: present
+  loop: "{{ admin_users }}"
+  become: true
+  tags: [common, users]
+
+# Add other common tasks below as needed:

@@ -1,0 +1,29 @@
+# /opt/architect_configs/roles/node_exporter/tasks/main.yml
+---
+# Tasks to install and manage Prometheus Node Exporter service
+
+- name: Ensure prometheus-node-exporter package is installed
+  ansible.builtin.apt:
+    name: prometheus-node-exporter
+    state: present
+    update_cache: yes # Update cache if package needs installing
+  tags: [node_exporter, packages]
+
+- name: Ensure prometheus-node-exporter service is enabled and running
+  ansible.builtin.service:
+    name: prometheus-node-exporter
+    state: started
+    enabled: yes
+  tags: [node_exporter, service]
+
+# Note: Firewall rule for port 9100 needs to be added to the 'security' role,
+# likely allowing access only from the Prometheus server (localhost in this case).
+# Example rule to add later in security role tasks, using a variable:
+# - name: Allow Node Exporter access from Prometheus server
+#   community.general.ufw:
+#     rule: allow
+#     port: '9100' # Default node_exporter port
+#     proto: tcp
+#     src: "{{ prometheus_server_ip | default('127.0.0.1') }}" # Define this var
+#   tags: [security, firewall, ufw, monitoring]
+

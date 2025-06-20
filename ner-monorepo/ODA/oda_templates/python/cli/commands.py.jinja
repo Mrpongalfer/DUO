@@ -1,0 +1,68 @@
+  ```python
+  # {{ project_module_name }}/commands.py
+  # Example command group structure for Typer
+
+  import typer
+  from rich.console import Console
+  from typing_extensions import Annotated # For newer Typer features
+
+  items_app = typer.Typer()
+  console = Console()
+
+  # Example state (replace with actual application logic/state management)
+  _items_db = {
+      1: {"name": "Item One", "value": 100},
+      2: {"name": "Item Two", "value": 200},
+  }
+
+  @items_app.command("list")
+  def list_items():
+      """
+      Lists all available items.
+      """
+      console.print("[bold yellow]Available Items:[/bold yellow]")
+      if not _items_db:
+          console.print("  No items found.")
+          return
+
+      from rich.table import Table
+      table = Table("ID", "Name", "Value")
+      for item_id, item_data in _items_db.items():
+          table.add_row(str(item_id), item_data["name"], str(item_data["value"]))
+      console.print(table)
+
+  @items_app.command("add")
+  def add_item(
+      name: Annotated[str, typer.Option(..., "--name", "-n", help="Name of the new item.")],
+      value: Annotated[int, typer.Option(..., "--value", "-v", help="Value of the new item.")],
+  ):
+      """
+      Adds a new item to the list.
+      """
+      new_id = max(_items_db.keys()) + 1 if _items_db else 1
+      _items_db[new_id] = {"name": name, "value": value}
+      console.print(f"[green]✓[/green] Added item {new_id}: '{name}' with value {value}")
+
+  @items_app.command("get")
+  def get_item(
+      item_id: Annotated[int, typer.Argument(help="The ID of the item to retrieve.")]
+  ):
+      """
+      Retrieves details for a specific item by ID.
+      """
+      item = _items_db.get(item_id)
+      if item:
+          console.print(f"[bold]Item {item_id}:[/bold]")
+          console.print(f"  Name: {item['name']}")
+          console.print(f"  Value: {item['value']}")
+      else:
+          console.print(f"[red]Error:[/red] Item with ID {item_id} not found.")
+          raise typer.Exit(code=1)
+
+  # Add more commands as needed for the 'items' group
+
+  if __name__ == "__main__":
+      # Allows running this specific command group directly for testing
+      # e.g., python -m {{ project_module_name }}.commands list
+      items_app()
+```

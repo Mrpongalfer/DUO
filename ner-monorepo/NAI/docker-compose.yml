@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  nai_quick_run: # Changed service name for clarity
+    build: .
+    image: nexus-agent-interface-quickrun:latest # Different image tag for this test
+    container_name: nai_quick_run_session
+    
+    # No stdin_open or tty needed if quick_run.py is non-interactive for this test
+    # If quick_run.py needed user input, you'd add them.
+
+    working_dir: /app # Script paths are relative to /app or absolute
+
+    volumes:
+      # Mount your quick_test_project to /workspace/test_project inside the container
+      - "./quick_test_project:/workspace/test_project:rw"
+      
+      # The .scribe.toml is now copied into the image at /app/.scribe.toml by Dockerfile
+      # The quick_run.py script refers to it there.
+
+      # Mount NAI's persistent log directory (optional for this test, but good practice)
+      - "./app_logs:/app/logs:rw" 
+
+    # This tells compose to run quick_run.py instead of the Dockerfile's default CMD (nai_tui_app.py)
+    command: ["python", "/app/quick_run.py"]

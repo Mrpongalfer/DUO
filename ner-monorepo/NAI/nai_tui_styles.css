@@ -1,0 +1,63 @@
+/* NAI TUI Styles - V1 Placeholder */
+Screen {
+    /* layout: vertical; */ /* Default layout for App is vertical */
+}
+
+#main_layout_horizontal {
+    layout: horizontal;
+    height: 100%; /* Make horizontal layout take full height */
+}
+
+#sidebar_left {
+    width: 30%;
+    height: 100%;
+    border-right: thick $primary-background-darken-2;
+    padding: 1;
+    overflow-y: auto; /* Allow sidebar to scroll if content overflows */
+}
+
+#project_tree {
+    height: 60%; /* Give tree a portion of sidebar */
+    margin-bottom: 1;
+}
+#current_project_label {
+    padding: 1 0;
+    text-style: bold;
+    color: $accent;
+}
+
+
+#agent_tabs {
+    width: 70%;
+    height: 100%;
+}
+
+TabPane {
+    padding: 1; /* Add some padding inside tabs */
+}
+
+.tab_header {
+    padding-bottom: 1;
+    text-style: bold underline;
+}
+.sub_header_label {
+    padding-top:1;
+    text-style: bold;
+}
+
+#exwork_json_input {
+    height: 15; /* Give JSON input area a decent height */
+    border: round $primary-lighten-2;
+    margin-bottom:1;
+}
+
+#output_log {
+    height: 20fr; /* Flexible height for the log */
+    border: round $primary-background-lighten-2;
+    margin-top: 1;
+}
+
+Button {
+    width: 100%;
+    margin: 1 0;
+}

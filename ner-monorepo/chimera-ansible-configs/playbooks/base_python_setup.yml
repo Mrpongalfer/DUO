@@ -1,0 +1,42 @@
+---
+# Playbook to ensure essential Python tooling (pip, venv) is installed
+# via apt package manager on all managed hosts.
+
+- name: Install Baseline Python Tooling via Apt
+  hosts: all # Target server and client(s)
+  become: true # Requires root privileges for apt
+  gather_facts: false # Facts not strictly needed for this simple task
+  tasks:
+    - name: Ensure python3-pip and python3-venv are present
+      ansible.builtin.apt:
+        name:
+          - python3-pip # System package manager's pip
+          - python3-venv # For creating virtual environments
+        state: present
+        update_cache: true # Update cache if installing
+      register: apt_python_tools
+      until: apt_python_tools is succeeded # Retry mechanism for apt potentially
+      retries: 3
+      delay: 5
+      ignore_errors: true # Continue even if one package fails temporarily
+
+    - name: Re-attempt python3-pip install if failed
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+      when: apt_python_tools is failed and 'python3-pip' in apt_python_tools.msg # Example retry logic
+
+    - name: Re-attempt python3-venv install if failed
+      ansible.builtin.apt:
+        name: python3-venv
+        state: present
+      when: apt_python_tools is failed and 'python3-venv' in apt_python_tools.msg # Example retry logic
+
+    - name: Report on Python package management strategy
+      ansible.builtin.debug:
+        msg:
+          - "Python tooling (pip, venv) installation attempted via apt on {{ inventory_hostname }}."
+          - "Reminder (PEP 668): Avoid global 'pip install'."
+          - "Use 'apt install python3-<pkg>' for system packages OR"
+          - "Use Ansible 'pip' module with 'virtualenv' arg for project dependencies."
+      when: apt_python_tools.changed | default(false) # Show message if changed

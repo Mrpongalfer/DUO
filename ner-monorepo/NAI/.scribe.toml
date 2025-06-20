@@ -1,0 +1,26 @@
+# ./NAI/.scribe.toml
+# Minimal Scribe config for the quick tandem test
+
+allowed_target_bases = ["/workspace"] # Critical for Docker security
+
+fail_on_audit_severity = "high"
+fail_on_lint_critical = true
+fail_on_mypy_error = true
+fail_on_test_failure = true # Will be skipped in this test, but good to have
+
+ollama_base_url = "http://192.168.0.95:11434" # Your Ollama URL
+ollama_model = "mistral-nemo:12b-instruct-2407-q4_k_m" # Or your preferred model
+ollama_api_retries = 1
+ollama_api_retry_delay = 3.0
+ollama_request_timeout = 60.0 # Shorter for quick test
+
+default_tool_timeout = 60.0
+
+commit_message_template = "feat(ScribeQuickRun): Validated {target_file}"
+
+validation_steps = [
+    "validate_inputs", "setup_environment", "install_deps", "audit_deps", "apply_code",
+    "format_code", "lint_code", "type_check", 
+    "generate_report" 
+]
+# NOTE: LLM steps, precommit, commit are excluded for this quick, minimal test

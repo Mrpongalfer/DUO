@@ -1,0 +1,151 @@
+  ```yaml
+  # .github/workflows/ci.yml
+  # Basic CI workflow for {{ project_name }}
+  # Forged by {{ APP_NAME }} v{{ APP_VERSION }}
+
+  name: CI Pipeline for {{ project_name }}
+
+  on:
+    push:
+      branches: [ "main", "develop" ] # Adjust primary branches as needed
+    pull_request:
+      branches: [ "main", "develop" ]
+    workflow_dispatch: # Allows manual triggering
+
+  jobs:
+    lint-test-build:
+      name: Lint, Test & Build (${{ matrix.os }})
+      runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+      strategy:
+        fail-fast: false # Don't cancel other jobs if one fails
+        matrix:
+          os: [ubuntu-latest] # Add 'windows-latest', 'macos-latest' if needed
+          {% if language == 'python' %}
+          python-version: ["{{ python_version | default('3.11') }}"] # Use version from context
+          {% elif language == 'nodejs' %}
+          # Use LTS version by default for Node.js
+          node-version: ["{{ node_version | default('20') }}lts"]
+          {% endif %}
+
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      {% if language == 'python' %}
+      # --- Python Setup ---
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true # Recommended for caching
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies (if cache miss)
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --sync # --sync ensures exact lock file state
+
+      - name: Install project itself (if needed for tests/imports)
+        run: poetry install --no-interaction # Installs the project based on pyproject.toml
+
+      # --- Linting, Formatting, Type Checking ---
+      - name: Setup pre-commit cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-cache-${{ runner.os }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+        # This action runs `pre-commit run --all-files` by default
+
+      # --- Testing ---
+      - name: Run tests with Pytest
+        run: poetry run pytest --cov={{ project_module_name }} --cov-report=xml --cov-report=term
+
+      # Optional: Upload coverage report
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v4.0.1
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }} # Store token in GitHub secrets
+      #     slug: your_github_username/your_repo_name # Optional: explicitly specify slug
+
+      # --- Security Auditing ---
+      - name: Security Audit with pip-audit
+        run: |
+          # Export production dependencies only for audit if possible
+          poetry export --without dev --without-hashes -f requirements.txt --output requirements.txt || \
+          poetry export --without-hashes -f requirements.txt --output requirements.txt # Fallback if groups fail
+          pip install pip-audit
+          # Use --fail-on MEDIUM or HIGH in production CI if desired
+          pip-audit -r requirements.txt --progress-spinner off --desc on --fix || echo "pip-audit found issues or failed, continuing build..."
+          rm requirements.txt
+
+      # --- Docker Build Validation (Optional) ---
+      - name: Build Docker image
+        if: ${{ steps.lint-test-build.outputs.run_docker_build == 'true' }} # Condition based on context/input if needed
+        run: |
+          docker build -t {{ project_slug }}:${{ github.sha }} .
+          docker image inspect {{ project_slug }}:${{ github.sha }} # Basic check
+
+      {% elif language == 'nodejs' %}
+      # --- Node.js Setup ---
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm' # Or 'yarn'
+
+      - name: Install dependencies
+        run: npm ci # Recommended for CI (uses package-lock.json)
+
+      # --- Linting, Formatting ---
+      # Option 1: Using pre-commit (requires Python env setup too)
+      # - name: Set up Python for pre-commit
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: '3.x'
+      # - name: Install pre-commit
+      #   run: pip install pre-commit
+      # - name: Run pre-commit hooks
+      #   uses: pre-commit/action@v3.0.1
+
+      # Option 2: Using npm scripts (defined in package.json)
+      - name: Run Linting
+        run: npm run lint --if-present # Only runs if 'lint' script exists
+
+      - name: Run Formatting Check
+        run: npm run format:check --if-present # Assumes a 'format:check' script exists
+
+      # --- Testing ---
+      - name: Run tests
+        run: npm test
+
+      # Optional: Upload coverage report
+      # ... (Use appropriate action for Node.js coverage, e.g., Codecov) ...
+
+      # --- Security Auditing ---
+      - name: Security Audit with npm audit
+        # Adjust --audit-level as needed ('critical', 'high', 'moderate', 'low')
+        # `--omit dev` can exclude dev dependencies
+        run: npm audit --audit-level=moderate || echo "npm audit found issues or failed, continuing build..."
+
+      # --- Docker Build Validation (Optional) ---
+      - name: Build Docker image
+        # if: ... # Condition if needed
+        run: |
+          docker build -t {{ project_slug }}:${{ github.sha }} .
+          docker image inspect {{ project_slug }}:${{ github.sha }}
+      {% endif %}
+```

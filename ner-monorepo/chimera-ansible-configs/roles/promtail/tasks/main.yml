@@ -1,0 +1,122 @@
+---
+# File: roles/promtail/tasks/main.yml
+# Version: Final - Uses curl workaround for GPG key
+
+- name: Ensure prerequisites for Grafana APT repo are installed
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https # Often needed, though may be default now
+      - software-properties-common
+      - wget
+      - gnupg # Needed for gpg dearmor
+    state: present
+    update_cache: yes
+  become: true
+  tags: [promtail, packages]
+
+# Grafana repo cleanup tasks are now in 'common' role
+
+# --- Start: Replaced Grafana GPG Key Task ---
+- name: Add Grafana GPG key (using shell with curl and gpg)
+  ansible.builtin.shell: # Use shell module for pipeline
+    cmd: curl -fsSL https://apt.grafana.com/gpg.key | gpg --dearmor -o /etc/apt/keyrings/grafana.gpg
+    creates: /etc/apt/keyrings/grafana.gpg # Makes task idempotent
+  become: yes
+  changed_when: false # Idempotency handled by 'creates'
+  tags: [promtail, repo]
+
+- name: Ensure Grafana GPG key has correct permissions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/grafana.gpg # Path where key was saved
+    mode: '0644'
+    owner: root
+    group: root
+  become: yes
+  tags: [promtail, repo]
+# --- End: Replaced Grafana GPG Key Task ---
+
+- name: Add Grafana APT repository (for Promtail)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" # Ensure signed-by matches key path
+    state: present
+    filename: grafana # Explicitly manages /etc/apt/sources.list.d/grafana.list
+    update_cache: yes # Update cache after adding repo
+  become: yes
+  tags: [promtail, repo]
+
+- name: Ensure promtail package is installed
+  ansible.builtin.apt:
+    name: promtail
+    state: present
+  become: true
+  tags: [promtail, packages]
+  notify: Restart promtail # Handler needed
+
+# Explicitly manage user/group if needed (often created by package)
+# The scan showed these tasks previously, retaining them if needed
+- name: Stop promtail service before managing user/group (if running)
+  ansible.builtin.service:
+    name: promtail
+    state: stopped
+  become: true
+  ignore_errors: true # Continue if service doesn't exist or isn't running
+  changed_when: false
+  tags: [promtail, config]
+
+- name: Ensure promtail group exists
+  ansible.builtin.group:
+    name: promtail
+    state: present
+    system: true
+  become: true
+  tags: [promtail, config]
+
+- name: Ensure promtail user exists
+  ansible.builtin.user:
+    name: promtail
+    group: promtail
+    system: true
+    shell: /usr/sbin/nologin
+    home: /var/lib/promtail # Common home/data dir
+  become: true
+  tags: [promtail, config]
+
+- name: Ensure Promtail config directory exists (/etc/promtail)
+  ansible.builtin.file:
+    path: /etc/promtail
+    state: directory
+    owner: root
+    group: promtail # Allow promtail group to read
+    mode: '0775' # Or 0750 for more restrictive
+  become: true
+  tags: [promtail, config]
+
+- name: Ensure Promtail lib directory exists for positions file (/var/lib/promtail)
+  ansible.builtin.file:
+    path: /var/lib/promtail
+    state: directory
+    owner: promtail
+    group: promtail
+    mode: '0750' # Needs to be writable by promtail user
+  become: true
+  tags: [promtail, config]
+
+- name: Deploy Promtail configuration from template
+  ansible.builtin.template:
+    src: promtail-config.yml.j2
+    dest: /etc/promtail/config.yml # Default path often expected by service
+    owner: root
+    group: promtail
+    mode: '0640' # Readable by root and promtail group only
+    validate: promtail -config.file=%s -print-config-stderr # Validate config
+  become: true
+  tags: [promtail, config]
+  notify: Restart promtail
+
+- name: Ensure promtail service is enabled and running
+  ansible.builtin.service:
+    name: promtail
+    state: started
+    enabled: true
+  become: true
+  tags: [promtail, service]

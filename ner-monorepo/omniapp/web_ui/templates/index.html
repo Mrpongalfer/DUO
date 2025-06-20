@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Home - Omnitide Web UI{% endblock %}
+{% block content %}
+    <h2>Welcome, Architect!</h2>
+    <p>This is the central web interface for interacting with your Omnitide Nexus tools.</p>
+    <p>Select an action from the navigation menu above to begin.</p>
+    
+    <h3>Available Tools:</h3>
+    <ul>
+        <li><a href="{{ url_for('run_exwork_ui_route') }}">Run ExWork Agent Task</a></li>
+        <li><a href="{{ url_for('run_scribe_ui_route') }}">Run Scribe Agent Validation</a> (NYI)</li>
+    </ul>
+{% endblock %}

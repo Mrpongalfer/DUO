@@ -1,0 +1,10 @@
+--2025-05-04 01:07:40--  https://get.x-cmd.com/
+Resolving ‘wget-log’... 2606:50c0:8002::153, 2606:50c0:8000::153, 2606:50c0:8003::153, ...
+Connecting to get.x-cmd.com (get.x-cmd.com)|2606:50c0:8002::153|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 5774 (5.6K) [text/html]
+Saving to: ‘STDOUT’
+
+-                                          0%[                                                                                  ]       0  --.-KB/s               -                                        100%[=================================================================================>]   5.64K  --.-KB/s    in 0.002s
+
+2025-05-04 01:07:40 (3.55 MB/s) - written to stdout [5774/5774]

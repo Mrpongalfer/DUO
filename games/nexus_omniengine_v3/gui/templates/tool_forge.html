@@ -1,0 +1,279 @@
+{% extends "layout.html" %}
+{% block title %}Tool & Knowledge Forge{% endblock %}
+{% block content %}
+<div class="nexus-card tool-forge-panel">
+  <h2 style="color:#ffe082;">Tool & Knowledge Forge</h2>
+  <div class="tool-forge-actions" style="margin-bottom:1.5em;display:flex;gap:1em;align-items:center;">
+    <button class="dashboard-btn" onclick="showToolCreateModal()">➕ Create Tool</button>
+    <button class="dashboard-btn" onclick="showAgentCreateModal()">🤖 Create Agent</button>
+    <button class="dashboard-btn" onclick="showDaemonCreateModal()">🛠️ Create Daemon</button>
+    <input type="text" id="tool-search" placeholder="Search tools..." style="flex:1 1 200px;padding:0.7em 1em;border-radius:8px;border:1px solid #bcd;" oninput="filterTools()" />
+  </div>
+  <div class="tool-list" id="tool-list">
+    <table style="width:100%;border-radius:12px;overflow:hidden;">
+      <thead>
+        <tr style="background:#e0e7ff;">
+          <th>Name</th>
+          <th>Description</th>
+          <th>Type</th>
+          <th>Creator</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tool in tools %}
+        <tr>
+          <td>{{ tool.name }}</td>
+          <td>{{ tool.description }}</td>
+          <td>{{ tool.type }}</td>
+          <td>{{ tool.creator }}</td>
+          <td>{{ tool.created }}</td>
+          <td>
+            <button class="agent-btn" onclick="editTool('{{ tool.name }}')">Edit</button>
+            <button class="agent-btn agent-btn-stop" onclick="deleteTool('{{ tool.name }}')">Delete</button>
+            <button class="dashboard-btn" onclick="runTool('{{ tool.name }}')">Run</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="tool-activity-log" style="margin-top:2em;">
+    <h3 style="color:#ffe082;">Tool Activity Log</h3>
+    <div id="tool-log-list">
+      {% for entry in tool_activity_log %}
+        <div class="tool-log-entry">{{ entry }}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<!-- Modals for create/edit/run will be injected here -->
+<div id="modal-root"></div>
+<script>
+// --- TOOL CREATION MODAL ---
+function showToolCreateModal() {
+  const modalHtml = `
+    <div class="modal-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000a;z-index:1000;display:flex;align-items:center;justify-content:center;">
+      <div class="modal-content" style="background:#23272e;color:#fff;padding:2em 2.5em;border-radius:16px;max-width:480px;width:100%;box-shadow:0 8px 32px #0008;position:relative;">
+        <button onclick="closeModal()" style="position:absolute;top:1em;right:1em;background:none;border:none;font-size:1.5em;color:#ffe082;cursor:pointer;">&times;</button>
+        <h3 style="color:#ffe082;margin-bottom:1em;">Create New Tool</h3>
+        <form id="create-tool-form" autocomplete="off">
+          <label style="color:#ffe082;">Tool Name:</label>
+          <input type="text" id="tool-create-name" name="name" required style="width:100%;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;background:#181c22;color:#fff;border:1px solid #444;" />
+          <label style="color:#ffe082;">Description:</label>
+          <textarea id="tool-create-desc" name="description" rows="2" style="width:100%;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;background:#181c22;color:#fff;border:1px solid #444;"></textarea>
+          <label style="color:#ffe082;">Python Code (function run(input)):</label>
+          <textarea id="tool-create-code" name="code" rows="8" style="width:100%;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;background:#181c22;color:#fff;border:1px solid #444;">def run(input):\n    # Your code here\n    return str(input)</textarea>
+          <button type="submit" class="dashboard-btn" style="width:100%;margin-bottom:1em;">Create Tool</button>
+        </form>
+        <div id="create-tool-output" style="margin-top:1em;min-height:2em;"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  document.getElementById('create-tool-form').onsubmit = function(e) {
+    e.preventDefault();
+    const name = document.getElementById('tool-create-name').value.trim();
+    const description = document.getElementById('tool-create-desc').value.trim();
+    const code = document.getElementById('tool-create-code').value;
+    const outputDiv = document.getElementById('create-tool-output');
+    outputDiv.innerHTML = '<span style="color:#ffe082;">Creating...</span>';
+    fetch('/create_tool', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, description: description, code: code})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        outputDiv.innerHTML = `<span style='color:#4caf50;'>${escapeHtml(data.message)}</span>`;
+        setTimeout(() => { location.reload(); }, 1200);
+      } else {
+        outputDiv.innerHTML = `<span style='color:#e53935;'>${escapeHtml(data.message||'Error')}</span>`;
+      }
+    })
+    .catch(err => {
+      outputDiv.innerHTML = `<span style='color:#e53935;'>Error: ${escapeHtml(err.toString())}</span>`;
+    });
+  };
+}
+
+// --- AGENT/DAEMON START/STOP CONTROLS ---
+function showAgentCreateModal() {
+  const modalHtml = `
+    <div class="modal-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000a;z-index:1000;display:flex;align-items:center;justify-content:center;">
+      <div class="modal-content" style="background:#23272e;color:#fff;padding:2em 2.5em;border-radius:16px;max-width:420px;width:100%;box-shadow:0 8px 32px #0008;position:relative;">
+        <button onclick="closeModal()" style="position:absolute;top:1em;right:1em;background:none;border:none;font-size:1.5em;color:#ffe082;cursor:pointer;">&times;</button>
+        <h3 style="color:#ffe082;margin-bottom:1em;">Create New Agent</h3>
+        <form id="create-agent-form" autocomplete="off">
+          <label style="color:#ffe082;">Agent Name:</label>
+          <input type="text" id="agent-create-name" name="name" required style="width:100%;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;background:#181c22;color:#fff;border:1px solid #444;" />
+          <label style="color:#ffe082;">Persona Blueprint:</label>
+          <select id="agent-create-persona" name="persona" class="ollama-select" style="margin-bottom:1em;width:100%;">
+            {% for persona in personas %}
+              <option value="{{ persona.id }}">{{ persona.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="dashboard-btn" style="width:100%;margin-bottom:1em;">Create Agent</button>
+        </form>
+        <div id="create-agent-output" style="margin-top:1em;min-height:2em;"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  document.getElementById('create-agent-form').onsubmit = function(e) {
+    e.preventDefault();
+    const name = document.getElementById('agent-create-name').value.trim();
+    const persona = document.getElementById('agent-create-persona').value;
+    const outputDiv = document.getElementById('create-agent-output');
+    outputDiv.innerHTML = '<span style="color:#ffe082;">Creating...</span>';
+    fetch('/create_agent', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, persona: persona})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        outputDiv.innerHTML = `<span style='color:#4caf50;'>${escapeHtml(data.message)}</span>`;
+        setTimeout(() => { location.reload(); }, 1200);
+      } else {
+        outputDiv.innerHTML = `<span style='color:#e53935;'>${escapeHtml(data.message||'Error')}</span>`;
+      }
+    })
+    .catch(err => {
+      outputDiv.innerHTML = `<span style='color:#e53935;'>Error: ${escapeHtml(err.toString())}</span>`;
+    });
+  };
+}
+
+function showDaemonCreateModal() {
+  const modalHtml = `
+    <div class="modal-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000a;z-index:1000;display:flex;align-items:center;justify-content:center;">
+      <div class="modal-content" style="background:#23272e;color:#fff;padding:2em 2.5em;border-radius:16px;max-width:420px;width:100%;box-shadow:0 8px 32px #0008;position:relative;">
+        <button onclick="closeModal()" style="position:absolute;top:1em;right:1em;background:none;border:none;font-size:1.5em;color:#ffe082;cursor:pointer;">&times;</button>
+        <h3 style="color:#ffe082;margin-bottom:1em;">Create New Daemon</h3>
+        <form id="create-daemon-form" autocomplete="off">
+          <label style="color:#ffe082;">Daemon Name:</label>
+          <input type="text" id="daemon-create-name" name="name" required style="width:100%;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;background:#181c22;color:#fff;border:1px solid #444;" />
+          <label style="color:#ffe082;">Type:</label>
+          <input type="text" id="daemon-create-type" name="type" required style="width:100%;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;background:#181c22;color:#fff;border:1px solid #444;" />
+          <button type="submit" class="dashboard-btn" style="width:100%;margin-bottom:1em;">Create Daemon</button>
+        </form>
+        <div id="create-daemon-output" style="margin-top:1em;min-height:2em;"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  document.getElementById('create-daemon-form').onsubmit = function(e) {
+    e.preventDefault();
+    const name = document.getElementById('daemon-create-name').value.trim();
+    const dtype = document.getElementById('daemon-create-type').value.trim();
+    const outputDiv = document.getElementById('create-daemon-output');
+    outputDiv.innerHTML = '<span style="color:#ffe082;">Creating...</span>';
+    fetch('/create_daemon', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, type: dtype})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        outputDiv.innerHTML = `<span style='color:#4caf50;'>${escapeHtml(data.message)}</span>`;
+        setTimeout(() => { location.reload(); }, 1200);
+      } else {
+        outputDiv.innerHTML = `<span style='color:#e53935;'>${escapeHtml(data.message||'Error')}</span>`;
+      }
+    })
+    .catch(err => {
+      outputDiv.innerHTML = `<span style='color:#e53935;'>Error: ${escapeHtml(err.toString())}</span>`;
+    });
+  };
+}
+
+// --- TOOL RUN MODAL LOGIC ---
+function runTool(toolName) {
+  // Modal HTML
+  const personas = {{ personas|tojson }};
+  let personaOptions = '';
+  for (const p of personas) {
+    personaOptions += `<option value="${p.id}">${p.name}</option>`;
+  }
+  const modalHtml = `
+    <div class="modal-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000a;z-index:1000;display:flex;align-items:center;justify-content:center;">
+      <div class="modal-content" style="background:#23272e;color:#fff;padding:2em 2.5em;border-radius:16px;max-width:420px;width:100%;box-shadow:0 8px 32px #0008;position:relative;">
+        <button onclick="closeModal()" style="position:absolute;top:1em;right:1em;background:none;border:none;font-size:1.5em;color:#ffe082;cursor:pointer;">&times;</button>
+        <h3 style="color:#ffe082;margin-bottom:1em;">Run Tool: <span style="color:#fff;">${toolName}</span></h3>
+        <form id="run-tool-form" autocomplete="off">
+          <label for="run-tool-persona" style="color:#ffe082;">Persona:</label>
+          <select id="run-tool-persona" name="persona" class="ollama-select" style="margin-bottom:1em;width:100%;">${personaOptions}</select>
+          <label for="run-tool-input" style="color:#ffe082;">Input (JSON or text):</label>
+          <textarea id="run-tool-input" name="input" rows="4" style="width:100%;border-radius:8px;padding:0.7em 1em;margin-bottom:1em;background:#181c22;color:#fff;border:1px solid #444;"></textarea>
+          <button type="submit" class="dashboard-btn" style="width:100%;margin-bottom:1em;">Run Tool</button>
+        </form>
+        <div id="run-tool-output" style="margin-top:1em;min-height:2em;"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-root').innerHTML = modalHtml;
+
+  document.getElementById('run-tool-form').onsubmit = function(e) {
+    e.preventDefault();
+    const persona = document.getElementById('run-tool-persona').value;
+    const input = document.getElementById('run-tool-input').value;
+    const outputDiv = document.getElementById('run-tool-output');
+    outputDiv.innerHTML = '<span style="color:#ffe082;">Running...</span>';
+    fetch('/run_tool', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({tool: toolName, persona: persona, input: input})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        outputDiv.innerHTML = `<pre style='white-space:pre-wrap;color:#4caf50;background:#181c22;padding:1em;border-radius:8px;'>${escapeHtml(data.output)}</pre>`;
+        refreshToolLog();
+      } else {
+        outputDiv.innerHTML = `<pre style='white-space:pre-wrap;color:#e53935;background:#181c22;padding:1em;border-radius:8px;'>${escapeHtml(data.output)}</pre>`;
+      }
+    })
+    .catch(err => {
+      outputDiv.innerHTML = `<span style='color:#e53935;'>Error: ${escapeHtml(err.toString())}</span>`;
+    });
+  };
+}
+
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return text.replace(/[&<>"']/g, function(m) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
+  });
+}
+
+function refreshToolLog() {
+  fetch(window.location.pathname, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+    .then(r => r.text())
+    .then(html => {
+      // Parse and update the tool log
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const newLog = doc.getElementById('tool-log-list');
+      if (newLog) {
+        document.getElementById('tool-log-list').innerHTML = newLog.innerHTML;
+      }
+    });
+}
+
+function filterTools() {
+  const q = document.getElementById('tool-search').value.toLowerCase();
+  document.querySelectorAll('#tool-list tbody tr').forEach(row => {
+    row.style.display = Array.from(row.children).some(td => td.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

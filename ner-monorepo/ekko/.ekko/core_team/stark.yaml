@@ -1,0 +1,7 @@
+# .ekko/core_team/stark.yaml
+code_quality:
+  pylint_score: 9.5+
+  test_coverage: 95%+
+  banned_patterns:
+    - "eval("
+    - "unsafe_exec"

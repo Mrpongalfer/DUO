@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# File: scripts/scribe_agent.py (within Omnitide Nexus)
+# Project Scribe: Apex Automated Validation Agent v1.2.0 (Finalized & Polished)
+# Augmented by NAA under Core Team Review - Manifested under Drake Protocol v5.0 Apex
+# For The Supreme Master Architect Alix Feronti
+# Current Version: Streamlined for optimal standalone performance.
+
+"""
+Project Scribe: Apex Automated Code Validation & Integration Agent (v1.2.0)
+
+Executes a validation gauntlet on provided Python code artifacts.
+Handles venv, dependencies, audit, format, lint, type check, AI test gen/exec,
+AI review, pre-commit hooks, conditional Git commit, and JSON reporting.
+Streamlined for optimal standalone performance and explicit error handling.
+"""
+
+import argparse
+import ast
+import json
+import logging
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import time
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import (Any, Callable, Dict, List, Optional, Sequence, Tuple,
+                    TypedDict, Union, cast)
+from urllib.parse import urlparse
+
+# --- Dependency Check for HTTP Library ---
+HTTP_LIB: Optional[str] = None
+HTTP_LIB_AVAILABLE: bool = False
+try:
+    import httpx
+    HTTP_LIB = "httpx"
+    HTTP_LIB_AVAILABLE = True
+except ImportError:
+    try:
+        import requests
+        HTTP_LIB = "requests"
+        HTTP_LIB_AVAILABLE = True
+    except ImportError:
+        pass
+
+# --- Dependency Check for TOML Library ---
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import tomli as tomllib  # Fallback for Python < 3.11
+    except ImportError:
+        tomllib = None
+
+# Added a helper function to check Python version compatibility
+def check_python_version():
+    if sys.version_info < (3, 9):
+        print("WARNING: You are using Python version {}.{}.{}. Project Scribe recommends Python 3.11 or higher for full compatibility.".format(
+            sys.version_info.major, sys.version_info.minor, sys.version_info.micro), file=sys.stderr)
+
+check_python_version()
+
+# --- Constants ---
+APP_NAME: str = "Project Scribe"
+APP_VERSION: str = "1.2.0" # Version reflects finalized state
+LOG_FORMAT: str = '%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s'
+DEFAULT_LOG_LEVEL: str = "INFO"
+LOG_LEVELS: List[str] = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+DEFAULT_CONFIG_FILENAME: str = ".scribe.toml"
+VENV_DIR_NAME: str = ".venv"
+DEFAULT_PYTHON_VERSION: str = "3.11"
+DEFAULT_REPORT_FORMAT: str = "json"
+REPORT_FORMATS: List[str] = ["json", "text"]
+DEFAULT_OLLAMA_MODEL: str = "gemma:2b"
+DEFAULT_OLLAMA_BASE_URL: str = "http://localhost:11434"
+SCRIBE_TEST_DIR: str = "tests/scribe_generated"
+DEFAULT_TOOL_TIMEOUT: float = 180.0
+
+# Step Status Constants
+STATUS_SUCCESS: str = "SUCCESS"
+STATUS_FAILURE: str = "FAILURE"
+STATUS_WARNING: str = "WARNING"
+STATUS_SKIPPED: str = "SKIPPED"
+STATUS_ADVISORY: str = "ADVISORY"
+STATUS_PENDING: str = "PENDING"
+
+
+# Type Definitions for Reporting Clarity
+class StepOutputDetails(TypedDict, total=False):
+    tool_name: Optional[str]
+    return_code: Optional[int]
+    message: Optional[str]
+    stdout_summary: Optional[str]
+    stderr_summary: Optional[str]
+    llm_model: Optional[str]
+    prompt_type: Optional[str]
+    response_summary: Optional[str]
+    generated_content_path: Optional[str]
+    vulnerability_count: Optional[int]
+    vulnerabilities: Optional[List[Dict[str,Any]]]
+    highest_severity: Optional[str]
+    configured_fail_severity: Optional[str]
+    raw_output: Optional[str]
+    issues_found: Optional[List[Dict[str,Any]]]
+    notes: Optional[List[str]]
+    traceback: Optional[str]
+
+class StepResult(TypedDict):
+    name: str
+    status: str
+    start_time: str
+    end_time: str
+    duration_seconds: float
+    details: Union[str, StepOutputDetails, Dict[str, Any], List[Any], None]
+    error_message: Optional[str]
+
+class FinalReport(TypedDict):
+    scribe_version: str
+    run_id: str
+    start_time: str
+    end_time: str
+    total_duration_seconds: float
+    overall_status: str
+    target_project_dir: str
+    target_file_relative: str
+    language: str
+    python_version: str
+    commit_attempted: bool
+    commit_sha: Optional[str]
+    steps: List[StepResult]
+    audit_findings: Optional[List[Dict[str, Any]]]
+    ai_review_findings: Optional[List[Dict[str, Any]]]
+    test_results_summary: Optional[Dict[str, Any]]
+    error_message: Optional[str]
+
+# --- Custom Exceptions ---
+class ScribeError(Exception):
+    """Base exception for Scribe-specific errors."""
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.details = details if details is not None else {}
+
+class ScribeConfigurationError(ScribeError): """Error related to Scribe configuration."""
+class ScribeInputError(ScribeError): """Error related to invalid user inputs."""
+class ScribeEnvironmentError(ScribeError): """Error related to environment setup (venv, dependencies)."""
+class ScribeToolError(ScribeError): """Error related to external tool execution."""
+class ScribeApiError(ScribeError): """Error related to LLM API communication."""
+class ScribeFileSystemError(ScribeError): """Error related to file system operations."""
+
+# --- Logging Setup Function ---
+def setup_logging(log_level_str: str, log_file: Optional[str] = None) -> logging.Logger:
+    log_level = getattr(logging, log_level_str.upper(), logging.INFO)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+        handler.close()
+
+    logging.Formatter.converter = time.gmtime
+    formatter = logging.Formatter(LOG_FORMAT + " (UTC)")
+
+    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(log_level)
+    root_logger.addHandler(console_handler)
+
+    app_logger_name = APP_NAME
+    if log_file:
+        try:
+            log_file_path = Path(log_file).resolve()
+            log_file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
+            file_handler.setFormatter(formatter)
+            file_handler.setLevel(logging.DEBUG)
+            root_logger.addHandler(file_handler)
+            logging.getLogger(app_logger_name).info(
+                f"Console logging level: {log_level_str}. Detailed (DEBUG) log file active: {log_file_path}"
+            )
+        except Exception as e:
+            logging.getLogger(app_logger_name).error(
+                f"Failed to initialize file logging to '{log_file}': {e}. Continuing with console logging only.",
+                exc_info=False
+            )
+    else:
+        logging.getLogger(app_logger_name).info(
+            f"Console logging level: {log_level_str}. No log file configured."
+        )
+    return logging.getLogger(app_logger_name)
+
+# --- Configuration Manager ---
+class ScribeConfig:
+    """Handles loading, validation, and access to Scribe configuration data."""
+    def __init__(self, config_path_override: Optional[str] = None,
+                 project_dir_for_local_config: Optional[Path] = None,
+                 is_nai_context: bool = False):
+        self._logger = logging.getLogger(f"{APP_NAME}.ScribeConfig")
+        self._is_nai_context = is_nai_context
+        self._config_path: Optional[Path] = None
+        if config_path_override:
+            p_override = Path(config_path_override).expanduser().resolve()
+            if p_override.is_file(): self._config_path = p_override
+            else: self._logger.warning(f"Override config file '{p_override}' not found. Searching defaults.")
+
+        if not self._config_path and project_dir_for_local_config:
+            proj_config = project_dir_for_local_config.resolve() / DEFAULT_CONFIG_FILENAME
+            if proj_config.is_file(): self._config_path = proj_config
+
+        if not self._config_path :
+            cwd_config = Path.cwd() / DEFAULT_CONFIG_FILENAME
+            if cwd_config.is_file(): self._config_path = cwd_config
+
+        self._config: Dict[str, Any] = self._load_and_validate_config()
+
+    def _get_default_config(self) -> Dict[str, Any]:
+        allowed_bases = ["/workspace"] if self._is_nai_context else [str(Path.home()), "/tmp", str(Path.cwd().resolve())]
+        self._logger.info(f"'allowed_target_bases' default: {allowed_bases} (NAI context: {self._is_nai_context})")
+        return {
+            "allowed_target_bases": allowed_bases, "fail_on_audit_severity": "high",
+            "fail_on_lint_critical": True, "fail_on_mypy_error": True, "fail_on_test_failure": True,
+            "ollama_base_url": os.environ.get("OLLAMA_API_BASE", DEFAULT_OLLAMA_BASE_URL),
+            "ollama_model": os.environ.get("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL),
+            "ollama_request_timeout": 180.0, "ollama_api_retries": 2, "ollama_api_retry_delay": 5.0,
+            "default_tool_timeout": DEFAULT_TOOL_TIMEOUT,
+            "commit_message_template": f"feat(Scribe): Apply v{APP_VERSION} validated changes to {{target_file}}",
+            "test_generation_prompt_template": (
+                "Ensure you import functions from src.main if Target File is src/main.py"
+                "You are an expert Python test generation assistant. Generate concise and effective pytest unit tests for the provided code. "
+                "Focus on testing the public API based on the function and class signatures. "
+                "The code to be tested is located in a module corresponding to the 'Target File' (e.g., if Target File is 'src/main.py', the functions can be imported from 'src.main'). "
+                "Your generated test code MUST include the necessary import statements to access these functions/classes from their module. "
+                "Ensure all generated test code is syntactically correct Python and follows pytest conventions. "
+                "Begin your response with 'import pytest' and any other necessary imports from the target module. "
+                "Provide ONLY the Python code for the tests, enclosed in a single ```python ... ``` block.\n\n"
+                "Target File: {target_file_path}\n"
+                "Code Snippet (may be truncated for brevity in prompt):\n```python\n{code_content}\n```\n"
+                "Key Signatures for Test Focus:\n{signatures}\n\n"
+                "Generated Pytest Code (including all necessary imports, within a single ```python ... ``` block):"
+            ),
+            "review_prompt_template": (
+                "You are an expert Python code reviewer. Perform a thorough review of the following code. "
+                "Identify potential bugs, style issues, security vulnerabilities, and areas for improvement. "
+                "Provide your findings as a JSON list of objects. Each object MUST have 'severity' (string: 'critical', 'high', 'moderate', 'low', or 'info'), "
+                "'description' (string: a clear explanation of the issue), and 'location' (string: e.g., function name, class name, or specific line number if applicable, otherwise 'general' or file name). "
+                "Return ONLY the raw JSON list of these objects, without any surrounding text or markdown.\n\n"
+                "Target File: {target_file_path}\n"
+                "Code:\n```python\n{code_content}\n```\n\n"
+                "Review Findings (as a raw JSON list of objects):"
+            ),
+            "validation_steps": [
+                "validate_inputs", "setup_environment", "install_deps", "audit_deps", "apply_code",
+                "format_code", "lint_code", "type_check", "extract_signatures", "generate_tests",
+                "save_tests", "execute_tests", "review_code", "run_precommit", "commit_changes",
+                "generate_report"
+            ], "tool_paths": {}
+        }
+
+    def _load_and_validate_config(self) -> Dict[str, Any]:
+        defaults = self._get_default_config(); config_data = defaults.copy()
+        if self._config_path and self._config_path.is_file():
+            try:
+                with open(self._config_path, "rb") as f: loaded_from_file = tomllib.load(f)
+                config_data = self._merge_configs(defaults, loaded_from_file)
+                self._logger.info(f"Loaded and merged config from: {self._config_path}")
+            except (tomllib.TOMLDecodeError, OSError) as e: self._logger.error(f"Error with config '{self._config_path}': {e}. Using defaults.")
+        else: self._logger.info("No .scribe.toml. Using defaults.")
+        try: self._validate_loaded_config(config_data); self._logger.debug("Config validated.")
+        except ScribeConfigurationError as e: self._logger.critical(f"Config validation failed: {e}"); raise
+        return config_data
+
+    def _merge_configs(self, base: Dict, updates: Dict) -> Dict:
+        m = base.copy();
+        for k,v in updates.items():
+            if isinstance(v,dict) and isinstance(m.get(k),dict): m[k] = self._merge_configs(m[k],v)
+            else: m[k] = v
+        return m
+
+    def _validate_loaded_config(self, config: Dict[str, Any]):
+        self._logger.debug("Validating config...")
+        if not isinstance(config.get("allowed_target_bases"), list): raise ScribeConfigurationError("allowed_target_bases: list expected")
+        if not all(isinstance(b, str) for b in config["allowed_target_bases"]): raise ScribeConfigurationError("allowed_target_bases must contain only strings.")
+        if not isinstance(config.get("fail_on_audit_severity"), str) or config["fail_on_audit_severity"].lower() not in ["low", "moderate", "high", "critical"]: raise ScribeConfigurationError("fail_on_audit_severity must be 'low', 'moderate', 'high', or 'critical'.")
+        if not isinstance(config.get("fail_on_lint_critical"), bool): raise ScribeConfigurationError("fail_on_lint_critical: boolean expected.")
+        if not isinstance(config.get("fail_on_mypy_error"), bool): raise ScribeConfigurationError("fail_on_mypy_error: boolean expected.")
+        if not isinstance(config.get("fail_on_test_failure"), bool): raise ScribeConfigurationError("fail_on_test_failure: boolean expected.")
+        if not isinstance(config.get("ollama_base_url"), str) or not urlparse(config["ollama_base_url"]).scheme: raise ScribeConfigurationError("ollama_base_url: valid URL string expected.")
+        if not isinstance(config.get("ollama_model"), str) or not config["ollama_model"]: raise ScribeConfigurationError("ollama_model: string expected.")
+        if not isinstance(config.get("ollama_request_timeout"), (int, float)) or config["ollama_request_timeout"] <= 0: raise ScribeConfigurationError("ollama_request_timeout: positive number expected.")
+        if not isinstance(config.get("ollama_api_retries"), int) or config["ollama_api_retries"] < 0: raise ScribeConfigurationError("ollama_api_retries: non-negative integer expected.")
+        if not isinstance(config.get("ollama_api_retry_delay"), (int, float)) or config["ollama_api_retry_delay"] <= 0: raise ScribeConfigurationError("ollama_api_retry_delay: positive number expected.")
+        if not isinstance(config.get("default_tool_timeout"), (int, float)) or config["default_tool_timeout"] <= 0: raise ScribeConfigurationError("default_tool_timeout: positive number expected.")
+        if not isinstance(config.get("commit_message_template"), str) or not config["commit_message_template"]: raise ScribeConfigurationError("commit_message_template: non-empty string expected.")
+        if not isinstance(config.get("test_generation_prompt_template"), str) or not config["test_generation_prompt_template"]: raise ScribeConfigurationError("test_generation_prompt_template: non-empty string expected.")
+        if not isinstance(config.get("review_prompt_template"), str) or not config["review_prompt_template"]: raise ScribeConfigurationError("review_prompt_template: non-empty string expected.")
+        if not isinstance(config.get("validation_steps"), list) or not all(isinstance(s, str) for s in config["validation_steps"]): raise ScribeConfigurationError("validation_steps: list of strings expected.")
+        if not isinstance(config.get("tool_paths"), dict): raise ScribeConfigurationError("tool_paths: dictionary expected.")
+        self._logger.debug("Config validation appears OK.")
+
+
+    def get(self, key: str, default: Any = None) -> Any: return self._config.get(key, default)
+    def get_list(self, key: str, default: Optional[List[Any]] = None) -> List[Any]: v=self._config.get(key,default or []); return v if isinstance(v,list) else (default or [])
+    def get_str(self, key: str, default: str = "") -> str: v=self._config.get(key,default); return str(v) if v is not None else default
+    def get_bool(self, key: str, default: bool = False) -> bool: v=self._config.get(key,default); return v if isinstance(v,bool) else (str(v).lower()=='true' if isinstance(v,str) else default)
+    def get_float(self, key: str, default: float = 0.0) -> float: try: return float(self._config.get(key,default)) except: return default
+    def get_int(self, key: str, default: int = 0) -> int: try: return int(float(self._config.get(key,default))) except: return default
+    @property
+    def config_path(self) -> Optional[Path]: return self._config_path
+    @property
+    def is_nai_context(self) -> bool: return self._is_nai_context
+
+# --- Tool Runner ---
+class ToolRunner:
+    def __init__(self, config: ScribeConfig): self._logger = logging.getLogger(f"{APP_NAME}.ToolRunner"); self._config = config
+    def _find_executable(self, executable_name: str, venv_path: Optional[Path] = None) -> Path:
+        configured_tool_paths = self._config.get("tool_paths", {})
+        if isinstance(configured_tool_paths, dict) and executable_name in configured_tool_paths:
+            custom_path_str = configured_tool_paths[executable_name]
+            if isinstance(custom_path_str, str) and custom_path_str.strip():
+                custom_path = Path(custom_path_str).expanduser()
+                if custom_path.is_file() and os.access(custom_path, os.X_OK):
+                    self._logger.debug(f"Using configured path for '{executable_name}': {custom_path}"); return custom_path.resolve()
+                else: self._logger.warning(f"Configured path for '{executable_name}' ('{custom_path_str}') not executable. Falling back.")
+        if venv_path:
+            resolved_venv_path = venv_path.resolve()
+            if resolved_venv_path.is_dir():
+                bin_dir = resolved_venv_path / ("Scripts" if sys.platform == "win32" else "bin")
+                for suffix in ["", ".exe"] if sys.platform == "win32" else [""]:
+                    venv_exec_candidate = bin_dir / f"{executable_name}{suffix}"
+                    if venv_exec_candidate.is_file() and os.access(venv_exec_candidate, os.X_OK):
+                        self._logger.debug(f"Found '{executable_name}' in venv: {venv_exec_candidate}"); return venv_exec_candidate.resolve()
+        system_exec_path_str = shutil.which(executable_name)
+        if system_exec_path_str: self._logger.debug(f"Found '{executable_name}' in PATH: {system_exec_path_str}"); return Path(system_exec_path_str).resolve()
+        raise FileNotFoundError(f"Executable '{executable_name}' not found.")
+    def run_tool(self, command_args: List[str], cwd: Path, venv_path: Optional[Path]=None, env_vars: Optional[Dict[str,str]]=None, timeout: Optional[float]=None) -> subprocess.CompletedProcess:
+        if not command_args: self._logger.critical("run_tool called with empty command_args."); return subprocess.CompletedProcess(args=[],returncode=127,stdout="",stderr="No command.")
+        exec_name = command_args[0]
+        try: exec_path = self._find_executable(exec_name, venv_path)
+        except FileNotFoundError as e: raise ScribeToolError(f"Executable '{exec_name}' not found.") from e
+        full_cmd = [str(exec_path)] + command_args[1:]; cmd_str = ' '.join(shlex.q

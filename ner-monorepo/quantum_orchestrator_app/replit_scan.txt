@@ -1,0 +1,261 @@
+### Replit Project Scan Initializing ###
+Timestamp: Fri Apr 25 04:36:20 PM MDT 2025
+Scan Location: /home/pong/Projects/replitwork
+=========================================
+
+### Directory Listing (Detailed) ###
+total 904
+drwxrwxr-x  5 pong pong   4096 Apr 25 16:35 .
+drwxrwxr-x  7 pong pong   4096 Apr 25 14:51 ..
+drwxr-xr-x  2 pong pong   4096 Apr 25 14:17 attached_assets
+-rw-r--r--  1 pong pong   1288 Apr 25 13:30 config.json
+-rwxrwxr-x  1 pong pong   2407 Apr 25 16:34 gather_replit_info.sh
+-rw-r--r--  1 pong pong 752808 Apr 25 14:21 generated-icon.png
+-rw-r--r--  1 pong pong   3862 Apr 25 13:31 instruction_schema.json
+-rw-r--r--  1 pong pong   9865 Apr 25 13:32 main.py
+-rw-r--r--  1 pong pong    755 Apr 25 13:31 orchestrator_state.json
+drwxr-xr-x  2 pong pong   4096 Apr 25 13:36 __pycache__
+-rw-r--r--  1 pong pong    448 Apr 25 13:30 pyproject.toml
+drwxr-xr-x 11 pong pong   4096 Apr 25 13:32 quantum_orchestrator
+-rw-rw-r--  1 pong pong    210 Apr 25 16:36 replit_scan.txt
+-rw-r--r--  1 pong pong   1778 Apr 25 12:00 run_api.py
+-rw-r--r--  1 pong pong   1870 Apr 25 12:00 setup.py
+-rw-r--r--  1 pong pong 105028 Apr 25 13:30 uv.lock
+
+### Directory Tree Structure (Max Depth 3) ###
+.
+├── attached_assets
+│   ├── Pasted-Directive-Delta-Quantum-Transcendence-Integration-Prompt-1-Cognitive-Fusion-Core-Multi-Agent-Sys-1745603383242.txt
+│   ├── Pasted-Directive-Omega-Quantum-Transcendence-Accelerated-13-Prompts-Prompt-1-Cognitive-Fusion-Core-Fo-1745603186325.txt
+│   ├── Pasted-Directive-Project-Completion-Final-Polish-Quantum-Orchestrator-v4-0-FINAL-ASSISTANT-Objective-1745612224625.txt
+│   └── Pasted-Genesis-Directive-Omnitide-Automaton-Manifestation-Quantum-Orchestrator-v4-0-Objective-Generat-1745603488447.txt
+├── config.json
+├── gather_replit_info.sh
+├── generated-icon.png
+├── instruction_schema.json
+├── main.py
+├── orchestrator_state.json
+├── __pycache__
+│   └── main.cpython-311.pyc
+├── pyproject.toml
+├── quantum_orchestrator
+│   ├── ai_agents
+│   │   ├── code_agent.py
+│   │   ├── core_team.py
+│   │   ├── __init__.py
+│   │   ├── meta_agent.py
+│   │   ├── optimization_agent.py
+│   │   ├── planning_agent.py
+│   │   ├── __pycache__
+│   │   └── test_agent.py
+│   ├── api
+│   │   ├── api_server.py
+│   │   └── __init__.py
+│   ├── automation
+│   │   ├── continuous_integration.py
+│   │   ├── __init__.py
+│   │   ├── input_sources.py
+│   │   └── scheduler.py
+│   ├── config.json
+│   ├── core
+│   │   ├── agent.py
+│   │   ├── config.py
+│   │   ├── __init__.py
+│   │   ├── instruction_parser.py
+│   │   ├── __pycache__
+│   │   ├── self_verification.py
+│   │   └── state_manager.py
+│   ├── gui
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── static
+│   │   ├── templates
+│   │   └── views
+│   ├── handlers
+│   │   ├── custom
+│   │   ├── execution.py
+│   │   ├── file_operations.py
+│   │   ├── git_operations.py
+│   │   ├── __init__.py
+│   │   ├── llm_operations.py
+│   │   ├── __pycache__
+│   │   └── quality_operations.py
+│   ├── __init__.py
+│   ├── instruction_schema.json
+│   ├── __pycache__
+│   │   └── __init__.cpython-311.pyc
+│   ├── services
+│   │   ├── api_service.py
+│   │   ├── __init__.py
+│   │   ├── integration_service.py
+│   │   ├── llm_service.py
+│   │   ├── __pycache__
+│   │   ├── quality_service.py
+│   │   └── watcher_service.py
+│   └── utils
+│       ├── __init__.py
+│       ├── logging_utils.py
+│       ├── path_resolver.py
+│       ├── __pycache__
+│       ├── quantum_optimization.py
+│       ├── security.py
+│       └── telemetry.py
+├── replit_scan.txt
+├── run_api.py
+├── setup.py
+└── uv.lock
+
+22 directories, 58 files
+=========================================
+
+### Dependency File Contents ###
+----- Content of: requirements.txt -----
+# File not found: requirements.txt
+--- End of: requirements.txt ---
+
+----- Content of: pyproject.toml -----
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "email-validator>=2.2.0",
+    "flask-login>=0.6.3",
+    "flask>=3.1.0",
+    "flask-sqlalchemy>=3.1.1",
+    "gunicorn>=23.0.0",
+    "psycopg2-binary>=2.9.10",
+    "flask-wtf>=1.2.2",
+    "jsonschema>=4.23.0",
+    "requests>=2.32.3",
+    "flask-cors>=5.0.1",
+    "watchdog>=6.0.0",
+    "numpy>=2.2.5",
+]
+--- End of: pyproject.toml ---
+
+----- Content of: package.json -----
+# File not found: package.json
+--- End of: package.json ---
+
+----- Content of: go.mod -----
+# File not found: go.mod
+--- End of: go.mod ---
+
+----- Content of: Gemfile -----
+# File not found: Gemfile
+--- End of: Gemfile ---
+
+=========================================
+
+### Replit / Config File Contents ###
+----- Content of: .replit -----
+# File not found: .replit
+--- End of: .replit ---
+
+----- Content of: replit.nix -----
+# File not found: replit.nix
+--- End of: replit.nix ---
+
+----- Content of: Dockerfile -----
+# File not found: Dockerfile
+--- End of: Dockerfile ---
+
+----- Content of: .env -----
+# File not found: .env
+--- End of: .env ---
+
+----- Content of: config.py -----
+# File not found: config.py
+--- End of: config.py ---
+
+----- Content of: config.json -----
+{
+  "version": "1.0.0",
+  "environment": "development",
+  "logging": {
+    "level": "info",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  },
+  "llm_service": {
+    "default_provider": "local",
+    "providers": {
+      "local": {
+        "model": "default",
+        "temperature": 0.7,
+        "max_tokens": 1000
+      },
+      "openai": {
+        "api_key_env": "OPENAI_API_KEY",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "max_tokens": 1000
+      }
+    }
+  },
+  "discovery": {
+    "enabled": true,
+    "probe_interval": 300,
+    "active_endpoints": [
+      "https://worldtimeapi.org/api/ip",
+      "https://api.publicapis.org/entries"
+    ]
+  },
+  "handlers": {
+    "enable_all": true,
+    "timeout": 30
+  },
+  "security": {
+    "verify_ssl": true,
+    "default_security_level": 3
+  },
+  "optimization": {
+    "default_algorithm": "annealing",
+    "default_iterations": 100
+  },
+  "core_team": {
+    "enabled": true,
+    "default_archetypes": [
+      "Engineering",
+      "Technical Pragmatism",
+      "Scientific",
+      "Strategic Wisdom"
+    ]
+  },
+  "web_interface": {
+    "theme": "dark",
+    "default_page_size": 20,
+    "enable_websocket": true
+  },
+  "api": {
+    "enabled": true,
+    "port": 8000,
+    "allow_cors": true
+  }
+}--- End of: config.json ---
+
+----- Content of: settings.py -----
+# File not found: settings.py
+--- End of: settings.py ---
+
+----- Content of: Procfile -----
+# File not found: Procfile
+--- End of: Procfile ---
+
+=========================================
+
+### Potential Entrypoint Files ###
+--- Check package.json 'scripts->start' or .replit 'run' command above ---
+=========================================
+
+### Detected File Extensions (Top 5) ###
+     52 py
+     34 pyc
+     11 html
+      5 txt
+      5 json
+=========================================
+
+### Replit Project Scan Complete ###
+Provide the *entire* output above.

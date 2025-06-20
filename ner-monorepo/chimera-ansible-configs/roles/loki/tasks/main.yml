@@ -1,0 +1,38 @@
+---
+# File: roles/loki/tasks/main.yml
+# Version: FINAL - Uses definition + project_name
+
+- name: Ensure Loki directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0755'
+  loop:
+    - "{{ loki_compose_dir }}"
+    - "{{ loki_config_dir }}"
+    - "{{ loki_data_dir }}" # Used by Loki config internally for filesystem storage
+  become: true
+  tags: [loki, config]
+
+- name: Deploy Loki configuration file (loki-config.yml)
+  ansible.builtin.template:
+    src: loki-config.yml.j2
+    dest: "{{ loki_config_file_path }}" # Use precise var from site.yml
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0644'
+  become: true
+  notify: Restart Loki container # Assumes handler 'Restart Loki container' exists
+  tags: [loki, config]
+
+- name: Ensure Loki Docker Compose project is running
+  community.docker.docker_compose_v2:
+    project_name: loki_stack # ADDED project_name
+    definition: "{{ lookup('template', 'docker-compose.yml.j2') | from_yaml }}" # Embed template definition
+    state: present
+    pull: missing
+  become: true
+  notify: Restart Loki container # Assumes handler exists
+  tags: [loki, docker, run]

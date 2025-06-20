@@ -1,0 +1,41 @@
+# Ansible Managed: /etc/fail2ban/jail.local from role security template jail.local.j2
+# Local overrides for Fail2Ban jail settings
+
+[DEFAULT]
+# Whitelist localhost and potentially other trusted IPs (e.g., internal network)
+# Add your client/management IPs here if applicable
+ignoreip = 127.0.0.1/8 ::1 {{ fail2ban_ignoreip | default('') }} # Use variable 'fail2ban_ignoreip' if defined in vars
+
+# Ban time (e.g., 1 hour)
+bantime = 1h
+
+# Find time (check last 10 minutes for failures)
+findtime = 10m
+
+# Max retries before ban
+maxretry = 5
+
+# Backend (auto usually picks systemd on modern systems)
+backend = auto
+
+# Default ban action using UFW (ensure ufw action scripts exist in /etc/fail2ban/action.d/)
+# Common actions: ufw, iptables-multiport, nftables-multiport
+banaction = ufw
+banaction_allports = ufw-allports
+
+
+# SSH Server Jail Configuration
+[sshd]
+enabled = true
+port = ssh,{{ security_ssh_port | default(22) }} # Monitor standard SSH port and configured port
+# filter = sshd # Usually default is fine
+logpath = %(sshd_log)s # Auto-detect log path
+backend = %(sshd_backend)s # Auto-detect backend
+maxretry = 3 # Be stricter for SSH
+bantime = 2h # Ban for longer for SSH failures
+
+# Add other jails below as needed, e.g., for nginx auth failures
+# [nginx-http-auth]
+# enabled = true
+# ... etc ...
+

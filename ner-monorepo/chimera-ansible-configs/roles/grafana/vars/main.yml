@@ -1,0 +1,6 @@
+---
+# roles/grafana/vars/main.yml
+# Define defaults or overrides here - testing explicit definition
+grafana_base_dir: "/opt/docker/grafana"
+grafana_config_dir: "{{ grafana_base_dir }}/config"
+grafana_data_dir: "{{ grafana_base_dir }}/data"

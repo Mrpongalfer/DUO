@@ -1,0 +1,98 @@
+name: DUO Self-Improving CI/CD
+
+on:
+  push:
+    branches: [main, "releases/**"]
+  pull_request:
+    branches: [main, "releases/**"]
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install -r requirements.txt
+    - name: Run Black, Ruff, Flake8
+      run: |
+        black --check .
+        ruff check .
+        flake8 .
+
+  scribe-validate:
+    needs: lint-and-format
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install -r requirements.txt
+    - name: Run Scribe Agent Validation (AI review, test, report)
+      run: |
+        python3 scribe0.py . --review-only --log-level INFO > scribe_report.json
+    - name: Upload Scribe Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: scribe-report
+        path: scribe_report.json
+
+  vector-alignment:
+    needs: scribe-validate
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install -r requirements.txt
+    - name: Ensure Goal Vectors
+      run: |
+        python3 vectorize_constitution.py
+    - name: Run Vector Alignment Check
+      run: |
+        python3 scripts/check_alignment.py --input scribe_report.json --vectors goal_vectors/ > alignment_score.txt
+    - name: Upload Alignment Score
+      uses: actions/upload-artifact@v4
+      with:
+        name: alignment-score
+        path: alignment_score.txt
+
+  exwork-agent:
+    needs: vector-alignment
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install -r requirements.txt
+    - name: Run Ex-Work Agent Tasks
+      run: |
+        python3 exworkagent0.py --mode ci --plan-file ci_plan.json --log-level INFO > exwork_output.log
+    - name: Upload Ex-Work Log
+      uses: actions/upload-artifact@v4
+      with:
+        name: exwork-log
+        path: exwork_output.log
+
+  metamorphosis-loop:
+    needs: exwork-agent
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install -r requirements.txt
+    - name: Run Metamorphosis Self-Improvement Loop
+      run: |
+        bash metamorphosis.sh

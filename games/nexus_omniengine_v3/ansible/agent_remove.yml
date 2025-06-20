@@ -1,0 +1,18 @@
+---
+# Ansible playbook: Agent Removal
+# Drake v0.3 protocol, TPC-compliant
+- name: Remove Nexus OmniEngine Agent
+  hosts: all
+  become: yes
+  vars_files:
+    - ../config/main_config.json
+  tasks:
+    - name: Stop agent service
+      shell: pkill -f core.ai_agent_forge.agent_forge || true
+      ignore_errors: yes
+
+    - name: Remove agent files
+      file:
+        path: "{{ agent_deploy_path }}"
+        state: absent
+      when: agent_deploy_path is defined

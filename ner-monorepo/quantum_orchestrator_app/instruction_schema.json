@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Quantum Orchestrator Instruction Schema",
+  "description": "Schema definition for instructions in the Quantum Orchestrator's Neural Flow Pipeline",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the instruction"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["intent", "direct", "workflow", "tool_request"],
+      "description": "Type of instruction being processed"
+    },
+    "intent": {
+      "type": "string",
+      "description": "Natural language description of the intent (for intent-type instructions)"
+    },
+    "handler": {
+      "type": "string",
+      "description": "Name of the handler to invoke (for direct-type instructions)"
+    },
+    "params": {
+      "type": "object",
+      "description": "Parameters for the handler (for direct-type instructions)"
+    },
+    "steps": {
+      "type": "array",
+      "description": "Sequence of instruction steps (for workflow-type instructions)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the step"
+          },
+          "handler": {
+            "type": "string",
+            "description": "Name of the handler to invoke for this step"
+          },
+          "params": {
+            "type": "object",
+            "description": "Parameters for the handler"
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "IDs of steps that must complete before this step",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "handler"]
+      }
+    },
+    "tool_spec": {
+      "type": "object",
+      "description": "Specification for a new tool to be generated (for tool_request-type instructions)",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the tool"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the tool's purpose"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Parameters for the tool"
+        },
+        "returns": {
+          "type": "object",
+          "description": "Return values for the tool"
+        },
+        "implementation_details": {
+          "type": "string",
+          "description": "Detailed information about how the tool should be implemented"
+        }
+      },
+      "required": ["name", "description"]
+    },
+    "context": {
+      "type": "object",
+      "description": "Additional context for instruction execution"
+    },
+    "callback": {
+      "type": "object",
+      "description": "Callback information for asynchronous execution",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL to call when execution completes"
+        },
+        "headers": {
+          "type": "object",
+          "description": "HTTP headers to include in the callback"
+        }
+      }
+    }
+  },
+  "required": ["type"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": { "enum": ["intent"] }
+        }
+      },
+      "then": {
+        "required": ["intent"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "enum": ["direct"] }
+        }
+      },
+      "then": {
+        "required": ["handler"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "enum": ["workflow"] }
+        }
+      },
+      "then": {
+        "required": ["steps"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "enum": ["tool_request"] }
+        }
+      },
+      "then": {
+        "required": ["tool_spec"]
+      }
+    }
+  ]
+}

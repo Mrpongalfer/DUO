@@ -1,0 +1,71 @@
+{
+    "exwork_version": "2.0",
+    "task_id": "LilyMemoryExtraction_ExWork_v1.1",
+    "description": "Extracts structured Memory Shards from a Scribe-parsed Lily interaction log JSON file. This task definition is passed to ExWorkAgent via stdin.",
+    "agent_compatibility": ["ExWorkAgentV2"],
+    "parameters": [
+        {
+            "name": "scribe_output_json_file_path",
+            "type": "file_path_absolute",
+            "description": "Absolute path to the JSON file produced by ScribeAgent containing the parsed conversation.",
+            "required": true
+        },
+        {
+            "name": "lily_persona_foundation_summary",
+            "type": "string",
+            "description": "Optional: A brief summary or keywords from Lily's current Persona Foundation to help contextualize memory extraction.",
+            "required": false,
+            "default": ""
+        }
+    ],
+    "actions": [
+        {
+            "action_id": "load_parsed_log_from_scribe",
+            "action_type": "file.read_json",
+            "inputs": {
+                "file_path": "{{ parameters.scribe_output_json_file_path }}"
+            },
+            "outputs": {
+                "variable_name": "conversation_data_from_scribe"
+            },
+            "error_handling": {
+                "on_failure": "HALT_WORKFLOW",
+                "log_level": "ERROR"
+            }
+        },
+        {
+            "action_id": "extract_lily_memory_shards_via_script",
+            "action_type": "RUN_SCRIPT", // Uses ExWork's built-in RUN_SCRIPT action
+            "inputs": {
+                // This script needs to be in your NER and accessible by ExWorkAgent
+                "script_path": "ner://06_AGENT_BLUEPRINTS/lily_memory_tasks/scripts/extract_shards_from_lily_log.py",
+                // The script will receive the conversation data as a JSON string via stdin
+                "stdin_content_json_variable": "variables.conversation_data_from_scribe",
+                "args": [ // Example of passing other params as CLI args to your script
+                    "--persona-summary", 
+                    "{{ parameters.lily_persona_foundation_summary }}"
+                ],
+                "cwd": "PROJECT_ROOT" // Or a specific scratch directory if needed
+            },
+            "outputs": {
+                // Assumes your Python script prints its JSON output (list of shards) to its stdout.
+                // BaseAgentRunner (used by ExWork's RUN_SCRIPT) will capture this stdout and try to parse it as JSON.
+                "variable_name": "extracted_shards_script_output"
+            },
+            "error_handling": {
+                "on_failure": "LOG_ERROR_CONTINUE", // Or HALT_WORKFLOW if this step is critical
+                "log_level": "WARNING"
+            }
+        }
+    ],
+    "final_output": {
+        "overall_success": "{{ steps.extract_lily_memory_shards_via_script.status == 'success' and steps.load_parsed_log_from_scribe.status == 'success' }}",
+        "message": "Memory Shard extraction process results.",
+        // Assumes your 'extract_shards_from_lily_log.py' script outputs a JSON like: 
+        // {"status": "success", "shards_extracted": [...], "summary_of_extraction": "..."}
+        // and that this entire JSON object is what 'variables.extracted_shards_script_output' holds.
+        "memory_shards": "{{ variables.extracted_shards_script_output.shards_extracted | default([]) }}",
+        "extraction_summary": "{{ variables.extracted_shards_script_output.summary_of_extraction | default('No summary from script.') }}"
+    },
+    "notes_for_architect": "1. You MUST create the Python script 'ner://06_AGENT_BLUEPRINTS/lily_memory_tasks/scripts/extract_shards_from_lily_log.py'.\n2. This script will receive the Scribe-parsed conversation data (as a JSON string) via its STDIN.\n3. It should implement the logic to identify and structure Memory Shards according to the schema in LilyPersonaHandler (e.g., 'architect_preference', 'key_topic_summary', 'architect_feedback_positive', etc.).\n4. The script MUST print a single JSON object to its STDOUT containing at least a key 'shards_extracted' with a list of these shard dictionaries, and ideally a 'status': 'success' field."
+}

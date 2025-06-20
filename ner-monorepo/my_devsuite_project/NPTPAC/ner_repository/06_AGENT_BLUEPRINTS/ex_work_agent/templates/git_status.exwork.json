@@ -1,0 +1,12 @@
+{
+  "step_id": "exwork_git_status_001",
+  "description": "Run git status in the current project.",
+  "actions": [
+    {
+      "type": "RUN_SCRIPT", 
+      "script_path": "git", 
+      "args": ["status"], 
+      "cwd": "." 
+    }
+  ]
+}

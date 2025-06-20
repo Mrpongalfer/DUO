@@ -1,0 +1,11 @@
+{
+    "folders": [
+        {
+            "name": "lilyOPS-1",
+            "path": "../ner-monorepo/duo/lilyOPS-1"
+        },
+        {
+            "path": "../ner-monorepo/duo"
+        }
+    ]
+}

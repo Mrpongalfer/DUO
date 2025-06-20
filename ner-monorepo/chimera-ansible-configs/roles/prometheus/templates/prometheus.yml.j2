@@ -1,0 +1,28 @@
+# File: roles/prometheus/templates/prometheus.yml.j2
+# Version: FINAL - Merged Remote Changes + Correct Self-Scrape Port + Refined Jinja
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    # Scrape Prometheus itself (inside Docker, uses internal port 9090)
+    static_configs:
+      - targets: ["localhost:9090"] # CORRECTED PORT to internal 9090
+
+  - job_name: "node_exporter"
+    # Scrape node_exporter based on inventory groups
+    static_configs:
+      - targets:
+{%- set ne_targets = [] %} {# Initialize list #}
+{%- set ne_port = node_exporter_port | default(9100) %} {# Get default port from vars #}
+{%- for host in (groups['server'] | default([])) + (groups['clients'] | default([])) %} {# Combine server & client groups safely #}
+{%-   set host_ip = hostvars[host]['ansible_host'] | default(host) %} {# Use connection IP or inventory name #}
+{%-   set _ = ne_targets.append(host_ip ~ ':' ~ ne_port) %} {# Append 'host:port' #}
+{%- endfor %}
+{{ ne_targets | to_yaml | indent(8) }} {# Output list as YAML #}
+
+# Add alerting rules configuration if needed
+# rule_files:
+#   - "/etc/prometheus/rules/*.rules.yml"

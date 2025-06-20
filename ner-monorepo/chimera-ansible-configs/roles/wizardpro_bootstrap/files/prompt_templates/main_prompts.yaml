@@ -1,0 +1,66 @@
+# orchestrator/prompt_templates/main_prompts.yaml
+# Main prompts for each phase - Populate using Agent Ex-Work
+Phase1_Requirements: |-
+  You are a helpful AI assistant starting a software project.
+  The user's initial idea is:
+  {{ ctx.initial_request }}
+  Ask clarifying questions to elicit detailed requirements (features, users, performance goals, data handling, etc.). Be thorough.
+
+Phase2_Architecture: |-
+  Based on the detailed requirements below:
+  ```yaml
+  {{ ctx.refined_requirements | default({}) | toyaml }}
+  ```
+  Design a robust and scalable system architecture. Define the core components (e.g., frontend, backend API, database, task queue), their responsibilities, data flow between them, and choose a specific, appropriate technology stack (languages, frameworks, databases, libraries, deployment platform). Justify your choices briefly.
+
+Phase3_CodeGeneration: |-
+  Based on the architecture and technology stack defined below:
+  Architecture:
+  ```yaml
+  {{ ctx.architecture_document | default({}) | toyaml }}
+  ```
+  Technology Stack:
+  ```yaml
+  {{ ctx.technology_stack | default(['Not Specified']) | toyaml }}
+  ```
+  Generate the necessary code files to implement the core functionality described. Use the file path marker format '--- File: path/to/file.ext ---' before each file's content block, and '--- End File ---' after each block. Include necessary imports, basic function/class structures, comments where needed, and initial error handling placeholders (e.g., try/except blocks).
+  Ensure the code is well-structured and follows best practices for the chosen technology stack. Provide a brief overview of each file's purpose and how it fits into the overall architecture.
+  Include any necessary configuration files (e.g., Dockerfile, requirements.txt, etc.) and a README file with instructions on how to set up and run the project.
+
+Phase4_Testing: |-
+  You are a Quality Assurance Lead AI. Analyze the generated code base provided below based on the requirements and architecture.
+  Requirements Summary:
+  ```yaml
+  {{ ctx.refined_requirements | default({}) | toyaml }}
+  ```
+  Architecture Summary:
+  ```yaml
+  {{ ctx.architecture_document | default({}) | toyaml }}
+  ```
+  Identify potential bugs, logical errors, missing edge cases, or areas not meeting requirements.
+  Suggest specific improvements or fixes.
+  Generate relevant unit test cases (e.g., using pytest) for the core components where possible. Present tests using the file path marker format.
+  If providing corrected code snippets, clearly indicate the file path and context. Structure your response clearly (e.g., using sections for Bugs, Suggestions, Tests).
+
+Phase5_Deployment: |-
+  You are a DevOps Engineer AI. Based on the tested code, architecture, and requirements, generate the necessary deployment artifacts and documentation.
+  Architecture Summary:
+  ```yaml
+  {{ ctx.get_architecture_summary() | default('[Not Provided]') }} {# Use summary method #}
+  ```
+  Technology Stack:
+  ```yaml
+  {{ ctx.technology_stack | default(['Not Specified']) | toyaml }}
+  ```
+  Code Files Available:
+  ```yaml
+  {{ ctx.generated_code.keys() | list | default(['N/A']) | toyaml }}
+  ```
+  Generate the following applicable artifacts using the '--- File: path/to/file.ext ---' marker format:
+
+    A suitable Dockerfile for containerizing the primary application service(s).
+    A docker-compose.yml file if multiple services (e.g., app, db) are involved.
+    A basic CI/CD pipeline configuration snippet (e.g., for GitHub Actions .github/workflows/deploy.yaml) including build, test, and potentially deployment steps.
+    A comprehensive README.md file explaining the project, setup instructions (including environment variables from a .env file), how to run it, and how to deploy it.
+    Any other essential configuration files suggested by the architecture (e.g., basic Nginx config).
+  Ensure the generated files are well-structured, follow best practices, and are ready for deployment.

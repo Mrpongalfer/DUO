@@ -1,0 +1,84 @@
+/* Modern Tool Forge Panel Styles */
+.tool-forge-panel {
+  background: var(--card-bg, #23272e);
+  color: var(--card-fg, #f8f8f8);
+  border-radius: var(--border-radius, 18px);
+  box-shadow: var(--shadow, 0 4px 24px #0002);
+  padding: 2em 2.5em 2em 2.5em;
+  margin-bottom: 2em;
+}
+.tool-forge-actions {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  margin-bottom: 1.5em;
+}
+.tool-list table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  color: #23272e;
+  box-shadow: 0 2px 8px #0001;
+}
+.tool-list th, .tool-list td {
+  padding: 0.7em 1em;
+  border-bottom: 1px solid #e0e7ef;
+  text-align: left;
+}
+.tool-list th {
+  background: #e0e7ff;
+}
+.tool-list tr:last-child td {
+  border-bottom: none;
+}
+.tool-activity-log {
+  background: #181b20;
+  border-radius: 10px;
+  padding: 1em 1.5em;
+  color: #ffe082;
+  box-shadow: 0 2px 8px #0002;
+}
+.tool-log-entry {
+  background: #fffbe6;
+  border-left: 4px solid #ffb84e;
+  margin-bottom: 0.5em;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  font-size: 1em;
+  font-style: italic;
+  color: #222;
+}
+/* Tool Forge Panel Styles */
+.tool-forge-container {
+  background: #f8faff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 1.5em;
+  max-width: 900px;
+  margin: 2em auto;
+}
+.tool-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5em;
+}
+.tool-list th, .tool-list td {
+  padding: 0.7em 1em;
+  border-bottom: 1px solid #e0e7ef;
+  text-align: left;
+}
+.tool-list th {
+  background: #e0e7ff;
+}
+.tool-log-entry {
+  background: #fffbe6;
+  border-left: 4px solid #ffb84e;
+  margin-bottom: 0.5em;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  font-size: 1em;
+  font-style: italic;
+}

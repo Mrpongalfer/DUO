@@ -1,0 +1,16 @@
+---
+# Simplified for debugging variable loading - v1.1
+common_pkgs:
+  - build-essential
+  - python3-dev
+  - curl
+  - wget
+  - git
+  - vim
+  - tmux
+  - htop
+  - net-tools
+  - dnsutils
+  - unzip
+  - ca-certificates
+  - gnupg

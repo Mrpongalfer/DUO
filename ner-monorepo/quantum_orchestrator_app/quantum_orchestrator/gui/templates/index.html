@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Orchestrator</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            padding: 4rem 2rem;
+            background: var(--bs-dark);
+            color: var(--bs-light);
+            margin-bottom: 2rem;
+        }
+        .card {
+            margin-bottom: 1.5rem;
+            background-color: var(--bs-dark);
+            border: 1px solid var(--bs-secondary);
+        }
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--bs-info);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Quantum Orchestrator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/console">Console</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/tools">Tools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/services">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/team">Core Team</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Quantum Orchestrator</h1>
+            <p class="lead mb-4">Neural Flow Pipeline with Cognitive Fusion Core</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <button type="button" class="btn btn-primary btn-lg px-4 gap-3" onclick="location.href='/console'">Open Console</button>
+                <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="location.href='/tools'">View Tools</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">🧠</div>
+                        <h5 class="card-title">Neural Flow Pipeline</h5>
+                        <p class="card-text">Advanced instruction processing with natural language understanding.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">🔄</div>
+                        <h5 class="card-title">Zero-Touch Integration</h5>
+                        <p class="card-text">Automatic discovery and integration with external services.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">⚛️</div>
+                        <h5 class="card-title">Quantum-Inspired Optimization</h5>
+                        <p class="card-text">Advanced algorithms for workflow optimization and resource allocation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">💡</div>
+                        <h5 class="card-title">Intent-Driven Workflows</h5>
+                        <p class="card-text">Natural language processing for intelligent workflow synthesis.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">👥</div>
+                        <h5 class="card-title">Core Team Archetypes</h5>
+                        <p class="card-text">Specialized cognitive modules for collaborative problem-solving.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">🔒</div>
+                        <h5 class="card-title">Self-Verification</h5>
+                        <p class="card-text">Comprehensive integrity checks and functionality verification.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">System Status</h4>
+                        <div id="status-panel">
+                            <p>Loading system status...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container text-center">
+            <p>Quantum Orchestrator v1.0.0</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to fetch system status
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                let statusHTML = '<div class="row">';
+
+                // Check if status has components
+                if (data.components) {
+                    for (const [key, value] of Object.entries(data.components)) {
+                        statusHTML += `
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-secondary">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${key}</h5>
+                                        <p class="card-text">Status: ${value.status || 'Unknown'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Display raw status data
+                    statusHTML += `
+                        <div class="col-12">
+                            <pre class="bg-dark p-3 rounded">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+
+                statusHTML += '</div>';
+                document.getElementById('status-panel').innerHTML = statusHTML;
+
+            } catch (error) {
+                document.getElementById('status-panel').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error fetching status: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Fetch status when page loads
+        window.addEventListener('load', fetchStatus);
+    </script>
+</body>
+</html>

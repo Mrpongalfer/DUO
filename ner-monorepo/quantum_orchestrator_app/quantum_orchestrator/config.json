@@ -1,0 +1,73 @@
+{
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "debug": false,
+    "enable_auth": false,
+    "cors_origins": [
+      "*"
+    ]
+  },
+  "web_ui": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": false
+  },
+  "llm_service": {
+    "provider": "openai",
+    "default_model": "gpt-3.5-turbo",
+    "max_retries": 3,
+    "timeout": 30,
+    "rate_limit": {
+      "tokens_per_minute": 90000,
+      "requests_per_minute": 20
+    }
+  },
+  "handlers": {
+    "execution": {
+      "timeout": 60,
+      "allowed_commands": [
+        "python",
+        "python3",
+        "pip",
+        "pip3"
+      ]
+    },
+    "file_operations": {
+      "max_file_size": 10485760,
+      "allowed_extensions": [
+        "*"
+      ]
+    }
+  },
+  "watcher": {
+    "enabled": true,
+    "paths": [
+      "./"
+    ],
+    "ignore_patterns": [
+      "__pycache__",
+      "*.pyc",
+      ".git/"
+    ]
+  },
+  "state": {
+    "max_history": 10
+  },
+  "telemetry": {
+    "enabled": true,
+    "log_level": "info"
+  },
+  "cognitive_fusion": {
+    "enable_optimization_agent": true,
+    "enable_planning_agent": true,
+    "enable_code_agent": true,
+    "enable_test_agent": true,
+    "enable_meta_agent": true,
+    "message_queue_size": 100
+  },
+  "quantum_optimization": {
+    "enabled": true,
+    "optimization_level": "medium"
+  }
+}

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Timeline/Audit (Ekko){% endblock %}
+{% block content %}
+<div class="nexus-card">
+  <h2 style="color:#ffe082;">Timeline/Audit (Ekko)</h2>
+  <div id="timeline-audit-panel">
+    <!-- Timeline and audit trail will be rendered here -->
+  </div>
+  <button class="dashboard-btn" onclick="rollbackLast()">⏪ Rollback Last Change</button>
+  <button class="dashboard-btn" onclick="showCircuitBreaker()">🚨 Circuit Breaker</button>
+</div>
+<script>
+function rollbackLast() { /* TODO: Implement rollback logic */ }
+function showCircuitBreaker() { /* TODO: Implement circuit breaker logic */ }
+</script>
+{% endblock %}

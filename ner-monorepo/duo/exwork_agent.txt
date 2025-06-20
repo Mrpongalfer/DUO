@@ -1,0 +1,511 @@
+#!/usr/bin/env python3
+# Agent Ex-Work: Executes structured JSON commands with self-improvement features.
+# Version: 2.3 (Finalized & Polished for Standalone)
+
+import base64
+import datetime
+import json
+import logging
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING # Added TYPE_CHECKING for circular ref.
+
+# Check for httpx/requests to avoid circular import if Scribe is also using.
+# This ensures Ex-Work can run standalone.
+HTTP_LIB_AVAILABLE: bool = False
+try:
+    import requests # Using requests as primary, it's often more ubiquitous.
+    HTTP_LIB_AVAILABLE = True
+    if TYPE_CHECKING:
+        import requests as httpx_or_requests # Alias for type hinting consistent with other agents
+except ImportError:
+    try:
+        import httpx
+        HTTP_LIB_AVAILABLE = True
+        if TYPE_CHECKING:
+            import httpx as httpx_or_requests # Alias for type hinting
+    except ImportError:
+        pass # Will be caught if LLM call is attempted.
+
+# --- Basic Logging Setup ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [ExWork-v2.3] [%(levelname)-7s] %(module)s:%(lineno)d - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stderr)],
+)
+logger = logging.getLogger("AgentExWorkV2.3")
+
+# --- Configuration ---
+PROJECT_ROOT = Path.cwd().resolve()
+HISTORY_FILE = PROJECT_ROOT / ".exwork_history.jsonl"
+DEFAULT_OLLAMA_ENDPOINT_BASE = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+DEFAULT_OLLAMA_MODEL = os.environ.get(
+    "OLLAMA_MODEL", "gemma:2b"
+)
+RUFF_EXECUTABLE = shutil.which("ruff") or "ruff"
+
+# --- Global State ---
+# _pending_signoffs is RETAINED. Although it's not functionally used by
+# the blocking request_signoff_helper_direct_tty in the current synchronous flow,
+# it is a critical conceptual placeholder for the future asynchronous Architect
+# approval mechanism. This mechanism is vital for a truly autonomous Nexus,
+# especially when agents (like Ex-Work) need to request approval for actions
+# before potentially interacting with or modifying sensitive systems (like Scribe).
+# Removing it would mean removing a planned core feature.
+_pending_signoffs: Dict[str, Dict[str, Any]] = {}
+
+# --- Action Handler Registration ---
+ACTION_HANDLERS: Dict[str, Callable[[Dict, Path, str], Tuple[bool, Any]]] = {}
+
+
+# --- Dynamic Learning and Adaptation ---
+def learn_from_failures(task_name: str, error_details: str):
+    """Analyzes task failures and suggests or creates new handlers dynamically.
+    NOTE: The input() call still blocks execution for approval in standalone mode.
+    This functionality is kept as it's a core design choice for interactive learning,
+    but it must be refactored for true autonomous (non-blocking) operation in the Nexus.
+    """
+    logger.warning(f"Learning from failure in task '{task_name}': {error_details}")
+    proposed_handler_name = f"auto_generated_{task_name}_handler"
+
+    # Cache to prevent redundant refinements
+    if hasattr(learn_from_failures, "_cache"):
+        cache = learn_from_failures._cache
+    else:
+        cache = learn_from_failures._cache = {}
+
+    if proposed_handler_name in cache and cache[proposed_handler_name] == error_details:
+        logger.info(f"Skipping redundant refinement for handler '{proposed_handler_name}'.")
+        return
+
+    cache[proposed_handler_name] = error_details
+
+    if proposed_handler_name in ACTION_HANDLERS:
+        logger.info(f"Handler '{proposed_handler_name}' already exists. Refining logic.")
+        existing_handler = ACTION_HANDLERS[proposed_handler_name]
+
+        def refined_handler(task_data: Dict, project_root: Path, step_id: str):
+            logger.info(f"Refined handler for task: {task_name}")
+            try:
+                return existing_handler(task_data, project_root, step_id)
+            except Exception as e:
+                logger.error(f"Refined handler failed: {e}")
+                return False, f"Refined handler for '{task_name}' failed."
+
+        ACTION_HANDLERS[proposed_handler_name] = refined_handler
+        return
+
+    logger.info(f"Proposing new handler: {proposed_handler_name}")
+
+    def auto_generated_handler(task_data: Dict, project_root: Path, step_id: str):
+        logger.info(f"Executing auto-generated handler for task: {task_name}")
+        if "retry" in task_data:
+            logger.info("Retrying task dynamically.")
+            return True, f"Task '{task_name}' retried successfully."
+        return False, f"Dynamic handler for '{task_name}' could not resolve the issue."
+
+    ACTION_HANDLERS[proposed_handler_name] = auto_generated_handler
+    logger.info(f"Auto-generated handler '{proposed_handler_name}' registered.")
+
+    user_input = input(f"Do you approve the auto-generated handler for '{task_name}'? (yes/no): ").strip().lower()
+    if user_input != "yes":
+        logger.warning(f"User rejected the auto-generated handler for '{task_name}'.")
+        del ACTION_HANDLERS[proposed_handler_name]
+        return
+
+
+# Extend the handler decorator to support versioning and dynamic updates
+def handler(name: str, version: Optional[str] = None):
+    """Decorator to register or update action handlers."""
+
+    def decorator(func: Callable[[Dict, Path, str], Tuple[bool, Any]]):
+        handler_key = f"{name}:{version}" if version else name
+        ACTION_HANDLERS[handler_key] = func
+        logger.debug(f"Registered action handler for: {handler_key}")
+        return func
+
+    return decorator
+
+
+# --- Helper Functions ---
+
+
+def resolve_path(project_root: Path, requested_path: str) -> Optional[Path]:
+    """Safely resolves path relative to project root. Prevents traversal."""
+    try:
+        normalized_req_path = requested_path.replace("\\", "/")
+        relative_p = Path(normalized_req_path)
+
+        if relative_p.is_absolute():
+            abs_path = relative_p.resolve()
+            common = Path(os.path.commonpath([project_root, abs_path]))
+            if common != project_root and abs_path != project_root:
+                logger.error(
+                    f"Absolute path '{requested_path}' is not within project root '{project_root}'. Rejected."
+                )
+                return None
+        else:
+            if ".." in relative_p.parts:
+                logger.error(f"Path traversal with '..' rejected: '{requested_path}'")
+                return None
+            abs_path = (project_root / relative_p).resolve()
+            common = Path(os.path.commonpath([project_root, abs_path]))
+            if common != project_root and abs_path != project_root:
+                logger.error(
+                    f"Path unsafe! Resolved '{abs_path}' outside project root '{project_root}'. Rejected."
+                )
+                return None
+
+        logger.debug(f"Resolved path '{requested_path}' to '{abs_path}'")
+        return abs_path
+    except Exception as e:
+        logger.error(
+            f"Error resolving path '{requested_path}' relative to '{project_root}': {e}"
+        )
+        return None
+
+
+def log_execution_history(record: Dict[str, Any]):
+    """Appends an execution record to the history file."""
+    record_final = {
+        "timestamp_iso": datetime.now(timezone.utc).isoformat(),
+        "action_name": record.get("action_name", "UNKNOWN_ACTION"),
+        "command": record.get("command", "N/A"),
+        "cwd": str(record.get("cwd", PROJECT_ROOT)),
+        "success": record.get("success", False),
+        "exit_code": record.get("exit_code", -1),
+        "stdout_snippet": str(record.get("stdout_snippet", ""))[:500]
+        + ("..." if len(str(record.get("stdout_snippet", ""))) > 500 else ""),
+        "stderr_snippet": str(record.get("stderr_snippet", ""))[:500]
+        + ("..." if len(str(record.get("stderr_snippet", ""))) > 500 else ""),
+        "message": record.get("message", ""),
+        "duration_s": round(record.get("duration_s", 0.0), 3),
+        "step_id": record.get("step_id", "N/A"),
+        "action_params": record.get("action_params", {}),
+    }
+    try:
+        with open(HISTORY_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record_final) + "\n")
+    except Exception as e:
+        logger.error(
+            f"Failed to log execution history for action '{record_final['action_name']}': {e}"
+        )
+
+
+def _run_subprocess(
+    command: List[str],
+    cwd: Path,
+    action_name: str,
+    action_params: Dict,
+    step_id: str,
+    timeout: int = 300,
+) -> Tuple[bool, str, str, str]:
+    """Helper to run subprocess. Returns: (success, user_message, stdout, stderr)"""
+    start_time = time.time()
+    command_str = " ".join(shlex.quote(c) for c in command)
+    logger.info(f"Running {action_name}: {command_str} in CWD={cwd}")
+
+    stdout_str = ""
+    stderr_str = ""
+    exit_code = -1
+    user_message = ""
+
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+            encoding="utf-8",
+            errors="replace",
+        )
+        stdout_str = result.stdout.strip() if result.stdout else ""
+        stderr_str = result.stderr.strip() if result.stderr else ""
+        exit_code = result.returncode
+
+        if exit_code == 0:
+            success = True
+            user_message = f"{action_name} completed successfully."
+            logger.info(
+                f"Finished {action_name}. Code: {exit_code}\n--- STDOUT ---\n{stdout_str if stdout_str else '<empty>'}"
+            )
+            if stderr_str:
+                logger.warning(
+                    f"--- STDERR (RC=0 but stderr present) ---\n{stderr_str}"
+                )
+        else:
+            success = False
+            user_message = f"{action_name} failed (Code: {exit_code})."
+            logger.error(
+                f"Finished {action_name}. Code: {exit_code}\n--- STDOUT ---\n{stdout_str if stdout_str else '<empty>'}\n--- STDERR ---\n{stderr_str if stderr_str else '<empty>'}"
+            )
+
+    except subprocess.TimeoutExpired:
+        success = False
+        user_message = f"{action_name} timed out after {timeout} seconds."
+        stderr_str = "Timeout Error"
+        logger.error(user_message)
+        exit_code = -2
+    except FileNotFoundError:
+        executable_name = command[0]
+        success = False
+        user_message = f"Command not found for {action_name}: {executable_name}"
+        stderr_str = f"Command not found: {executable_name}"
+        logger.error(user_message)
+        exit_code = -3
+    except Exception as e:
+        success = False
+        user_message = f"Unexpected error running {action_name}: {type(e).__name__}"
+        stderr_str = str(e)
+        logger.error(f"Error running {action_name}: {e}", exc_info=True)
+        exit_code = -4
+
+    log_execution_history(
+        {
+            "timestamp": start_time,
+            "action_name": action_name,
+            "command": command_str,
+            "cwd": str(cwd),
+            "success": success,
+            "exit_code": exit_code,
+            "stdout_snippet": stdout_str,
+            "stderr_snippet": stderr_str,
+            "message": user_message,
+            "duration_s": time.time() - start_time,
+            "step_id": step_id,
+            "action_params": action_params,
+        }
+    )
+    return success, user_message, stdout_str, stderr_str
+
+
+def call_local_llm_helper(
+    prompt: str,
+    model_name: Optional[str] = None,
+    api_endpoint_base: Optional[str] = None,
+    options: Optional[Dict] = None,
+    step_id: str = "N/A",
+    action_name: str = "CALL_LOCAL_LLM_HELPER",
+) -> Tuple[bool, str]:
+    """Internal helper to call local LLM. Returns (success, response_text_or_error_msg)."""
+    start_time = time.time()
+    actual_model = model_name or DEFAULT_OLLAMA_MODEL
+    actual_endpoint_base = api_endpoint_base or DEFAULT_OLLAMA_ENDPOINT_BASE
+    actual_endpoint_generate = f"{actual_endpoint_base.rstrip('/')}/api/generate"
+    llm_options = options or {}
+
+    logger.info(f"Targeting {actual_model} @ {actual_endpoint_generate}")
+    payload = {
+        "model": actual_model,
+        "prompt": prompt,
+        "stream": False,
+        "options": llm_options,
+    }
+    if not llm_options:
+        del payload["options"]
+
+    action_params = {
+        "model": actual_model,
+        "prompt_length": len(prompt),
+        "api_endpoint": actual_endpoint_generate,
+        "options": llm_options,
+    }
+
+    try:
+        if not HTTP_LIB_AVAILABLE:
+            raise ImportError("No HTTP library (requests or httpx) available for LLM calls.")
+        
+        # Use httpx_or_requests alias for consistent type hinting if TYPE_CHECKING
+        # Otherwise, fall back to explicit requests import
+        http_client_lib = requests # Default to requests if available
+        if 'httpx' in sys.modules: # Check if httpx was the one actually imported
+            http_client_lib = httpx 
+
+        response = http_client_lib.post( # Use the determined client
+            actual_endpoint_generate,
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=300,
+        )
+        response.raise_for_status()
+        data = response.json()
+        llm_response_text = data.get("response", "").strip()
+
+        if not llm_response_text:
+            err_detail = data.get("error", "LLM returned empty response content.")
+            logger.warning(f"LLM empty response. Error detail: {err_detail}")
+            success = False
+            message = f"LLM returned empty response. Detail: {err_detail}"
+        else:
+            logger.info("Local LLM call successful.")
+            success = True
+            message = llm_response_text
+
+        log_execution_history(
+            {
+                "timestamp": start_time,
+                "action_name": action_name,
+                "success": success,
+                "message": message if success else f"LLM Error: {message}",
+                "duration_s": time.time() - start_time,
+                "step_id": step_id,
+                "action_params": action_params,
+                "stdout_snippet": llm_response_text if success else "",
+            }
+        )
+        return success, message
+    except requests.exceptions.RequestException as e: # Catch requests-specific errors
+        err_msg = f"LLM Request Error: {e}"
+        logger.error(f"LLM Call Failed: {err_msg}")
+        log_execution_history(
+            {
+                "timestamp": start_time,
+                "action_name": action_name,
+                "success": False,
+                "message": err_msg,
+                "duration_s": time.time() - start_time,
+                "step_id": step_id,
+                "action_params": action_params,
+                "stderr_snippet": str(e),
+            }
+        )
+        return False, err_msg
+    except httpx.RequestError as e: # Catch httpx-specific errors
+        err_msg = f"LLM Request Error (httpx): {e}"
+        logger.error(f"LLM Call Failed: {err_msg}")
+        log_execution_history(
+            {
+                "timestamp": start_time,
+                "action_name": action_name,
+                "success": False,
+                "message": err_msg,
+                "duration_s": time.time() - start_time,
+                "step_id": step_id,
+                "action_params": action_params,
+                "stderr_snippet": str(e),
+            }
+        )
+        return False, err_msg
+    except ImportError as e:
+        err_msg = f"Missing HTTP library for LLM: {e}"
+        logger.error(f"LLM Call Failed: {err_msg}")
+        log_execution_history(
+            {
+                "timestamp": start_time,
+                "action_name": action_name,
+                "success": False,
+                "message": err_msg,
+                "duration_s": time.time() - start_time,
+                "step_id": step_id,
+                "action_params": action_params,
+                "stderr_snippet": str(e),
+            }
+        )
+        return False, err_msg
+    except Exception as e:
+        err_msg = f"Unexpected LLM error: {type(e).__name__}: {e}"
+        logger.error(f"LLM call unexpected error: {err_msg}", exc_info=True)
+        log_execution_history(
+            {
+                "timestamp": start_time,
+                "action_name": action_name,
+                "success": False,
+                "message": err_msg,
+                "duration_s": time.time() - start_time,
+                "step_id": step_id,
+                "action_params": action_params,
+                "stderr_snippet": str(e),
+            }
+        )
+        return False, err_msg
+
+
+# --- Action Handler Functions ---
+
+
+@handler(name="ECHO")
+def handle_echo(
+    action_data: Dict, project_root: Path, step_id: str
+) -> Tuple[bool, str]:
+    message = action_data.get("message", "No message provided for ECHO.")
+    print(f"[EXWORK_ECHO_STDOUT] {message}")
+    logger.info(f"ECHO: {message}")
+    return True, f"Echoed: {message}"
+
+
+@handler(name="CREATE_OR_REPLACE_FILE")
+def handle_create_or_replace_file(
+    action_data: Dict, project_root: Path, step_id: str
+) -> Tuple[bool, str]:
+    relative_path = action_data.get("path")
+    content_base64 = action_data.get("content_base64")
+    if not isinstance(relative_path, str) or not relative_path:
+        return False, "Missing or invalid 'path' (string) for CREATE_OR_REPLACE_FILE."
+    if not isinstance(content_base64, str):
+        return (
+            False,
+            "Missing or invalid 'content_base64' (string) for CREATE_OR_REPLACE_FILE.",
+        )
+
+    file_path = resolve_path(project_root, relative_path)
+    if not file_path:
+        return False, f"Invalid or unsafe path specified: '{relative_path}'"
+    try:
+        decoded_content = base64.b64decode(content_base64, validate=True)
+        logger.info(f"Writing {len(decoded_content)} bytes to: {file_path}")
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_bytes(decoded_content)
+        return (
+            True,
+            f"File '{relative_path}' written successfully ({len(decoded_content)} bytes).",
+        )
+    except (base64.binascii.Error, ValueError) as b64e:
+        logger.error(f"Base64 decode error for '{relative_path}': {b64e}")
+        return False, f"Base64 decode error for '{relative_path}': {b64e}"
+    except Exception as e:
+        logger.error(f"Error writing file '{relative_path}': {e}", exc_info=True)
+        return False, f"Error writing file '{relative_path}': {type(e).__name__} - {e}"
+
+
+@handler(name="APPEND_TO_FILE")
+def handle_append_to_file(
+    action_data: Dict, project_root: Path, step_id: str
+) -> Tuple[bool, str]:
+    relative_path = action_data.get("path")
+    content_base64 = action_data.get("content_base64")
+    add_newline = action_data.get("add_newline_if_missing", True)
+
+    if not isinstance(relative_path, str) or not relative_path:
+        return False, "Missing or invalid 'path' (string) for APPEND_TO_FILE."
+    if not isinstance(content_base64, str):
+        return False, "Missing or invalid 'content_base64' (string) for APPEND_TO_FILE."
+
+    file_path = resolve_path(project_root, relative_path)
+    if not file_path:
+        return False, f"Invalid or unsafe path specified: '{relative_path}'"
+    try:
+        decoded_content = base64.b64decode(content_base64, validate=True)
+        logger.info(f"Appending {len(decoded_content)} bytes to: {file_path}")
+
+        file_exists_before_open = file_path.exists()
+        if not file_exists_before_open:
+            logger.warning(
+                f"File '{relative_path}' does not exist. Creating before appending."
+            )
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with file_path.open("ab") as f:
+            if add_newline and file_exists_before_open and file_path.stat().st_size > 0:
+                with file_path.open("rb") as rf:
+         

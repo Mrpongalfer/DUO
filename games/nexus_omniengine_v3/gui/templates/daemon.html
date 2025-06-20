@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}Daemon Monitor{% endblock %}
+{% block content %}
+<h2 style="color:#e11d48;letter-spacing:1px;">Daemon Monitor <span style="font-size:0.7em;color:#4e9cff;">(Stark/Rick/Harley/Power/Momo style)</span></h2>
+<div class="panel">
+  <h3>Status: <span class="status-{{ daemon.status|lower }}">{{ daemon.status }}</span></h3>
+  <p>PID: <b>{{ daemon.pid or 'N/A' }}</b></p>
+  <form method="post" action="/daemon/start" style="display:inline;">
+    <button type="submit" {% if daemon.status=='Running' %}disabled{% endif %} class="btn btn-primary">Start Daemon</button>
+  </form>
+  <form method="post" action="/daemon/stop" style="display:inline;">
+    <button type="submit" {% if daemon.status!='Running' %}disabled{% endif %} class="btn btn-danger">Stop Daemon</button>
+  </form>
+  <div style="margin-top:1.5em;">
+    <h4>Live Output <span style="font-size:0.8em;color:#aaa;">(auto-refresh)</span></h4>
+    <pre id="daemon-output" style="background:#181825;color:#b9f;font-size:1em;padding:1em;max-height:200px;overflow:auto;border-radius:8px;">{{ daemon.last_output or 'No output yet.' }}</pre>
+  </div>
+</div>
+<a href="/">Back to Dashboard</a>
+<script>
+function pollDaemonStatus() {
+  fetch('/daemon/status').then(r=>r.json()).then(data=>{
+    document.querySelector('.status-running')?.classList.remove('status-running');
+    document.querySelector('.status-stopped')?.classList.remove('status-stopped');
+    let status = data.status;
+    let pid = data.pid || 'N/A';
+    document.querySelector('h3 span').textContent = status;
+    document.querySelector('p b').textContent = pid;
+    document.getElementById('daemon-output').textContent = data.last_output || 'No output yet.';
+    document.querySelector('h3 span').className = 'status-' + status.toLowerCase();
+  });
+}
+setInterval(pollDaemonStatus, 3000);
+</script>
+{% endblock %}

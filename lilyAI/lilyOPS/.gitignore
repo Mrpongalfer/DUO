@@ -1,0 +1,97 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+*.out
+*.prof
+*.prof.json
+*.lprof
+*.prof.gz
+*.py,cover
+*.coverage
+.coverage
+.coverage.*
+htmlcov/
+MANIFEST
+*.manifest
+*.spec
+
+# Virtual Environments
+.venv_aci/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE / Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+build/
+dist/
+sdist/
+*.tar.gz
+*.zip
+
+# Coverage & Test Caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs & ACI Data (Local Only)
+*.log
+logs/
+aci_mvp_config.ini
+aci_main.db
+aci_main.db-shm
+aci_main.db-wal
+# Path for local Git clone cache if EESRS uses one for RAG (should be outside project or here if small)
+# Ensure this matches ACLS/EESRS config if it's within the project structure
+# For now, assuming these are outside the lilyOPS_ACI_Project Git repo itself:
+# local_git_repo_clone_path/
+# eesrs_rag_index/
+
+# Secrets (ALWAYS IGNORE - these are examples, actual secrets should never be versioned)
+secrets/
+*.env.*
+*.pem
+*.key
+*.credential*
+*token*
+*secret*
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+dist/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+.venv
+venv/
+ENV/
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,29 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "editor.fontFamily": "FiraCode Nerd Font, JetBrains Mono, monospace",
+    "editor.fontLigatures": true,
+    "editor.tabSize": 4,
+    "editor.rulers": [
+        100
+    ],
+    "editor.formatOnSave": true,
+    "editor.minimap.enabled": false,
+    "workbench.colorTheme": "One Dark Pro",
+    "workbench.iconTheme": "material-icon-theme",
+    "terminal.integrated.fontFamily": "FiraCode Nerd Font",
+    "terminal.integrated.shell.linux": "/usr/bin/xonsh",
+    "python.defaultInterpreterPath": "python3",
+    "python.formatting.provider": "black",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.testing.pytestEnabled": true,
+    "files.autoSave": "onFocusChange",
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "breadcrumbs.enabled": true,
+    "window.zoomLevel": 1,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true
+}

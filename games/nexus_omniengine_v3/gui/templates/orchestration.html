@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Orchestration (ExWork){% endblock %}
+{% block content %}
+<div class="nexus-card">
+  <h2 style="color:#ffe082;">Orchestration (ExWork)</h2>
+  <form id="exwork-orchestrate-form" style="display:flex;gap:1em;align-items:center;margin-bottom:1.5em;">
+    <input type="text" id="exwork-task" placeholder="Workflow/task to run..." style="flex:1 1 300px;padding:0.7em 1em;border-radius:8px;border:1px solid #bcd;" />
+    <button class="dashboard-btn" type="submit">Run Workflow</button>
+  </form>
+  <div id="exwork-orchestration-log">
+    <!-- Orchestration logs and status will be rendered here -->
+  </div>
+</div>
+<script>
+document.getElementById('exwork-orchestrate-form').onsubmit = function(e) {
+  e.preventDefault();
+  // TODO: Implement orchestration logic and show logs
+};
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Nexus OmniEngine v3.0{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/persona_bar.css">
+    <link rel="stylesheet" href="/static/modern_theme.css">
+</head>
+<body>
+    <div class="nexus-sidebar">
+        <div class="sidebar-logo">Nexus v3</div>
+        <div class="sidebar-menu">
+            <div class="menu-section">
+                <div class="menu-title">Main</div>
+                <a class="menu-item" href="/">🏠 Dashboard</a>
+                <a class="menu-item" href="/configure">⚙️ Configure</a>
+                <a class="menu-item" href="/status">📊 Status</a>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">Agents & Daemons</div>
+                <a class="menu-item" href="/agents">🤖 Agents</a>
+                <a class="menu-item" href="/daemon">🛠️ Daemon Monitor</a>
+                <a class="menu-item" href="/llm">🧠 LLM Playground</a>
+                <a class="menu-item" href="/orchestration">🔗 Orchestration (ExWork)</a>
+                <a class="menu-item" href="/validation">📝 Validation (Scribe)</a>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">Tools & Knowledge</div>
+                <a class="menu-item" href="/tool_forge">🛡️ Tool Forge</a>
+                <a class="menu-item" href="/ner_knowledge">📚 NER/Knowledge</a>
+                <a class="menu-item" href="/chat">💬 Team Chat</a>
+                <a class="menu-item" href="/logs">📜 Live Logs</a>
+            </div>
+            <div class="menu-section">
+                <div class="menu-title">Meta & Control</div>
+                <a class="menu-item" href="/meta_activity">🧩 Meta Activity (Lily)</a>
+                <a class="menu-item" href="/query_orchestrator">🔍 Query Orchestrator (QO)</a>
+                <a class="menu-item" href="/timeline_audit">⏳ Timeline/Audit (Ekko)</a>
+                <a class="menu-item" href="/pac_cli">💻 PAC CLI</a>
+            </div>
+        </div>
+        <div class="sidebar-footer">&copy; 2025 Omnitide Nexus</div>
+    </div>
+    <div class="persona-bar" style="margin-left:240px;">
+        <!-- Persona bar is now fully dynamic and interactive -->
+        {% for persona in personas %}
+        <div class="persona-avatar" title="{{ persona.name }}" onclick="focusPersona('{{ persona.id }}')" id="persona-{{ persona.id }}">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed={{ persona.name|urlencode }}" alt="{{ persona.name }}" />
+            <span class="persona-name">{{ persona.name }}</span>
+            <span class="persona-status" id="status-{{ persona.id }}"></span>
+        </div>
+        {% endfor %}
+        <div class="persona-avatar" title="Lily" onclick="focusPersona('lily')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Lily" alt="Lily" />
+            <span class="persona-name">Lily</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Librarian" onclick="focusPersona('librarian')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Librarian" alt="Librarian" />
+            <span class="persona-name">Librarian</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="QO" onclick="focusPersona('qo')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=QO" alt="QO" />
+            <span class="persona-name">QO</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Ekko" onclick="focusPersona('ekko')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Ekko" alt="Ekko" />
+            <span class="persona-name">Ekko</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Scribe" onclick="focusPersona('scribe')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Scribe" alt="Scribe" />
+            <span class="persona-name">Scribe</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="ExWork" onclick="focusPersona('exwork')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=ExWork" alt="ExWork" />
+            <span class="persona-name">ExWork</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Rick" onclick="focusPersona('rick')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Rick" alt="Rick" />
+            <span class="persona-name">Rick</span>
+            <span class="persona-status offline"></span>
+        </div>
+        <div class="persona-avatar" title="Tony Stark" onclick="focusPersona('tony')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Tony%20Stark" alt="Tony Stark" />
+            <span class="persona-name">Tony</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Harley Quinn" onclick="focusPersona('harley')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Harley%20Quinn" alt="Harley Quinn" />
+            <span class="persona-name">Harley</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Power" onclick="focusPersona('power')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Power" alt="Power" />
+            <span class="persona-name">Power</span>
+            <span class="persona-status offline"></span>
+        </div>
+        <div class="persona-avatar" title="Momo Ayase" onclick="focusPersona('momo')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Momo%20Ayase" alt="Momo Ayase" />
+            <span class="persona-name">Momo</span>
+            <span class="persona-status"></span>
+        </div>
+        <div class="persona-avatar" title="Makima" onclick="focusPersona('makima')">
+            <img class="persona-img" src="https://api.dicebear.com/7.x/personas/svg?seed=Makima" alt="Makima" />
+            <span class="persona-name">Makima</span>
+            <span class="persona-status offline"></span>
+        </div>
+    </div>
+    <script>
+    // Real-time persona status update (SocketIO or polling)
+    function updatePersonaStatus(personaId, status) {
+      const el = document.getElementById('status-' + personaId);
+      if (el) {
+        el.className = 'persona-status' + (status === 'offline' ? ' offline' : '');
+      }
+    }
+    function focusPersona(id) {
+      document.querySelectorAll('.persona-avatar').forEach(el => el.classList.remove('active'));
+      const el = document.getElementById('persona-' + id);
+      if (el) el.classList.add('active');
+      // Show persona-specific quick actions, logs, and filter panels
+      // TODO: Implement real-time panel switching and quick actions
+    }
+    // TODO: Wire up SocketIO or polling for real-time status
+    </script>
+    <main class="nexus-main">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

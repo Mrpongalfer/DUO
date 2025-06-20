@@ -1,0 +1,295 @@
+{
+    "version": "1.1.0",
+    "comment": "Omnitide Nexus Templates Database for Scribe & Ex-Work. Timestamp variables like {{timestamp}} should be manually replaced or will be handled by future launcher versions.",
+    "templates": [
+      {
+        "id": "exwork_simple_echo",
+        "name": "Ex-Work: Simple Echo",
+        "description": "A basic test for Ex-Work agent, echoes a user-provided message.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "echo_test_{{timestamp}}",
+          "description": "Simple echo test with variable.",
+          "actions": [
+            {"type": "ECHO", "message": "Ex-Work says: {{user_message}}"}
+          ]
+        },
+        "variables": [
+          {"name": "user_message", "prompt": "Message for Ex-Work to Echo:", "default": "Nexus online."}
+        ]
+      },
+      {
+        "id": "exwork_create_replace_file",
+        "name": "Ex-Work: Create/Replace File",
+        "description": "Creates or replaces a file with specified base64 encoded content.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "create_file_{{filename}}_{{timestamp}}",
+          "description": "Create or replace file: {{relative_file_path}}",
+          "actions": [
+            {
+              "type": "CREATE_OR_REPLACE_FILE",
+              "path": "{{relative_file_path}}",
+              "content_base64": "{{base64_content}}"
+            }
+          ]
+        },
+        "variables": [
+          {"name": "relative_file_path", "prompt": "Relative path for the file (e.g., output/data.txt):", "default": "output/new_file.txt"},
+          {"name": "base64_content", "prompt": "Base64 encoded content for the file:", "type": "textarea", "default": "SGVsbG8gTmV4dXMu"}
+        ]
+      },
+      {
+        "id": "exwork_run_script_basic",
+        "name": "Ex-Work: Run Script (Basic)",
+        "description": "Runs a script located in Ex-Work's 'scripts/' subdirectory or project root.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "run_script_{{script_name}}_{{timestamp}}",
+          "description": "Execute script: {{script_name}}",
+          "actions": [
+            {
+              "type": "RUN_SCRIPT",
+              "script_path": "{{script_relative_path}}",
+              "args": ["{{arg1}}", "{{arg2}}"],
+              "cwd": "project_root",
+              "timeout": 60
+            }
+          ]
+        },
+        "variables": [
+          {"name": "script_relative_path", "prompt": "Script path (relative to project, e.g., scripts/my.sh or my_script.py):", "default": "scripts/sample_exwork_script.sh"},
+          {"name": "arg1", "prompt": "Argument 1 for script:", "default": ""},
+          {"name": "arg2", "prompt": "Argument 2 for script:", "default": ""}
+        ]
+      },
+      {
+        "id": "exwork_lint_format_project",
+        "name": "Ex-Work: Lint & Format Project (Ruff)",
+        "description": "Uses Ex-Work's LINT_FORMAT_FILE action to run Ruff on the entire project.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "lint_format_project_{{timestamp}}",
+          "description": "Lint and Format entire project with Ruff.",
+          "actions": [
+            {
+              "type": "LINT_FORMAT_FILE",
+              "path": ".", 
+              "format": true,
+              "lint_fix": true
+            }
+          ]
+        },
+        "variables": []
+      },
+      {
+        "id": "exwork_git_add_commit",
+        "name": "Ex-Work: Git Add & Commit",
+        "description": "Stages all changes and creates a Git commit.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "git_add_commit_{{timestamp}}",
+          "description": "Git add all and commit with message: {{commit_message}}",
+          "actions": [
+            {"type": "GIT_ADD", "paths": ["."]},
+            {"type": "GIT_COMMIT", "message": "{{commit_message}}", "allow_empty": false}
+          ]
+        },
+        "variables": [
+          {"name": "commit_message", "prompt": "Git Commit Message:", "default": "feat: Automated commit via Ex-Work"}
+        ]
+      },
+      {
+        "id": "exwork_call_local_llm",
+        "name": "Ex-Work: Call Local LLM",
+        "description": "Sends a prompt to the configured local Ollama LLM.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "llm_query_{{timestamp}}",
+          "description": "Query local LLM with prompt: {{llm_prompt}}",
+          "actions": [
+            {
+              "type": "CALL_LOCAL_LLM",
+              "prompt": "{{llm_prompt}}",
+              "model": "{{ollama_model}}",
+              "api_endpoint_base": "{{ollama_endpoint}}"
+            }
+          ]
+        },
+        "variables": [
+          {"name": "llm_prompt", "prompt": "Prompt for LLM:", "type": "textarea", "default": "Explain quantum computing in simple terms."},
+          {"name": "ollama_model", "prompt": "Ollama Model (optional, uses Ex-Work default if blank):", "default": ""},
+          {"name": "ollama_endpoint", "prompt": "Ollama Endpoint Base URL (optional, uses Ex-Work default if blank):", "default": ""}
+        ]
+      },
+      {
+        "id": "exwork_diagnose_error_example",
+        "name": "Ex-Work: Diagnose Error (Example)",
+        "description": "Provides example structure for Ex-Work's DIAGNOSE_ERROR action.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "diagnose_failure_{{timestamp}}",
+          "description": "Diagnose a hypothetical command failure.",
+          "actions": [
+            {
+              "type": "DIAGNOSE_ERROR",
+              "failed_command": "{{failed_command_string}}",
+              "stdout": "{{failed_stdout}}",
+              "stderr": "{{failed_stderr}}",
+              "context": {"triggering_step": "some_previous_step_id", "relevant_file": "src/problem.py"},
+              "history_lookback": 3
+            }
+          ]
+        },
+        "variables": [
+          {"name": "failed_command_string", "prompt": "Failed command string:", "default": "python run_complex_task.py --input data.csv"},
+          {"name": "failed_stdout", "prompt": "STDOUT from failed command:", "type": "textarea", "default": "Processing item 1..."},
+          {"name": "failed_stderr", "prompt": "STDERR from failed command:", "type": "textarea", "default": "Traceback (most recent call last):\n  File \"run_complex_task.py\", line 50, in <module>\n    raise ValueError(\"Critical data missing\")\nValueError: Critical data missing"}
+        ]
+      },
+      {
+        "id": "exwork_apply_patch_example",
+        "name": "Ex-Work: Apply Patch (Example)",
+        "description": "Example for Ex-Work's APPLY_PATCH. WARNING: Uses direct TTY input for signoff.",
+        "type": "exwork_payload_only",
+        "exwork_json": {
+          "step_id": "apply_patch_{{file_to_patch}}_{{timestamp}}",
+          "description": "Apply patch to {{file_to_patch}}",
+          "actions": [
+            {
+              "type": "APPLY_PATCH",
+              "path": "{{file_to_patch_relative}}",
+              "patch_content": "{{patch_diff_content}}"
+            }
+          ]
+        },
+        "variables": [
+          {"name": "file_to_patch_relative", "prompt": "File to patch (relative path):", "default": "src/module.py"},
+          {"name": "patch_diff_content", "prompt": "Patch content (diff format):", "type": "textarea", "default": "--- a/src/module.py\n+++ b/src/module.py\n@@ -1,1 +1,1 @@\n-old line\n+new line"}
+        ]
+      },
+      {
+        "id": "scribe_full_validate_commit",
+        "name": "Scribe: Full Validate & Auto-Commit",
+        "description": "Runs Scribe's full validation gauntlet on a Python file and auto-commits if successful.",
+        "type": "scribe_config_only",
+        "scribe_params": {
+          "target_project_dir": "{{project_root_path}}",
+          "source_code_file_path": "{{source_code_to_apply}}",
+          "destination_target_file_relative": "{{python_file_to_validate}}",
+          "commit_cli": true,
+          "report_format_cli": "json",
+          "skip_deps_cli": false,
+          "skip_tests_cli": false,
+          "skip_review_cli": false,
+          "log_level_cli": "INFO"
+        },
+        "variables": [
+          {"name": "project_root_path", "prompt": "Scribe: Target Project Directory:", "default": "/path/to/your/project"},
+          {"name": "source_code_to_apply", "prompt": "Scribe: Path to NEW/MODIFIED code file Scribe should APPLY:", "default": "/tmp/new_code.py"},
+          {"name": "python_file_to_validate", "prompt": "Scribe: DESTINATION file to validate (relative to Project Dir):", "default": "src/main.py"}
+        ]
+      },
+      {
+        "id": "scribe_format_lint_only",
+        "name": "Scribe: Format & Lint Only (No Commit)",
+        "description": "Runs Scribe focusing on formatting and linting, skips heavy steps.",
+        "type": "scribe_config_only",
+        "scribe_params": {
+          "target_project_dir": "{{project_root_path}}",
+          "source_code_file_path": "{{source_code_to_apply}}",
+          "destination_target_file_relative": "{{python_file_to_validate}}",
+          "commit_cli": false,
+          "skip_deps_cli": true,
+          "skip_tests_cli": true,
+          "skip_review_cli": true,
+          "additional_options_cli": "" 
+          // User might add --run-steps format_code lint_code here if Scribe supports it,
+          // or configure .scribe.toml to only run these.
+        },
+        "variables": [
+          {"name": "project_root_path", "prompt": "Scribe: Target Project Directory:", "default": "/path/to/your/project"},
+          {"name": "source_code_to_apply", "prompt": "Scribe: Path to NEW/MODIFIED code file Scribe should APPLY:", "default": "/tmp/updated_module.py"},
+          {"name": "python_file_to_validate", "prompt": "Scribe: DESTINATION file to format/lint (relative to Project Dir):", "default": "src/module.py"}
+        ]
+      },
+      {
+        "id": "workflow_scribe_commit_exwork_run_script",
+        "name": "Workflow: Scribe (Commit) -> Ex-Work (Run Script)",
+        "description": "Scribe validates & commits; if successful, Ex-Work runs a specified script.",
+        "type": "full_scribe_exwork_workflow",
+        "scribe_params": {
+          "target_project_dir": "{{project_root_path}}",
+          "source_code_file_path": "{{source_code_to_apply}}",
+          "destination_target_file_relative": "{{python_file_path}}",
+          "commit_cli": true,
+          "report_format_cli": "text"
+        },
+        "exwork_json": {
+          "step_id": "run_script_after_scribe_commit_{{timestamp}}",
+          "description": "Run {{exwork_script_name}} after Scribe validation & commit of {{python_file_path}}",
+          "actions": [
+            {
+              "type": "ECHO",
+              "message": "Scribe validation and commit successful for {{python_file_path}}. Running Ex-Work script: {{exwork_script_name}}."
+            },
+            {
+              "type": "RUN_SCRIPT",
+              "script_path": "{{exwork_script_relative_path}}", 
+              "args": ["{{script_arg1}}"],
+              "cwd": "project_root"
+            }
+          ]
+        },
+        "variables": [
+          {"name": "project_root_path", "prompt": "Scribe: Target Project Directory:", "default": "/path/to/your/project"},
+          {"name": "source_code_to_apply", "prompt": "Scribe: Path to NEW/MODIFIED code Scribe should APPLY:", "default": "/tmp/code_for_scribe.py"},
+          {"name": "python_file_path", "prompt": "Scribe: DESTINATION file to validate (relative to Project Dir):", "default": "src/app.py"},
+          {"name": "exwork_script_relative_path", "prompt": "Ex-Work: Script to run (relative to Project Dir, e.g. scripts/deploy.sh):", "default": "scripts/post_validation.sh"},
+          {"name": "script_arg1", "prompt": "Ex-Work: Argument for script:", "default": "deployed"}
+        ]
+      }
+    ],
+    "tools": [
+      {
+        "id": "tool_list_detailed_directory",
+        "name": "Tool: List Directory Contents (Detailed via Ex-Work)",
+        "description": "Uses 'ls -lah' (or 'dir' on Windows) via a future Ex-Work EXECUTE_SYSTEM_COMMAND action.",
+        "comment": "This tool definition relies on Ex-Work agent being enhanced with EXECUTE_SYSTEM_COMMAND.",
+        "exwork_action_template": { 
+          "type": "EXECUTE_SYSTEM_COMMAND",
+          "command_string": "ls -lah {{directory_path}}",
+          "shell": true 
+        },
+        "variables": [
+          {"name": "directory_path", "prompt": "Directory Path to List:", "default": "."}
+        ]
+      },
+      {
+        "id": "tool_docker_ps",
+        "name": "Tool: List Docker Containers (via Ex-Work)",
+        "description": "Runs 'docker ps -a' via a future Ex-Work EXECUTE_SYSTEM_COMMAND action.",
+        "comment": "Requires Docker CLI and EXECUTE_SYSTEM_COMMAND in Ex-Work.",
+        "exwork_action_template": {
+          "type": "EXECUTE_SYSTEM_COMMAND",
+          "command_string": "docker ps -a",
+          "shell": true
+        },
+        "variables": []
+      },
+      {
+        "id": "tool_curl_example",
+        "name": "Tool: Fetch Web Page (curl via Ex-Work)",
+        "description": "Fetches a web page using 'curl' via a future Ex-Work EXECUTE_SYSTEM_COMMAND action.",
+        "comment": "Requires curl CLI and EXECUTE_SYSTEM_COMMAND in Ex-Work.",
+        "exwork_action_template": {
+          "type": "EXECUTE_SYSTEM_COMMAND",
+          "command_string": "curl -L {{target_url}}",
+          "shell": true 
+        },
+        "variables": [
+          {"name": "target_url", "prompt": "URL to fetch:", "default": "https://api.example.com/status"}
+        ]
+      }
+    ]
+  }

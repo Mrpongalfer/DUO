@@ -1,0 +1,17 @@
+---
+# Ansible playbook: Agent Status Check
+# Drake v0.3 protocol, TPC-compliant
+- name: Check Nexus OmniEngine Agent Status
+  hosts: all
+  become: yes
+  vars_files:
+    - ../config/main_config.json
+  tasks:
+    - name: Check if agent process is running
+      shell: pgrep -f core.ai_agent_forge.agent_forge
+      register: agent_status
+      ignore_errors: yes
+
+    - name: Show agent status
+      debug:
+        msg: "Agent running: {{ agent_status.rc == 0 }}"

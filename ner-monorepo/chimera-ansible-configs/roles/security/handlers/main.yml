@@ -1,0 +1,20 @@
+# /opt/architect_configs/roles/security/handlers/main.yml
+---
+# Handlers for the security role
+- name: Restart sshd
+  ansible.builtin.service:
+    name: ssh # Service name is typically 'ssh' on Debian/Ubuntu
+    state: restarted
+  listen: "Restart sshd" # Custom listener name used in notify
+
+- name: Reload ufw
+  ansible.builtin.command:
+    # Using 'ufw reload' might be sufficient and less disruptive than restart
+    cmd: ufw reload
+  listen: "Reload ufw" # Custom listener name used in notify
+
+- name: Restart fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+  listen: "Restart fail2ban" # Custom listener name used in notify

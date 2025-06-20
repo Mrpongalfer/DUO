@@ -1,0 +1,11 @@
+---
+# File: roles/prometheus/handlers/main.yml
+- name: Restart Prometheus container
+  # Ensures the Prometheus stack defined by the template is running/restarted.
+  # Use command module for explicit reload/restart if needed, or rely on compose state.
+  community.docker.docker_compose_v2:
+    project_name: prometheus_stack # Match project name from task
+    definition: "{{ lookup('template', '../templates/docker-compose.yml.j2') | from_yaml }}" # Re-read definition
+    state: present     # Ensure services are running per the definition
+    # recreate: always # Use if 'state: present' isn't forceful enough
+  become: yes

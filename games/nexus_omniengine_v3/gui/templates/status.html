@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block title %}Nexus OmniEngine Status{% endblock %}
+{% block content %}
+<h2>Status</h2>
+<p>Current status: <strong>{{ status }}</strong></p>
+<ul>
+  <li>Python: {{ python_version }}</li>
+  <li>Platform: {{ platform }}</li>
+  <li>Config file: {{ config_path }}</li>
+</ul>
+<a href="/">Back to Dashboard</a>
+{% endblock %}

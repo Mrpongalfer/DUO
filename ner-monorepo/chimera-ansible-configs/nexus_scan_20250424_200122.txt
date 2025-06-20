@@ -1,0 +1,971 @@
+### Nexus Reality Scan Initializing ###
+Timestamp: Thu Apr 24 08:01:22 PM MDT 2025
+=========================================
+
+### System Information ###
+User: pong
+Hostname: pop-os
+Current Directory: /home/pong/Projects/chimera-ansible-configs
+----- OS Info -----
+Distributor ID:	Pop
+Description:	Pop!_OS 22.04 LTS
+Release:	22.04
+Codename:	jammy
+----- Kernel Info -----
+Linux pop-os 6.12.10-76061203-generic #202412060638~1743109366~22.04~1fce33b SMP PREEMPT_DYNAMIC Thu M x86_64 x86_64 x86_64 GNU/Linux
+=========================================
+
+### Ansible Environment ###
+----- Ansible Version -----
+ansible [core 2.17.10]
+  config file = /home/pong/Projects/chimera-ansible-configs/ansible.cfg
+  configured module search path = ['/home/pong/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /home/pong/ansible_venv/lib/python3.10/site-packages/ansible
+  ansible collection location = /home/pong/.ansible/collections:/usr/share/ansible/collections
+  executable location = /home/pong/ansible_venv/bin/ansible
+  python version = 3.10.12 (main, Feb  4 2025, 14:57:36) [GCC 11.4.0] (/home/pong/ansible_venv/bin/python3)
+  jinja version = 3.1.6
+  libyaml = True
+----- Installed Collections -----
+
+# /home/pong/.ansible/collections/ansible_collections
+Collection                               Version
+---------------------------------------- -------
+community.docker                         4.5.2  
+community.general                        10.5.0 
+community.library_inventory_filtering_v1 1.1.0  
+----- Python Packages (pip list) -----
+Package         Version
+--------------- -------
+ansible-core    2.17.10
+cffi            1.17.1
+cryptography    44.0.2
+git-filter-repo 2.47.0
+Jinja2          3.1.6
+MarkupSafe      3.0.2
+packaging       24.2
+pathspec        0.12.1
+pip             25.0.1
+pycparser       2.22
+PyYAML          6.0.2
+resolvelib      1.0.1
+setuptools      59.6.0
+yamllint        1.37.0
+=========================================
+
+### Git Repository Status ###
+----- Git Status -----
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   roles/prometheus/tasks/main.yml
+	modified:   roles/prometheus/templates/prometheus.yml.j2
+	modified:   site.yml
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	gather_nexus_info.sh
+	nexus_scan_20250424_200122.txt
+	tasks/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+----- Git Remotes -----
+----- Git Branches -----
+* main e028533 fix(apt): Add pre-flight cleanup for Docker APT config
+----- Git Log (Last 5) -----
+* e028533 (HEAD -> main) fix(apt): Add pre-flight cleanup for Docker APT config
+* 0fb6e11 fix(apt): Remove invalid 'args' parameter from apt-get clean command task
+* a409a10 fix(apt): Implement aggressive pre-flight APT cleanup and validation
+* 06aa66f fix(apt): Add pre-flight play to remove problematic lazygit PPA from server
+* b5069d5 fix(prometheus): Provide fully corrected tasks file content
+=========================================
+
+### Project Directory Structure ###
+.
+├── ansible.cfg
+├── ansible.cfg.bak_vaultfix_2025-04-14_17:10:10
+├── gather_nexus_info.sh
+├── handlers
+│   └── main.yml
+├── host_vars
+├── inventory
+│   ├── group_vars
+│   │   ├── all
+│   │   ├── all.yml
+│   │   ├── clients.yml
+│   │   ├── server.yml
+│   │   ├── server.yml.bak_promfinal_2025-04-14_18:55:37
+│   │   ├── server.yml.bak_promfinal_2025-04-14_18:56:02
+│   │   ├── server.yml.bak_promfinal2_2025-04-14_18:57:18
+│   │   ├── server.yml.bak_promvars_2025-04-14_18:50:44
+│   │   └── server.yml.bak_promvars2_2025-04-14_18:52:36
+│   ├── hosts_generated
+│   ├── hosts_generated.bak_2025-04-14_12:57:06
+│   ├── hosts_generated.bak_2025-04-14_12:58:14
+│   ├── hosts_generated.bak_groupfix_2025-04-14_17:42:40
+│   ├── hosts_generated.bak_groupfix2_2025-04-14_18:44:55
+│   └── hosts_generated.bak_keyfix_2025-04-14_17:27:29
+├── nexus_scan_20250424_200122.txt
+├── playbooks
+│   ├── base_python_setup.yml
+│   ├── debug_vars.yml
+│   ├── docker_setup.yml
+│   └── setup_client_for_mgmt.yml
+├── README.md
+├── roles
+│   ├── common
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── tests
+│   │   └── vars
+│   ├── docker
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── tests
+│   │   └── vars
+│   ├── grafana
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── tests
+│   │   └── vars
+│   ├── loki
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── templates
+│   │   ├── tests
+│   │   └── vars
+│   ├── node_exporter
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── tests
+│   │   └── vars
+│   ├── prometheus
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── templates
+│   │   ├── tests
+│   │   └── vars
+│   ├── prompt_debug
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── tests
+│   │   └── vars
+│   ├── promtail
+│   │   ├── defaults
+│   │   ├── handlers
+│   │   ├── meta
+│   │   ├── README.md
+│   │   ├── tasks
+│   │   ├── templates
+│   │   ├── tests
+│   │   └── vars
+│   └── security
+│       ├── defaults
+│       ├── handlers
+│       ├── meta
+│       ├── README.md
+│       ├── tasks
+│       ├── templates
+│       ├── tests
+│       └── vars
+├── site.yml
+├── site.yml.bak_playvars_2025-04-14_19:00:59
+├── site.yml.bak_varsinplay_2025-04-14_19:14:49
+├── tasks
+│   └── main.yml
+└── vars
+    └── common_packages.yml
+
+76 directories, 38 files
+=========================================
+
+### Key Configuration File Contents ###
+----- Content of: ansible.cfg -----
+# Ansible Configuration File - Managed by Chimera Setup
+
+[defaults]
+inventory = ./inventory/hosts_generated
+host_key_checking = False
+#vault_password_file = /home/aiseed/.ansible_vault_pass
+# Note: Vault password file path set above
+
+# Add other sections like [privilege_escalation] or [ssh_connection] if needed
+# [privilege_escalation]
+# become=True
+# become_method=sudo
+# become_user=root
+# become_ask_pass=False
+
+--- End of: ansible.cfg ---
+
+----- Content of: hosts_generated -----
+# Inventory generated by bootstrap, corrected by Chimera v2.7 (v1.1)
+[server]
+192.168.0.95 ansible_user=aiseed
+
+[clients]
+192.168.0.96 ansible_user=pong
+
+[control_node]
+# Use 'localhost' if you want to manage Pop!_OS itself with Ansible using this inventory
+# localhost ansible_connection=local ansible_user=pong
+--- End of: hosts_generated ---
+
+----- Content of: site.yml -----
+# File: /home/pong/Projects/chimera-ansible-configs/site.yml
+# Version 1.6 (Chimera Corrected) - Includes Pre-flight Cleanup
+---
+- name: Pre-flight APT Cleanup and Validation on Server(s)
+  hosts: server
+  become: yes
+  gather_facts: no # Optimization
+  tasks:
+    # --- LazyGit PPA Cleanup ---
+    - name: Attempt removal of problematic lazygit PPA via module
+      ansible.builtin.apt_repository:
+        repo: "ppa:lazygit-team/release"
+        state: absent
+      ignore_errors: yes # Continue even if module has issues or PPA not found this way
+
+    - name: Force removal of lazygit PPA sources list file (.list format)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/lazygit-team-ubuntu-release-{{ ansible_distribution_release | default('noble') }}.list" # Default to noble if fact not gathered
+        state: absent
+      ignore_errors: yes # Don't fail if file doesn't exist
+
+    - name: Force removal of lazygit PPA sources file (.sources format)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/lazygit-team-ubuntu-release-{{ ansible_distribution_release | default('noble') }}.sources" # Default to noble if fact not gathered
+        state: absent
+      ignore_errors: yes # Don't fail if file doesn't exist
+
+    # --- Docker APT Config Cleanup ---
+    - name: Remove potential conflicting Docker sources file (.list)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/docker.list"
+        state: absent
+      ignore_errors: yes # Don't fail if file doesn't exist
+
+    - name: Remove potential conflicting Docker sources file (.sources)
+      ansible.builtin.file:
+        path: "/etc/apt/sources.list.d/docker.sources"
+        state: absent
+      ignore_errors: yes # Don't fail if file doesn't exist
+
+    - name: Remove potential conflicting Docker keyring file (.gpg)
+      ansible.builtin.file:
+        path: "/etc/apt/keyrings/docker.gpg"
+        state: absent
+      ignore_errors: yes # Don't fail if file doesn't exist
+
+    - name: Remove potential conflicting Docker keyring file (.asc)
+      ansible.builtin.file:
+        path: "/etc/apt/keyrings/docker.asc"
+        state: absent
+      ignore_errors: yes # Don't fail if file doesn't exist
+    # --- End Docker Cleanup ---
+
+    - name: Clean APT package cache thoroughly
+      ansible.builtin.command: apt-get clean -y
+      changed_when: false # Command doesn't reliably report changes
+
+    - name: Update APT cache explicitly AFTER cleanup to validate
+      ansible.builtin.apt:
+        update_cache: yes
+      register: preflight_apt_update_result
+      retries: 1
+      delay: 3
+      until: preflight_apt_update_result is succeeded # FAIL PLAY if update still broken
+
+# --- Main Configuration Play ---
+- name: Apply common configuration to all hosts
+  hosts: all
+  become: yes
+  gather_facts: yes # Facts needed here
+  vars:
+    # Vars for 'common' role
+    system_timezone: "America/Denver"
+    admin_users:
+      - { username: aiseed, shell: /bin/bash }
+      - { username: pong, shell: /bin/bash }
+    common_pkgs: # Used directly by common role tasks now
+      - build-essential
+      - python3-dev
+      - curl
+      - wget
+      - git
+      - vim
+      - tmux
+      - htop
+      - net-tools
+      - dnsutils
+      - unzip
+      - ca-certificates
+      - gnupg
+      - python3-pip
+      - python3-venv
+      - chrony # Ensure NTP client is listed if managed by common role
+    # Vars for 'security' role (global aspects)
+    security_ssh_port: 22
+    security_fail2ban_enabled: false # Explicitly false if skipping fail2ban tasks
+    fail2ban_ignoreip: '127.0.0.1/8 ::1 192.168.0.0/24'
+    monitoring_allowed_sources: '192.168.0.0/24' # Used by UFW rules
+    # Define UFW rules directly here (as per site.yml structure)
+    server_ufw_allow_rules: # Needed by security role when run on server host
+      - { comment: "Allow SSH from Client 'pong@pop-os'", port: '{{ security_ssh_port | default(22) }}', proto: tcp, rule: allow, src: '192.168.0.96' }
+      - { comment: "Allow SSH from Localhost", port: '{{ security_ssh_port | default(22) }}', proto: tcp, rule: allow, src: '127.0.0.1' }
+      - { comment: "Allow Prometheus from Client Subnet", port: '{{ prometheus_port_override | default(9091) }}', proto: tcp, rule: allow, src: '{{ monitoring_allowed_sources }}' } # Uses override var if defined later
+      - { comment: "Allow Loki from Client Subnet", port: 3100, proto: tcp, rule: allow, src: '{{ monitoring_allowed_sources }}' }
+      # Add other server rules here if needed
+    client_ufw_allow_rules: # Needed by security role when run on client host
+      - { comment: "Allow SSH from Server 'aiseed@thosedataguys-s'", port: '{{ security_ssh_port | default(22) }}', proto: tcp, rule: allow, src: '192.168.0.95' }
+      - { comment: "Allow SSH from Localhost", port: '{{ security_ssh_port | default(22) }}', proto: tcp, rule: allow, src: '127.0.0.1' }
+      # Add other client rules here if needed
+    # Vars for 'docker' role
+    docker_users_to_group:
+      - aiseed
+      - pong
+    # Vars for 'node_exporter' role (if needed by role itself)
+    node_exporter_port: 9100 # Also needed for prometheus scrape config template
+    # Vars for 'promtail' role
+    loki_server_url: "http://192.168.0.95:3100/loki/api/v1/push" # Assumes Loki runs on server IP
+
+  roles:
+    - common
+    - security # Uses security_*, fail2ban_*, server/client_ufw_allow_rules, monitoring_allowed_sources
+    - docker # Uses docker_users_to_group
+    - node_exporter # Installs node_exporter service
+    - promtail # Uses loki_server_url
+
+# --- Server-Specific Configuration ---
+- name: Configure server-specific settings
+  hosts: server # TARGETS ONLY SERVER GROUP
+  become: yes
+  gather_facts: no # Facts likely gathered in 'all' play
+  vars:
+    # Define ALL variables needed by server roles HERE
+    prometheus_port_override: 9091 # Use non-default port on server
+    prometheus_config_dir: "/opt/docker/prometheus/config"
+    prometheus_data_dir: "/opt/docker/prometheus/data"
+    prometheus_compose_dir: "/opt/docker/prometheus"
+    docker_run_user: "aiseed" # User for docker artifacts on server
+    docker_run_group: "aiseed" # Group for docker artifacts on server
+    prometheus_template_name: "docker-compose.yml.j2"
+    prometheus_compose_file_path: "{{ prometheus_compose_dir }}/docker-compose.yml"
+    prometheus_config_template: "prometheus.yml.j2"
+    prometheus_config_file_path: "{{ prometheus_config_dir }}/prometheus.yml"
+    # Loki vars if needed by loki role
+    loki_config_dir: "/opt/docker/loki/config" # Example
+    loki_data_dir: "/opt/docker/loki/data" # Example
+    loki_port: 3100 # Example
+    loki_compose_file_path: "{{ prometheus_compose_dir | replace('prometheus','loki') }}/docker-compose.yml" # Example path derivation
+    # Grafana vars if needed by grafana role (assuming similar structure)
+    grafana_config_dir: "/opt/docker/grafana/config" # Example
+    grafana_data_dir: "/opt/docker/grafana/data" # Example
+    grafana_port: 3000 # Example
+    grafana_compose_file_path: "{{ prometheus_compose_dir | replace('prometheus','grafana') }}/docker-compose.yml" # Example
+
+  roles:
+    - prometheus # Uses prometheus_*, docker_run_* vars
+    - loki # Uses loki_*, docker_run_* vars
+    # - grafana # Add if/when Grafana role is used
+
+# --- Client-Specific Configuration ---
+- name: Configure client-specific settings
+  hosts: clients # TARGETS ONLY CLIENT GROUP
+  become: yes
+  gather_facts: no # Facts likely gathered in 'all' play
+  vars:
+    # Define client-specific variables here if needed
+    placeholder_client_var: true
+  roles:
+    - prompt_debug # Keeping placeholder from user provided file
+--- End of: site.yml ---
+
+----- Content of: common_packages.yml -----
+---
+# Explicitly defined variables for common role
+common_pkgs:
+  - build-essential
+  - python3-dev
+  - curl
+  - wget
+  - git
+  - vim
+  - tmux
+  - htop
+  - net-tools
+  - dnsutils
+  - unzip
+  - ca-certificates
+  - gnupg
+--- End of: common_packages.yml ---
+
+----- Content of: all.yml -----
+---
+# Simplified for debugging variable loading - v1.1
+common_pkgs:
+  - build-essential
+  - python3-dev
+  - curl
+  - wget
+  - git
+  - vim
+  - tmux
+  - htop
+  - net-tools
+  - dnsutils
+  - unzip
+  - ca-certificates
+  - gnupg
+--- End of: all.yml ---
+
+----- Content of: server.yml -----
+# Corrected server.yml - Version 1.8 (Final Prometheus Vars)
+# Define ALL required vars here, including port override
+prometheus_port_override: 9091 # Changed default port
+
+# --- Prometheus Role Variables (Defined Here for Handlers) ---
+prometheus_config_dir: "/opt/docker/prometheus/config"
+prometheus_data_dir: "/opt/docker/prometheus/data"
+prometheus_compose_dir: "/opt/docker/prometheus"
+docker_run_user: "aiseed" # User owning files/running compose on server - ADJUST IF NEEDED
+docker_run_group: "aiseed" # Group owning files on server - ADJUST IF NEEDED
+prometheus_template_name: "docker-compose.yml.j2"
+prometheus_compose_file_path: "{{ prometheus_compose_dir }}/docker-compose.yml"
+prometheus_config_template: "prometheus.yml.j2"
+prometheus_config_file_path: "{{ prometheus_config_dir }}/prometheus.yml"
+node_exporter_port: 9100 # For scrape config example
+
+# --- Other Server Vars (Ensure consistency) ---
+server_ufw_allow_rules:
+  - comment: Allow SSH from Client 'pong@pop-os'
+    port: '{{ security_ssh_port | default(22) }}'
+    proto: tcp
+    rule: allow
+    src: 192.168.0.96
+  - comment: Allow SSH from Localhost
+    port: '{{ security_ssh_port | default(22) }}'
+    proto: tcp
+    rule: allow
+    src: 127.0.0.1
+  - comment: Allow Prometheus from Client Subnet # Uses port override
+    port: '{{ prometheus_port_override | default(9091) }}'
+    proto: tcp
+    rule: allow
+    src: '{{ monitoring_allowed_sources | default("192.168.0.0/24") }}'
+
+# Add any OTHER essential variables originally in server.yml below:
+
+--- End of: server.yml ---
+
+----- Content of: clients.yml -----
+# /opt/architect_configs/group_vars/clients.yml
+---
+# Client Specific UFW Rules - MINIMAL SECURE DEFAULTS
+
+client_ufw_allow_rules:
+  # Allow SSH ONLY from the server IP and localhost for management
+  - { rule: allow, port: "{{ security_ssh_port | default(22) }}", proto: tcp, src: '192.168.0.95', comment: "Allow SSH from Server 'aiseed@thosedataguys-s'" }
+  - { rule: allow, port: "{{ security_ssh_port | default(22) }}", proto: tcp, src: '127.0.0.1', comment: "Allow SSH from Localhost" }
+
+  # No other incoming ports allowed by default for client workstation.
+--- End of: clients.yml ---
+
+----- List Vault Files -----
+./inventory/group_vars/all/vault.yml
+--- End Vault List ---
+
+----- Content of: main.yml -----
+# /opt/architect_configs/roles/common/tasks/main.yml
+# Version 1.1 - Added debug task
+---
+# Tasks applied to all hosts for common baseline configuration
+
+- name: Update apt cache if older than 1 hour
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600 # Only update if cache is > 1 hour old
+  changed_when: false # Prevent this task alone from reporting 'changed' status
+  tags: [common, packages, apt]
+
+
+- name: Install common packages defined in group_vars/all.yml
+  ansible.builtin.apt:
+    name: "{{ common_pkgs }}" # Uses the variable list from group_vars/all.yml
+    state: present
+  tags: [common, packages, apt]
+
+- name: Set system timezone
+  community.general.timezone:
+    name: "{{ system_timezone }}" # Uses the variable
+  tags: [common, system, timezone]
+
+# --- NTP Configuration (using Chrony) ---
+- name: Ensure chrony NTP client is installed
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+  tags: [common, system, ntp]
+
+- name: Ensure chrony service is enabled and running
+  ansible.builtin.service:
+    name: chrony # Service name might be chronyd on some systems, check service status if fails
+    state: started
+    enabled: yes
+  tags: [common, system, ntp]
+
+# Basic user check - ensures specified users exist with correct shell
+- name: Ensure admin users exist
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    shell: "{{ item.shell }}"
+    state: present
+  loop: "{{ admin_users }}" # Loop through the list defined in group_vars/all.yml
+  tags: [common, users]
+
+# Add other common tasks below as needed:
+
+--- End of: main.yml ---
+
+----- Content of: main.yml -----
+---
+# Tasks for security role - v2.0 Idempotent UFW Reset
+- name: Deploy hardened sshd_config from template
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0600'
+  notify: Restart sshd
+  tags: [security, ssh]
+
+- name: Ensure ufw package is installed
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  tags: [security, ufw]
+
+# --- BEGIN IDEMPOTENT UFW RESET APPROACH ---
+# This block ensures UFW is reset ONLY if it's currently active and managed
+# Avoids errors about backup files and unnecessary resets
+
+- name: Check current UFW status
+  ansible.builtin.command: ufw status
+  register: ufw_status_check
+  changed_when: false
+  failed_when: false # Continue even if inactive
+  become: true
+  tags: [security, ufw]
+
+# Only attempt reset if UFW is currently active (prevents issues on first run)
+# Further checks could be added here if more complex state detection needed
+- name: Reset UFW to defaults if it is currently active
+  ansible.builtin.command: ufw --force reset
+  when: "'Status: active' in ufw_status_check.stdout"
+  changed_when: true # Reset always changes state conceptually
+  become: true
+  notify: Reload ufw
+  tags: [security, ufw]
+# --- END IDEMPOTENT UFW RESET APPROACH ---
+
+- name: Set UFW logging state
+  community.general.ufw:
+    logging: 'on'
+  notify: Reload ufw
+  tags: [security, ufw]
+
+- name: Set UFW default policies (Deny Incoming)
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - { direction: incoming, policy: deny }
+    - { direction: outgoing, policy: allow }
+    - { direction: routed, policy: deny }
+  notify: Reload ufw
+  tags: [security, ufw]
+
+- name: Apply Server-specific UFW allow rules
+  community.general.ufw:
+    rule: "{{ item.rule | default('allow') }}"
+    direction: "{{ item.direction | default('in') }}"
+    from_ip: "{{ item.src | default('any') }}"
+    to_ip: "{{ item.dest | default('any') }}"
+    port: "{{ item.port | default(omit) }}"
+    proto: "{{ item.proto | default('any') }}"
+    comment: "{{ item.comment | default(omit) }}"
+  loop: "{{ server_ufw_allow_rules | default([]) }}"
+  when: inventory_hostname in groups['server']
+  notify: Reload ufw
+  tags: [security, ufw]
+
+- name: Apply Client-specific UFW allow rules
+  community.general.ufw:
+    rule: "{{ item.rule | default('allow') }}"
+    direction: "{{ item.direction | default('in') }}"
+    from_ip: "{{ item.src | default('any') }}"
+    to_ip: "{{ item.dest | default('any') }}"
+    port: "{{ item.port | default(omit) }}"
+    proto: "{{ item.proto | default('any') }}"
+    comment: "{{ item.comment | default(omit) }}"
+  loop: "{{ client_ufw_allow_rules | default([]) }}"
+  when: inventory_hostname in groups['clients']
+  notify: Reload ufw
+  tags: [security, ufw]
+
+- name: Ensure ufw is enabled and running
+  community.general.ufw:
+    state: enabled
+  tags: [security, ufw]
+
+# --- Fail2ban Section ---
+# (Assuming Fail2ban setup remains the same)
+- name: Ensure fail2ban package is installed
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+  when: security_fail2ban_enabled | default(false)
+  tags: [security, fail2ban]
+
+- name: Deploy fail2ban jail.local configuration from template
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: '0644'
+  when: security_fail2ban_enabled | default(false)
+  notify: Restart fail2ban
+  tags: [security, fail2ban]
+
+- name: Ensure fail2ban service is enabled and running
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: yes
+  when: security_fail2ban_enabled | default(false)
+  tags: [security, fail2ban]
+
+--- End of: main.yml ---
+
+----- Content of: main.yml -----
+# /opt/architect_configs/roles/docker/tasks/main.yml
+---
+# Tasks for installing and configuring Docker CE
+
+- name: Ensure prerequisites for Docker repo are installed
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: yes
+  tags: [docker, packages]
+
+# Remove conflicting docker.io package if present (best effort)
+- name: Ensure conflicting docker.io package is removed
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-doc
+      - docker-compose # Older compose
+      - podman-docker # Conflicting package
+      - containerd
+      - runc
+    state: absent
+  ignore_errors: yes # Ignore if packages are not installed
+  tags: [docker, packages]
+
+- name: Ensure Docker apt key directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  tags: [docker, repo]
+
+- name: Add Docker's official GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: true # Overwrite if exists, ensures latest key
+  tags: [docker, repo]
+
+- name: Add Docker's official APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker # Creates /etc/apt/sources.list.d/docker.list
+    update_cache: yes
+  tags: [docker, repo]
+
+- name: Install Docker CE packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io # Required by docker-ce
+      - docker-buildx-plugin
+      - docker-compose-plugin # Installs 'docker compose' command
+    state: present
+  tags: [docker, packages]
+  notify: Restart docker # Handler needed
+
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+  tags: [docker, users]
+
+- name: Add specified users to the docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes # Add to existing groups
+  loop: "{{ docker_users_to_group | default([]) }}" # Use variable from group_vars/all.yml
+  tags: [docker, users]
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+  tags: [docker, service]
+
+--- End of: main.yml ---
+
+----- Content of: main.yml -----
+---
+# Tasks for Prometheus role - v1.7 Relying on Play Vars
+# Assumes ALL prometheus_* vars are defined directly in the calling play's 'vars:' section
+
+- name: Ensure Prometheus directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0755'
+  loop:
+    - "{{ prometheus_compose_dir }}"
+    - "{{ prometheus_config_dir }}"
+    - "{{ prometheus_data_dir }}"
+
+- name: Deploy Prometheus configuration file (prometheus.yml)
+  ansible.builtin.template:
+    src: "{{ prometheus_config_template }}"
+    dest: "{{ prometheus_config_file_path }}"
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0644'
+  notify: Restart Prometheus container
+
+- name: Ensure Docker Compose V2 is available
+  ansible.builtin.command: docker compose version
+  register: compose_version_check
+  changed_when: false
+  failed_when: compose_version_check.rc != 0
+
+- name: Deploy Prometheus docker-compose.yml file from template
+  ansible.builtin.template:
+    src: "{{ prometheus_template_name }}"
+    dest: "{{ prometheus_compose_file_path }}"
+    owner: "{{ docker_run_user | default('root') }}"
+    group: "{{ docker_run_group | default('root') }}"
+    mode: '0644'
+  notify: Start Prometheus container # Consider changing to 'Restart Prometheus container' for consistency if config changes also require compose restart
+
+- name: Ensure Prometheus container is running via Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ prometheus_compose_dir }}"
+    state: present
+    pull: missing # Change to 'always' if you want latest image on every run
+  register: compose_result
+
+- name: Ensure problematic lazygit PPA is removed (if present)
+  ansible.builtin.apt_repository:
+    repo: "ppa:lazygit-team/release"
+    state: absent
+  become: yes
+  when: "'server' in group_names" # Only run this on hosts in the 'server' group
+  ignore_errors: yes # Ignore if the PPA doesn't exist, just ensure it's gone
+--- End of: main.yml ---
+
+----- Content of: prometheus.yml.j2 -----
+# ~/Projects/chimera-ansible-configs/roles/prometheus/templates/prometheus.yml.j2
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Configuration for Alertmanager (if/when deployed)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093'] # Assumes resolvable name in Docker network
+
+# Location of rule files (if/when defined)
+# rule_files:
+#   - /etc/prometheus/rules/*.rules.yml
+
+scrape_configs:
+  - job_name: 'prometheus'
+    # Instruct Prometheus to scrape its own metrics endpoint
+    static_configs:
+      - targets: ['localhost:9090'] # 'localhost' within the container refers to itself
+
+  # Add other scrape jobs here as needed. Example for node_exporter on inventory hosts:
+  # - job_name: 'node_exporter'
+  #   static_configs:
+  #     - targets:
+  #       # Iterate over hosts in a specific group (e.g., 'monitored_servers')
+  #       {% for host in groups['monitored_servers'] | default([]) %}
+  #       # Use ansible_host if defined, otherwise inventory_hostname, with node_exporter port
+  #       - '{{ hostvars[host]['ansible_host'] | default(hostvars[host]['inventory_hostname']) }}:9100'
+  #       {% endfor %}
+--- End of: prometheus.yml.j2 ---
+
+----- Content of: docker-compose.yml.j2 -----
+# ~/Projects/chimera-ansible-configs/roles/prometheus/templates/docker-compose.yml.j2
+version: '3.7'
+
+volumes:
+  # Define a Docker volume for persistent Prometheus data
+  prometheus_data: {}
+
+networks:
+  # Define a network for monitoring components
+  monitoring_net:
+    driver: bridge
+
+services:
+  prometheus:
+    image: prom/prometheus:latest # Use the latest official image
+    container_name: prometheus
+    restart: unless-stopped # Ensure service restarts automatically
+    volumes:
+      # Mount the main configuration file (templated by Ansible onto the host)
+      - /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Mount the persistent data volume
+      - prometheus_data:/prometheus
+    command:
+      # Specify command line arguments for Prometheus
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle' # Allows hot-reloading config via API
+    - ports:
+    -   # Expose Prometheus port 9090 to the host
+    -   - "{{ prometheus_port | default('9090') }}:9090" # Use variable for flexibility
+    + ports:
+    +   # Expose Prometheus port to the host, using override variable if defined
+    +   - "{{ prometheus_port_override | default('9090') }}:9090"
+    networks:
+      # Connect to the monitoring network
+      - monitoring_net
+    labels:
+      # Add labels for organization/tooling
+      org.label-schema.group: "monitoring"
+      managed-by: "ansible-chimera-prime"
+
+  # Potential future addition: Node Exporter (Ensure handled by appropriate role/tasks)
+  # node_exporter:
+  #   image: prom/node-exporter:latest
+  #   container_name: node_exporter
+  #   # ... configuration ...
+--- End of: docker-compose.yml.j2 ---
+
+=========================================
+
+### Network Information (Control Node) ###
+----- IP Addresses -----
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp5s0f1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether c4:54:44:3a:3c:6c brd ff:ff:ff:ff:ff:ff
+    inet 192.168.0.96/24 brd 192.168.0.255 scope global dynamic noprefixroute enp5s0f1
+       valid_lft 169594sec preferred_lft 169594sec
+    inet6 fd67:f474:67ad:db1:a2e9:99ae:acd4:29f/64 scope global temporary dynamic 
+       valid_lft 601595sec preferred_lft 82923sec
+    inet6 fd67:f474:67ad:db1:ad39:ca36:3229:a132/64 scope global dynamic mngtmpaddr noprefixroute 
+       valid_lft 2591896sec preferred_lft 604696sec
+    inet6 2600:8803:a001:d800::3a39/128 scope global dynamic noprefixroute 
+       valid_lft 83194sec preferred_lft 83194sec
+    inet6 2600:8803:a001:d800:9462:cf6b:97e2:3f5d/64 scope global temporary dynamic 
+       valid_lft 301sec preferred_lft 301sec
+    inet6 2600:8803:a001:d800:b42d:dc06:7b3a:4cc6/64 scope global dynamic mngtmpaddr noprefixroute 
+       valid_lft 301sec preferred_lft 301sec
+    inet6 fe80::cdb5:6800:a954:eed1/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+3: br-58584849cc8d: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 5a:cc:7b:3b:8e:59 brd ff:ff:ff:ff:ff:ff
+    inet 172.18.0.1/16 brd 172.18.255.255 scope global br-58584849cc8d
+       valid_lft forever preferred_lft forever
+4: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 8a:2b:40:b7:95:69 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+----- Listening Ports (TCP/UDP) -----
+Netid State  Recv-Q Send-Q                        Local Address:Port  Peer Address:PortProcess                                 
+udp   UNCONN 0      0                             127.0.0.53%lo:53         0.0.0.0:*                                           
+udp   UNCONN 0      0                                 127.0.0.1:323        0.0.0.0:*                                           
+udp   UNCONN 0      0                                   0.0.0.0:35920      0.0.0.0:*                                           
+udp   UNCONN 0      0                                   0.0.0.0:5353       0.0.0.0:*                                           
+udp   UNCONN 0      0                                      [::]:48082         [::]:*                                           
+udp   UNCONN 0      0                                         *:48103            *:*    users:(("firefox-bin",pid=3651,fd=186))
+udp   UNCONN 0      0                                     [::1]:323           [::]:*                                           
+udp   UNCONN 0      0      [fe80::cdb5:6800:a954:eed1]%enp5s0f1:546           [::]:*                                           
+udp   UNCONN 0      0                                         *:36282            *:*    users:(("firefox-bin",pid=3651,fd=113))
+udp   UNCONN 0      0                                      [::]:5353          [::]:*                                           
+tcp   LISTEN 0      4096                          127.0.0.53%lo:53         0.0.0.0:*                                           
+tcp   LISTEN 0      128                               127.0.0.1:37167      0.0.0.0:*    users:(("ssh",pid=3125912,fd=5))       
+tcp   LISTEN 0      511                               127.0.0.1:46661      0.0.0.0:*    users:(("code",pid=2962592,fd=58))     
+tcp   LISTEN 0      4096                              127.0.0.1:11434      0.0.0.0:*                                           
+tcp   LISTEN 0      511                               127.0.0.1:44049      0.0.0.0:*    users:(("code",pid=2792846,fd=41))     
+tcp   LISTEN 0      511                               127.0.0.1:35957      0.0.0.0:*    users:(("code",pid=2792846,fd=40))     
+tcp   LISTEN 0      511                               127.0.0.1:33519      0.0.0.0:*    users:(("code",pid=3125680,fd=39))     
+tcp   LISTEN 0      128                               127.0.0.1:631        0.0.0.0:*                                           
+tcp   LISTEN 0      128                                 0.0.0.0:22         0.0.0.0:*                                           
+tcp   LISTEN 0      511                               127.0.0.1:33921      0.0.0.0:*    users:(("code",pid=2963729,fd=23))     
+tcp   LISTEN 0      50                       [::ffff:127.0.0.1]:64120            *:*    users:(("java",pid=2963624,fd=16))     
+tcp   LISTEN 0      128                                   [::1]:37167         [::]:*    users:(("ssh",pid=3125912,fd=4))       
+tcp   LISTEN 0      4096                                      *:9090             *:*                                           
+tcp   LISTEN 0      4096                                      *:9100             *:*                                           
+tcp   LISTEN 0      128                                    [::]:22            [::]:*                                           
+tcp   LISTEN 0      128                                   [::1]:631           [::]:*                                           
+=========================================
+
+### Ansible Lint Check (Optional) ###
+# 'ansible-lint' command not found. Skipping lint check.
+=========================================
+
+### Nexus Reality Scan Complete ###
+Provide the *entire* output above when requested.

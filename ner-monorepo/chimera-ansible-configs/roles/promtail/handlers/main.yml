@@ -1,0 +1,9 @@
+# /opt/architect_configs/roles/promtail/handlers/main.yml
+---
+# Handlers for the promtail role
+- name: Restart promtail
+  ansible.builtin.service:
+    name: promtail
+    state: restarted
+  listen: "Restart promtail"
+

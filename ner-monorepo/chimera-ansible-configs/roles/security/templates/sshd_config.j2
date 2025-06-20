@@ -1,0 +1,71 @@
+# Ansible Managed: /etc/ssh/sshd_config from role security template sshd_config.j2
+# See sshd_config(5) for details
+
+# Basic Secure Settings (Customize further as needed)
+Port {{ security_ssh_port | default(22) }}
+Protocol 2
+
+# Listen addresses (optional - default is all)
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+# HostKeys for protocol 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Privilege Separation is deprecated in newer OpenSSH but needed for compatibility
+UsePrivilegeSeparation sandbox # Or yes for older versions
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Authentication:
+LoginGraceTime 30s # Shorter grace time
+PermitRootLogin no # Or prohibit-password
+StrictModes yes
+MaxAuthTries 3 # Limit brute-force attempts
+MaxSessions 10
+
+PubkeyAuthentication yes
+# Set authorized keys file path explicitly
+AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2
+
+# Disable unused authentications
+HostbasedAuthentication no
+IgnoreRhosts yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Disable password authentication entirely (RECOMMENDED IF KEYS ARE SET UP)
+PasswordAuthentication no
+
+# Kerberos / GSSAPI (disable unless specifically needed)
+#KerberosAuthentication no
+#GSSAPIAuthentication no
+#GSSAPICleanupCredentials no
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+# Subsystem for SFTP
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# Use PAM authentication
+UsePAM yes
+
+# Optional: Limit users/groups allowed to connect
+# AllowUsers {{ ssh_allow_users | default([]) | join(' ') }} # Requires ssh_allow_users list variable defined elsewhere
+
+# Optional: Stronger Ciphers/MACs/Kex (Modern defaults are generally good)
+# Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+# MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
+# KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
+
+# Optional: Client Alive settings (prevent idle timeouts)
+#ClientAliveInterval 300
+#ClientAliveCountMax 2
+
+# Disable X11 forwarding if not needed
+X11Forwarding no

@@ -1,0 +1,6 @@
+[
+  "Omnitide_Architects_Presence_Discretion_And_Value_Actualization_System/tests/test_oapdvas.py::test_root",
+  "games/nexus_omniengine_v3/tests/test_agent_handler.py::TestAgentHandler::test_init",
+  "games/nexus_omniengine_v3/tests/test_utils.py::TestUtils::test_ensure_dir",
+  "games/nexus_omniengine_v3/tests/test_utils.py::TestUtils::test_load_and_save_workflow"
+]

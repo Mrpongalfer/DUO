@@ -1,0 +1,50 @@
+    {
+    "oda_version": "0.1-mvp",
+    "architect_identity": {
+      "name": "Architect Alix Feronti",
+      "email": "architect@omnitide.io" 
+    },
+    "nexus_cosmology": {
+      "principles": ["Adaptive Sentience", "Operational Sovereignty"] 
+    },
+    "tpc_standards": {
+      "require_docker": true,
+      "require_ci_cd": true,
+      "require_pre_commit": true,
+      "default_license": "MIT"
+    },
+    "interaction_protocols": {
+      "style": "direct",
+      "pma_enabled": false, 
+      "confirm_major_actions": true
+    },
+    "operational_philosophy": {
+      "default_timeout": 300,
+      "unconventional_bias": 0.1 
+    },
+    "core_team_simulation": {
+      "enabled": false 
+    },
+    "advanced_workflows": {
+      "apex_workflow_enabled": false 
+    },
+    "rules": {
+      "validation": [
+        {"check": "run_tests", "priority": 1},
+        {"check": "run_linting", "priority": 2},
+        {"check": "run_audit", "priority": 3}
+      ]
+    },
+    "persona_traits": {
+      "proactivity": "medium",
+      "verbosity": "concise"
+    },
+    "template_sources": {
+      "type": "local", 
+      "path": "./oda_templates" 
+    },
+    "learning_config": {
+        "feedback_logging_enabled": true,
+        "heuristic_update_enabled": false 
+    }
+    }

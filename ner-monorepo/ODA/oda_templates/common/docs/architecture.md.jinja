@@ -1,0 +1,61 @@
+  ```markdown
+  # Architecture Overview - {{ project_name }}
+
+  **Forged by {{ APP_NAME }} v{{ APP_VERSION }}**
+
+  ## Introduction
+
+  This document provides a high-level overview of the architecture for the `{{ project_name }}` project. It should be maintained and updated as the project evolves.
+
+  *Project Goal:* {{ description }}
+
+  ## Key Components / Modules
+
+  * **`{{ project_module_name if language == 'python' else 'src' }}/`:** Contains the primary source code.
+      * *(Describe the main modules/directories within the source folder and their responsibilities. e.g., `main.py` - entry point, `commands.py` - CLI logic, `routes/` - API routes, `services/` - business logic, `models/` - data structures, etc.)*
+  * **`tests/`:** Contains automated tests (unit, integration).
+      * *(Describe testing strategy, frameworks used - e.g., Pytest, Jest)*
+  * **`Dockerfile`:** Defines the container image for the application.
+      * *(Briefly describe base image, build stages if any, entry point)*
+  * **`docker-compose.yml`:** Defines services for local development/testing.
+      * *(Describe the services defined, e.g., application service, database, cache)*
+  * **`.github/workflows/ci.yml`:** Defines the CI pipeline.
+      * *(Summarize the key stages: lint, test, build, audit)*
+
+  ## Technology Stack
+
+  * **Language:** {{ language }} (Version: {{ python_version if language == 'python' else node_version }})
+  * **Framework/Core Libraries:** {{ 'FastAPI/CLI (Typer)' if language == 'python' else 'Express.js' }} *(Adjust)*
+  * **Package Manager:** {{ 'Poetry' if language == 'python' else 'npm/yarn' }}
+  * **Containerization:** Docker, Docker Compose
+  * **CI/CD:** GitHub Actions
+  * **Linting/Formatting:** {{ 'Ruff, MyPy' if language == 'python' else 'ESLint, Prettier' }} (via pre-commit)
+  * **Testing:** {{ 'Pytest' if language == 'python' else 'Jest' }} *(Adjust if different)*
+
+  ## Data Flow / Control Flow (Optional)
+
+  *(Include diagrams or descriptions of how data flows through the system or how key operations are controlled. Mermaid diagrams can be embedded in Markdown)*
+
+  ```mermaid
+  graph TD
+      A[User Request] --> B{Load Balancer / API Gateway};
+      B --> C{{ Application Service ({{ project_slug }}) }};
+      C --> D[(Database)];
+      C --> E[/External API/];
+      C --> F((Cache));
+      C --> A;
+
+Key Design Decisions & Patterns
+
+(Document significant architectural choices, patterns used (e.g., MVC, Dependency Injection, Repository Pattern), trade-offs considered, etc.)
+
+    Decision 1: ... (Rationale: ...)
+    Pattern Used: ... (Reason: ...)
+
+Deployment Strategy (Conceptual)
+
+(Outline the intended deployment approach, e.g., container orchestration (Kubernetes, ECS), serverless, target cloud provider.)
+Future Considerations / Scalability
+
+(Notes on potential future enhancements, scalability bottlenecks, areas for refactoring.)
+```

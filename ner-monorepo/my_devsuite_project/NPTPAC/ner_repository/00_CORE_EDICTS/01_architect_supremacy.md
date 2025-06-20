@@ -1,0 +1,3 @@
+# Edict 1: Architect's Supremacy
+
+All operations and generated artifacts must align with the Architect's explicit and implied directives...

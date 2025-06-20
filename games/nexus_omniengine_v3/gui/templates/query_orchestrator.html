@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Query Orchestrator (QO){% endblock %}
+{% block content %}
+<div class="nexus-card">
+  <h2 style="color:#ffe082;">Query Orchestrator (QO)</h2>
+  <form id="qo-query-form" style="display:flex;gap:1em;align-items:center;margin-bottom:1.5em;">
+    <input type="text" id="qo-query" placeholder="Enter your query..." style="flex:1 1 300px;padding:0.7em 1em;border-radius:8px;border:1px solid #bcd;" />
+    <button class="dashboard-btn" type="submit">Submit Query</button>
+  </form>
+  <div id="qo-query-history">
+    <!-- Query history and routing will be rendered here -->
+  </div>
+</div>
+<script>
+document.getElementById('qo-query-form').onsubmit = function(e) {
+  e.preventDefault();
+  // TODO: Implement query routing and history update
+};
+</script>
+{% endblock %}

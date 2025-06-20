@@ -1,0 +1,12 @@
+{
+  "step_id": "redteam_nmap_discover_001",
+  "description": "Nmap host discovery scan for {{target_network_cidr}}.",
+  "parameters": [{"name": "target_network_cidr", "prompt": "Enter target network CIDR (e.g., 192.168.1.0/24)"}],
+  "actions": [
+    {
+      "type": "RUN_SCRIPT",
+      "script_path": "nmap",
+      "args": ["-sn", "{{target_network_cidr}}"]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+[project]
+name = "lilyOPS" # Uses current folder name
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "The Architect (mrpongalfer)", email = "architect@example.com"}, # Placeholder
+    {name = "mrpongalfer", email = "pongalfer@gmail.com"},
+]
+readme = "README.md"
+requires-python = "==3.11.*"
+dependencies = [
+    "keyring>=23.0.0",
+    "cryptography>=3.4.0",
+    "ollama>=0.1.0",
+    "PyGithub>=1.55",
+    "textual>=0.50.0",
+    "aiohttp>=3.8.0",
+]
+license = {text = "MIT"}
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E","F","W","I","UP","B","C4","SIM","TID","PT","Q","N","ANN","ASYNC","TRY"] # Comprehensive set
+ignore = [
+    "ANN101", # Missing type annotation for self
+    "ANN102", # Missing type annotation for cls
+    "E501",   # Line too long (Ruff formatter will handle this)
+]
+# fixable = ["ALL"] # Uncomment for very aggressive auto-fixing by 'ruff --fix'
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+# skip-string-normalization = false
+line-ending = "lf"
+
+# Placeholder for PDM dev dependencies if Architect chooses to use 'pdm install --dev'
+[tool.pdm]
+distribution = false
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.12",
+    "pytest",
+    "pre-commit>=4.2.0",
+]

@@ -1,0 +1,33 @@
+# Default Scribe Profile (.scribe.toml)
+
+fail_on_audit_severity = "high"
+fail_on_lint_critical = true
+fail_on_mypy_error = true
+fail_on_test_failure = true
+
+ollama_base_url = "http://localhost:11434"
+ollama_model = "mistral-nemo:12b-instruct-2407-q4_k_m"
+# ollama_request_timeout = 180.0
+# ollama_api_retries = 2
+# ollama_api_retry_delay = 5.0
+
+commit_message_template = "feat(Scribe): Apply validated changes to {target_file}"
+
+validation_steps = [
+  "validate_inputs",
+  "setup_environment",
+  "install_deps",
+  "audit_deps",
+  "apply_code",
+  "format_code",
+  "lint_code",
+  "type_check",
+  # "extract_signatures", # Uncomment for AI tests
+  # "generate_tests",
+  # "save_tests",
+  # "execute_tests",
+  # "review_code", # Uncomment for AI review
+  "run_precommit",
+  "commit_changes",
+  "generate_report"
+]

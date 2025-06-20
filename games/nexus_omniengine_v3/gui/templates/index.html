@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block title %}Nexus OmniEngine Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+  <h2 class="dashboard-title">Welcome to Nexus OmniEngine v3.0</h2>
+  <p class="dashboard-desc">This is the main dashboard. Use the navigation above to configure or check status.</p>
+  <div class="dashboard-cards">
+    <div class="dashboard-card">
+      <h3>Quick Actions</h3>
+      <a class="dashboard-btn" href="/configure">⚙️ Configure Engine</a>
+      <a class="dashboard-btn" href="/status">📊 Check System Status</a>
+    </div>
+    <div class="dashboard-card">
+      <h3>System Info</h3>
+      <ul class="dashboard-info">
+        <li><b>Date:</b> {{ current_date }}</li>
+        <li><b>Python:</b> {{ python_version }}</li>
+        <li><b>Platform:</b> {{ platform }}</li>
+      </ul>
+    </div>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="dashboard-messages">
+      {% for category, message in messages %}
+        <li><strong>{{ category }}:</strong> {{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}

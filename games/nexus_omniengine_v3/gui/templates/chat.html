@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="chat-container-modern">
+  <h2 class="chat-title">Team Chat & Logs</h2>
+  <div id="chat-log" class="chat-log-modern">
+    {% for entry in chat_history %}
+      <div class="chat-entry-modern {{ entry.type }} persona-{{ entry.persona|default('system') }}">
+        <span class="chat-timestamp">[{{ entry.timestamp }}]</span>
+        <span class="chat-sender">{{ entry.sender }}{% if entry.persona %} ({{ entry.persona }}){% endif %}:</span>
+        <span class="chat-message">{{ entry.message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+  <form id="chat-form" class="chat-form-modern" autocomplete="off">
+    <select id="persona-select" name="persona" class="chat-persona-select">
+      <option value="all">All</option>
+      {% for persona in personas %}
+        <option value="{{ persona.id }}">{{ persona.name }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" id="chat-input" name="message" placeholder="Type your message..." required class="chat-input-modern" />
+    <button type="submit" class="chat-btn-modern">Send</button>
+    <select id="meta-action-select" class="chat-meta-select">
+      <option value="meta_request">Meta-State</option>
+      <option value="self_optimize">Self-Optimize</option>
+      <option value="ner_cleanup">NER Cleanup</option>
+      <option value="tool_audit">Tool Audit</option>
+      <option value="agent_feedback">Request Feedback</option>
+    </select>
+    <button type="button" id="meta-action-btn" class="chat-btn-meta-modern" title="Send meta-action to selected persona">Meta Action</button>
+  </form>
+</div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+  const socket = io();
+  const chatLog = document.getElementById('chat-log');
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const personaSelect = document.getElementById('persona-select');
+  const metaBtn = document.getElementById('meta-action-btn');
+  const metaActionSelect = document.getElementById('meta-action-select');
+
+  function renderEntry(entry) {
+    const div = document.createElement('div');
+    div.className = `chat-entry ${entry.type} persona-${entry.persona || 'system'}`;
+    let msg = `<span class='chat-timestamp'>[${entry.timestamp}]</span> <span class='chat-sender'>${entry.sender}${entry.persona ? ' ('+entry.persona+')' : ''}:</span> <span class='chat-message'>${entry.message}</span>`;
+    if (entry.type === 'meta') {
+      div.style.background = '#fffbe6';
+      div.style.fontStyle = 'italic';
+      div.style.borderLeft = '4px solid #ffb84e';
+    }
+    div.innerHTML = msg;
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  socket.on('chat_message', function(entry) {
+    renderEntry(entry);
+  });
+
+  chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = chatInput.value.trim();
+    if (!message) return;
+    const persona = personaSelect.value;
+    socket.emit('send_message', {
+      sender: 'user',
+      persona: persona === 'all' ? null : persona,
+      message: message,
+      type: 'chat'
+    });
+    chatInput.value = '';
+  });
+
+  metaBtn.addEventListener('click', function() {
+    const persona = personaSelect.value;
+    if (!persona || persona === 'all') {
+      alert('Select a specific persona to send a meta-action.');
+      return;
+    }
+    const metaType = metaActionSelect.value;
+    socket.emit('send_message', {
+      sender: 'user',
+      persona: persona,
+      message: '',
+      type: metaType
+    });
+  });
+</script>
+{% endblock %}

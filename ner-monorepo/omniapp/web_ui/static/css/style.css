@@ -1,0 +1,121 @@
+/* static/css/style.css for Omnitide Web UI */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background-color: #1e1e2f; /* Dark background */
+    color: #e0e0e0; /* Light text */
+    line-height: 1.6;
+}
+header { 
+    background-color: #2a2a3a; /* Slightly lighter dark */
+    color: #ffffff; 
+    padding: 1.2em 0; 
+    text-align: center; 
+    border-bottom: 3px solid #7b5cd9; /* Accent color */
+}
+header h1 {
+    margin: 0;
+    font-size: 2.2em;
+    font-weight: 300;
+}
+nav { 
+    background-color: #303040; /* Darker than header */
+    padding: 0.8em; 
+    text-align: center; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+nav a { 
+    color: #d0d0ff; /* Light accent for links */
+    margin: 0 20px; 
+    text-decoration: none; 
+    font-weight: bold; 
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+}
+nav a:hover, nav a.active { 
+    color: #ffffff;
+    text-shadow: 0 0 5px #ffffff;
+}
+.container { 
+    width: 85%; 
+    max-width: 1200px;
+    margin: 25px auto; 
+    padding: 25px; 
+    background-color: #252535; /* Content area background */
+    border-radius: 8px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+h2 { 
+    color: #a0a0ff; /* Accent color for headings */
+    border-bottom: 2px solid #4a4a6a;
+    padding-bottom: 0.3em;
+    margin-top: 0;
+}
+h3 { color: #b0b0cc; }
+h4 { color: #c0c0dd; }
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #c0c0dd;
+}
+textarea, input[type="text"] { 
+    width: calc(100% - 22px); /* Full width minus padding and border */
+    min-height: 100px; 
+    padding: 10px; 
+    border: 1px solid #4a4a6a; 
+    border-radius: 4px; 
+    font-family: 'Courier New', Courier, monospace; 
+    font-size: 0.95em; 
+    margin-bottom:15px; 
+    background-color: #1c1c2b; /* Darker input background */
+    color: #e0e0e0; /* Light text for input */
+    resize: vertical;
+}
+textarea#exwork_json_payload { min-height: 200px; }
+
+input[type="submit"], button { 
+    background-color: #7b5cd9; /* Accent color button */
+    color: white; 
+    padding: 12px 20px; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer; 
+    font-size: 1.05em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+input[type="submit"]:hover, button:hover { 
+    background-color: #6a4bc0; /* Darker accent on hover */
+}
+
+pre.results-output { 
+    background-color: #1a1a28; /* Very dark for code blocks */
+    padding: 15px; 
+    border-radius: 5px; 
+    border: 1px solid #3a3a4a;
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+    color: #c0c0ff; /* Light blueish text for output */
+    max-height: 400px;
+    overflow-y: auto;
+}
+pre.error-output { color: #ff8080; /* Reddish for errors */ }
+
+.error-text, .flashes .error { color: #ff6060; font-weight: bold; background-color: rgba(255, 80, 80, 0.1); padding: 10px; border-left: 5px solid #ff6060; margin-bottom:15px; border-radius:4px;}
+.success-text, .flashes .success { color: #60ff60; font-weight: bold; background-color: rgba(80, 255, 80, 0.1); padding: 10px; border-left: 5px solid #60ff60; margin-bottom:15px; border-radius:4px;}
+.warning-text, .flashes .info { color: #ffd700; background-color: rgba(255, 215, 0, 0.1); padding: 10px; border-left: 5px solid #ffd700; margin-bottom:15px; border-radius:4px;}
+
+ul.flashes { list-style-type: none; padding: 0; }
+.form-group { margin-bottom: 20px; }
+
+footer { 
+    text-align:center; 
+    padding: 20px 0;
+    margin-top: 30px;
+    color: #888898; 
+    font-size:0.9em;
+    border-top: 1px solid #303040;
+}

@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  exworkagent:
+    build: .
+    command: poetry run python exworkagent0.py
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "5000:5000"
+  scribe:
+    build: .
+    command: poetry run python scribe0.py
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8000:8000"
+  llmcodegen:
+    build: .
+    command: poetry run python llm_code_generator.py
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "5050:5050"
+# Add more services as needed

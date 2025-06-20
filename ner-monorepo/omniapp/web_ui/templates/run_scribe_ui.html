@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Run Scribe Task - Omnitide Web UI{% endblock %}
+{% block content %}
+    <h2>Run Scribe Agent Validation</h2>
+    <p class="warning-text">Scribe integration is not yet fully implemented in this Web UI.</p>
+    
+    <form method="POST" class="scribe-form">
+        <div class="form-group">
+            <label for="scribe_target_dir">Target Project Directory:</label>
+            <input type="text" id="scribe_target_dir" name="scribe_target_dir" placeholder="/path/to/your/project" style="width:98%;">
+        </div>
+        <div class="form-group">
+            <label for="scribe_code_file">Source Code File (to apply):</label>
+            <input type="text" id="scribe_code_file" name="scribe_code_file" placeholder="/tmp/new_code.py" style="width:98%;">
+        </div>
+        <div class="form-group">
+            <label for="scribe_target_file_relative">Destination File (relative in project):</label>
+            <input type="text" id="scribe_target_file_relative" name="scribe_target_file_relative" placeholder="src/module.py" style="width:98%;">
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Run Scribe Validation (NYI)">
+        </div>
+    </form>
+
+    {% if results %}
+        <hr>
+        <h3>Scribe Results (Placeholder):</h3>
+        <pre class="results-output">{{ results | tojson(indent=2) }}</pre>
+    {% endif %}
+{% endblock %}

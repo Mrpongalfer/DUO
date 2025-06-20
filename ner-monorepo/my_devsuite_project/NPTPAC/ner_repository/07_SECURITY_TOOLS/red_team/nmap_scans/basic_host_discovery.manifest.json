@@ -1,0 +1,8 @@
+{
+  "tool_name": "Nmap Host Discovery",
+  "description": "Performs a simple ping scan to discover live hosts on a network segment.",
+  "ex_work_template": "nmap_host_discovery.exwork.json",
+  "manual_command": "nmap -sn <target_network_CIDR>",
+  "expected_output_type": "text",
+  "notes": "Requires nmap to be installed. Target network should be specified carefully."
+}

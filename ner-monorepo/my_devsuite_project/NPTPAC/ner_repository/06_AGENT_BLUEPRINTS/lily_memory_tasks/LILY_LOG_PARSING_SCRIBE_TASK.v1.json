@@ -1,0 +1,31 @@
+{
+  "task_id": "LilyLogParse_Scribe_v1.1",
+  "description": "Instructs ScribeAgent to parse a raw Lily interaction log file into a structured JSON format containing conversational turns. ScribeAgent should be invoked with CLI arguments specifying this task and the input/output files.",
+  "agent_type_compatibility": ["ScribeAgent"],
+  "version": "1.1",
+  "invocation_details": {
+    "expected_scribe_cli_mode": "lily_log_parse",
+    "input_log_file_arg": "--input-log-file",
+    "output_json_file_arg": "--output-structured-log-file"
+  },
+  "parsing_rules_summary": [
+    "Identify 'Architect:' and 'Lily:' prefixed lines as speaker turns.",
+    "Attempt to extract timestamps if present in log lines (format TBD by Scribe's internal logic).",
+    "Handle multi-line messages for a single speaker.",
+    "Output should be a JSON list of turn objects: {'speaker': 'Architect'|'Lily', 'timestamp': 'ISO_DATETIME_STR_OR_NULL', 'text': 'message_content'}"
+  ],
+  "output_payload_schema_for_scribe_stdout": {
+    "type": "object",
+    "properties": {
+      "status": { "type": "string", "enum": ["success", "failure"] },
+      "message": { "type": "string" },
+      "parsed_log_output_path": {
+        "type": "string",
+        "description": "Absolute path to the JSON file Scribe created with structured conversation turns."
+      },
+      "parsed_turn_count": { "type": "integer" }
+    },
+    "required": ["status", "parsed_log_output_path"]
+  },
+  "notes_for_architect": "Your `scribe_agent.py` needs a new CLI mode (e.g., activated by '--task-mode lily_log_parse'). In this mode, it should accept '--input-log-file <path>' and '--output-structured-log-file <path>'. It should then parse the input log according to 'parsing_rules_summary' (you'll implement this parsing logic within Scribe) and write the structured JSON to the specified output file. Finally, ScribeAgent must print a JSON object to STDOUT matching 'output_payload_schema_for_scribe_stdout'."
+}

@@ -1,0 +1,68 @@
+{
+    "step_id": "forge_exwork_rickprime_agent_v1",
+    "description": "Task 1: Upgrade the current ExWork agent (ex_work_agent_v_current.py in OPF) to ExWork-RickPrime based on Rick's directives. This involves manual coding by the Architect, guided by the directives, and validation by Scribe.",
+    "parameters": [
+        {
+            "name": "RICKPRIME_DIRECTIVES_PATH_NER",
+            "type": "string",
+            "default": "ner://06_AGENT_BLUEPRINTS/ex_work_agent/docs/ExWork_RickPrime_Upgrade_Directives.md"
+        },
+        {
+            "name": "SEED_EXWORK_AGENT_OPF_PATH",
+            "type": "string",
+            "default": "/home/pong/OmnitidePrimeFoundry/NPTPAC/core_agents/ex_work_agent_v_current.py"
+        },
+        {
+            "name": "TARGET_RICKPRIME_AGENT_OPF_PATH",
+            "type": "string",
+            "default": "/home/pong/OmnitidePrimeFoundry/NPTPAC/core_agents/ex_work_agent.py"
+        },
+        {
+            "name": "RICK_STRICT_SCRIBE_PROFILE_NER_PATH",
+            "type": "string",
+            "default": "ner://06_AGENT_BLUEPRINTS/scribe_agent/profiles/rick_prime_strict.scribe.toml"
+        },
+        {
+            "name": "PAC_CLI_EXECUTABLE_PATH_IN_OPF",
+            "type": "string",
+            "prompt": "Path to npac CLI executable (once it is setup for OPF and its venv is active, e.g., /home/pong/OmnitidePrimeFoundry/NPTPAC/pac_cli/venv/bin/npac)"
+        }
+    ],
+    "actions": [
+        {
+            "type": "ECHO",
+            "message": "Architect Action Required: 1. Read Rick's ExWork-RickPrime Upgrade Directives in your new NER: /home/pong/OmnitidePrimeFoundry/NPTPAC/ner_repository/06_AGENT_BLUEPRINTS/ex_work_agent/docs/ExWork_RickPrime_Upgrade_Directives.md"
+        },
+        {
+            "type": "ECHO",
+            "message": "2. MANUALLY EDIT the seed agent '{{ SEED_EXWORK_AGENT_OPF_PATH }}'. It's recommended to FIRST COPY it to '{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}' and then edit '{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}' to implement ALL RickPrime upgrades outlined in the directives. This is YOUR coding task."
+        },
+        {
+            "type": "ECHO",
+            "message": "3. Ensure your PAC CLI (from within OPF) is set up, its venv is active, and it's functional before proceeding with signoff. The '{{ PAC_CLI_EXECUTABLE_PATH_IN_OPF }}' parameter for the Scribe step will need its path."
+        },
+        {
+            "type": "REQUEST_SIGNOFF",
+            "prompt": "Have you completed the manual coding upgrades to create/update '{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}' in OPF, AND is your PAC CLI (for OPF, with venv active) ready to run Scribe? (yes/no)"
+        },
+        {
+            "type": "RUN_SCRIPT",
+            "id": "scribe_validate_rickprime_agent",
+            "script_path": "{{ PAC_CLI_EXECUTABLE_PATH_IN_OPF }}",
+            "args": [
+                "scribe", "validate",
+                "--project-path", "/home/pong/OmnitidePrimeFoundry/NPTPAC/core_agents/",
+                "--code-file", "{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}",
+                "--target-file", "ex_work_agent.py", 
+                "--profile", "{{ RICK_STRICT_SCRIBE_PROFILE_NER_PATH }}",
+                "--report-format", "json",
+                "--fail-on-issues"
+            ],
+            "comment": "If this Scribe validation fails, your coding for ExWork-RickPrime sucked. Fix the agent at '{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}' and re-run this ExWork task (or at least this Scribe step manually from within OPF using the PAC CLI)."
+        },
+        {
+            "type": "ECHO",
+            "message": "ExWork-RickPrime agent at '{{ TARGET_RICKPRIME_AGENT_OPF_PATH }}' hopefully upgraded and Scribe-validated. It is now the ONE TRUE EXWORK AGENT for the OPF. Good luck."
+        }
+    ]
+}

@@ -1,0 +1,141 @@
+# orchestrator/prompt_templates/sub_injection_prompts.yaml
+# Sub-injection prompts for specific tasks (Refinement, Parsing, etc.)
+# Populate with more prompts using Agent Ex-Work
+
+RefactorCode: |-
+  **Sub-Task: Refactor Code**
+  Refactor the provided code snippet for file '{{ file_path | default('unknown') }}' to improve readability, maintainability, and adherence to Python best practices (PEP 8), based on the following analysis:
+  Analysis: {{ analysis | default('N/A') }}
+  Language: {{ language | default('python') }}
+  --- PREVIOUS CODE ---
+  ```{{ language | default('python') }}
+  {{ previous_code | default('# No code provided') }}
+
+  --- END PREVIOUS CODE ---
+  Provide ONLY the complete, refactored code block for the entire file/snippet within a single markdown code block ({{ language }}...). Do not add explanations unless the analysis specifically requires clarification on a choice made. Ensure the core external functionality remains identical.
+
+OptimizeAlgorithm: |-
+  Sub-Task: Optimize Algorithm
+  Analyze and optimize the algorithm within the provided code snippet for file '{{ file_path | default('unknown') }}'.
+  Analysis suggesting optimization need: {{ analysis | default('N/A') }}
+  Language: {{ language | default('python') }}
+  --- PREVIOUS CODE ---
+  Code snippet
+
+  {{ previous_code | default('# No code provided') }}
+
+  --- END PREVIOUS CODE ---
+  Provide ONLY the optimized code block within a single markdown code block ({{ language }}...). Focus specifically on improving algorithmic efficiency (time or space complexity) or resource usage as indicated by the analysis, while preserving correctness and readability.
+
+AddErrorHandling: |-
+  Sub-Task: Add Error Handling
+  Enhance the provided code snippet for file '{{ file_path | default('unknown') }}' by adding robust error handling based on the analysis:
+  Analysis identifying need: {{ analysis | default('N/A') }}
+  Potential Error Cases to Consider: {{ error_cases | default('Invalid input, file not found, network issues, unexpected None values, division by zero.') }}
+  Language: {{ language | default('python') }}
+  --- PREVIOUS CODE ---
+  Code snippet
+
+  {{ previous_code | default('# No code provided') }}
+
+  --- END PREVIOUS CODE ---
+  Provide ONLY the updated code block with appropriate try-except blocks, validation, logging for errors, and potentially raising custom exceptions or returning specific error indicators. Ensure the code gracefully handles the identified potential error cases.
+
+AddSecurityChecks: |-
+  Sub-Task: Add Security Checks
+  Review the provided code snippet for file '{{ file_path | default('unknown') }}' and add necessary security checks based on the analysis:
+  Analysis identifying potential vulnerability: {{ vulnerability_description | default('General security review needed.') }}
+  Language: {{ language | default('python') }}
+  --- PREVIOUS CODE ---
+  Code snippet
+
+  {{ previous_code | default('# No code provided') }}
+
+  --- END PREVIOUS CODE ---
+  Provide ONLY the updated code block with added security measures. This might include input sanitization/validation (preventing injection), proper use of authentication/authorization checks, escaping output (preventing XSS), avoiding hardcoded secrets, using secure library defaults, and adding checks for common web vulnerabilities if applicable.
+
+FixBug: |-
+  Sub-Task: Fix Bug
+  Correct the identified bug in the provided code snippet for file '{{ file_path | default('unknown') }}'.
+  Bug Description / Analysis: {{ analysis | default('Logical error identified.') }}
+  Language: {{ language | default('python') }}
+  --- PREVIOUS CODE ---
+  Code snippet
+
+  {{ previous_code | default('# No code provided') }}
+
+  --- END PREVIOUS CODE ---
+  Provide ONLY the corrected code block within a single markdown code block ({{ language }}...). Ensure the fix addresses the described bug while preserving other functionality.
+
+ParseRequirementsJSON: |-
+  Sub-Task: Parse Requirements into JSON
+  You are a data extraction specialist AI. Analyze the following text, which is a raw response from an AI assistant attempting to elicit software requirements. Your objective is to extract key functional/non-functional requirements, target users, assumptions, and any outstanding questions asked by the assistant. Present these details STRICTLY as a single, valid JSON object. Do NOT include any text before or after the JSON object. Use these keys (use null or empty lists/strings if info not present): "status" (string: "Parsed", "NeedsUserInput", "Error"), "requirements_summary" (string), "features" (list[str]), "non_functional" (list[str]), "target_users" (string), "assumptions" (list[str]), "outstanding_questions" (list[str]), "error" (string, optional).
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+  Respond ONLY with the valid JSON object.
+
+ParseArchitectureJSON: |-
+  Sub-Task: Parse Architecture into JSON
+  You are a data extraction specialist AI. Analyze the text below from an AI system architect. Extract the main architecture components and the technology stack. Present STRICTLY as a single, valid JSON object with two keys: "architecture_document" (nested object for arch details like frontend, backend, db, etc.) and "technology_stack" (list of strings). If invalid, return JSON: {"error": "Could not parse valid architecture and tech stack"}. Do NOT include any text before or after the JSON.
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+  Respond ONLY with the valid JSON object.
+
+ParseCodeFilesJSON: |-
+  Sub-Task: Parse Code Files into JSON
+  You are a data extraction specialist AI. Analyze the text below from a code generation AI. It should contain code blocks marked with '--- File: path/to/filename.ext ---'. Extract ALL file paths and their corresponding raw code content. Present STRICTLY as a single, valid JSON object mapping file paths (keys) to code strings (values). Example: {"src/main.py": "print('Hello')\n...", "reqs.txt": "flask"}. If markers are missing, try to extract the first block with a placeholder name and add a 'parsing_warning' key. If no code found, return JSON: {"error": "Could not parse valid code file blocks"}. Do NOT include any text before or after the JSON.
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+  Respond ONLY with the valid JSON object.
+
+ParseTestResultsJSON: |-
+  Sub-Task: Parse Testing & Debugging Output into JSON
+  You are a data extraction specialist AI. Analyze the text below from a QA AI. Extract structured info about test outcomes, bugs, and fixes. Present STRICTLY as a single, valid JSON object. Use keys: "status" (string: "TestsPassed", "BugsFound", "NeedsReview", "Error"), "test_results_summary" (string), "bugs_found" (list[object]), "suggested_fixes" (list[str]), "generated_tests" (dict[filepath, code], optional), "corrected_code" (dict[filepath, code], optional), "error" (string, optional). Do NOT include text before/after JSON.
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+  Respond ONLY with the valid JSON object.
+
+ParseDeploymentArtifactsJSON: |-
+  Sub-Task: Parse Deployment Artifacts and Documentation into JSON
+  You are a data extraction specialist AI. Analyze the text below from a DevOps AI. It should contain files like Dockerfile, README.md, etc., likely marked with '--- File: ... ---'. Extract ALL file paths and their corresponding raw content. Present STRICTLY as a single, valid JSON object mapping file paths (keys) to content strings (values). If markers are missing, use best effort and add a 'parsing_warning'. If no files found, return JSON: {"error": "Could not parse deployment/doc files"}. Do NOT include text before/after JSON.
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+  Respond ONLY with the valid JSON object.
+
+ProcessUserResponse: |-
+  Sub-Task: Process User Response for Requirements
+  You are the Project Initiator AI assistant, continuing a requirements discussion.
+  Initial Request: '''{{ ctx.initial_request | default('N/A') }}'''
+  Previous State/Questions: '''json
+  {# The 'previous_requirements' variable must be passed in template_data #}
+  {{ previous_requirements | default({}) | toyaml }}
+  '''
+  User Response: '''
+  {# The 'user_response' variable must be passed in template_data #}
+  {{ user_response | default('N/A') }}
+  '''
+  Incorporate the response, refine requirements, and either ask further SPECIFIC clarifying questions OR output an updated requirements summary. Maintain conversational tone. Your output will be parsed later by ParseRequirementsJSON.
+
+AnalyzeCodeQuality: |-
+  Sub-Task: Analyze Code Quality and Suggest Action
+  You are an expert code reviewer AI. Analyze the provided code snippet based on correctness, readability, efficiency, error handling, and security.
+  File Path: {{ file_path | default('Unknown') }}
+  Language: {{ language | default('python') }}
+  Requirements Summary (Optional): {{ ctx.get_requirements_summary() | default('[Not Provided]') }}
+  Code to Analyze:
+  Code snippet
+
+  {{ code_to_analyze | default('# No code') }}
+
+  Task: Assess code. Determine if "Good" or "Needs Refinement". If Needs Refinement, identify primary reason and suggest ONE action key: [RefactorCode, OptimizeAlgorithm, AddErrorHandling, AddSecurityChecks, FixBug]. Prioritize: Correctness > Security > Errors > Efficiency > Readability. Default to "RefactorCode" if unsure. If "Good", action is null.
+  Respond ONLY with valid JSON: {"quality_ok": boolean, "analysis_details": string, "suggested_action": string or null}

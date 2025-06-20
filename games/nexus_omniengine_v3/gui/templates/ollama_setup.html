@@ -1,0 +1,235 @@
+{% extends "layout.html" %}
+{% block title %}Ollama LLM Setup{% endblock %}
+{% block content %}
+<div class="nexus-card ollama-setup-panel" style="max-width:600px;margin:2em auto;box-shadow:0 8px 32px #0003;">
+  <h2 style="color:#ffe082;font-size:2em;margin-bottom:0.5em;">Ollama LLM Setup</h2>
+  <div class="ollama-status" id="ollama-status" style="margin-bottom:2em;display:flex;gap:2em;align-items:center;justify-content:space-between;">
+    <div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:0.7em;">
+        <span class="status-indicator {{ 'offline' if not status.installed else '' }} animated" title="Ollama Installed"></span>
+        <span><b>Ollama Installed:</b> <span style="color:{{ '#4caf50' if status.installed else '#e53935' }};font-weight:bold;">{{ 'Yes' if status.installed else 'No' }}</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.7em;">
+        <span class="status-indicator {{ 'offline' if not status.running else '' }} animated" title="Ollama Running"></span>
+        <span><b>Ollama Running:</b> <span style="color:{{ '#4caf50' if status.running else '#e53935' }};font-weight:bold;">{{ 'Yes' if status.running else 'No' }}</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.7em;">
+        <span class="status-indicator {{ 'offline' if not status.model_pulled else '' }} animated" title="Model Pulled"></span>
+        <span><b>Model Pulled:</b> <span style="color:{{ '#4caf50' if status.model_pulled else '#e53935' }};font-weight:bold;">{{ 'Yes' if status.model_pulled else 'No' }}</span></span>
+      </div>
+    </div>
+    <div style="flex:0 0 140px;text-align:center;">
+      <label for="persona-select" style="font-size:1em;color:#ffe082;display:flex;align-items:center;justify-content:center;gap:0.3em;">
+        Persona
+        <span title="Choose your assistant persona. Each persona has a unique style and expertise." style="cursor:help;font-size:1.2em;color:#ffd54f;">&#9432;</span>
+      </label><br>
+      <select id="persona-select" name="persona" class="ollama-select" style="margin-top:0.5em;width:100%;">
+        {% for persona in personas %}
+          <option value="{{ persona.id }}" title="{{ persona.description|default('No description') }}">{{ persona.name }}</option>
+        {% endfor %}
+      </select>
+      <div id="persona-desc" style="margin-top:0.5em;font-size:0.95em;color:#ffe082;min-height:2em;"></div>
+    </div>
+  </div>
+  {% if status.error %}
+    <div class="ollama-error" style="background:#e53935;color:#fff;padding:0.7em 1em;border-radius:8px;margin-bottom:1em;">{{ status.error }}</div>
+  {% endif %}
+  <form method="post" class="ollama-actions" style="display:flex;gap:1em;align-items:center;justify-content:center;flex-wrap:wrap;">
+    {% if not status.installed %}
+      <button class="dashboard-btn" name="action" value="install" title="Install the Ollama LLM engine. This is required for AI features.">Install Ollama</button>
+    {% elif not status.running %}
+      <button class="dashboard-btn" name="action" value="start" title="Start the Ollama LLM service.">Start Ollama</button>
+    {% endif %}
+    {% if status.installed %}
+      <label for="model" style="margin-right:0.5em;display:flex;align-items:center;gap:0.3em;">
+        Model
+        <span title="Choose which AI model to use. Each model has different strengths." style="cursor:help;font-size:1.2em;color:#ffd54f;">&#9432;</span>:
+      </label>
+      <select name="model" id="model" class="ollama-select" style="border-radius:8px;padding:0.5em 1em;">
+        <option value="llama2">llama2</option>
+        <option value="mistral">mistral</option>
+        <option value="phi">phi</option>
+        <option value="codellama">codellama</option>
+        <option value="llava">llava</option>
+      </select>
+      <button class="dashboard-btn" name="action" value="pull" title="Download the selected model for use.">Pull Model</button>
+      <button class="dashboard-btn" type="button" id="test-llm-btn" style="background:#4caf50;color:#fff;" title="Try a quick test prompt to see if the LLM is working.">Test LLM</button>
+    {% endif %}
+    <button class="dashboard-btn" type="button" onclick="showAdvancedOllama()" style="background:#23272e;color:#ffe082;border:1px solid #ffe082;" title="Show advanced options and troubleshooting.">Advanced</button>
+    <button class="dashboard-btn" type="button" id="help-btn" style="background:#1976d2;color:#fff;" title="Need help? Click for documentation and support.">Need Help?</button>
+  </form>
+  <div id="ollama-advanced" style="display:none;margin-top:2em;background:#181b20;padding:1.5em 2em;border-radius:12px;box-shadow:0 2px 8px #0002;">
+    <h3 style="color:#ffe082;">Advanced Options</h3>
+    <ul style="color:#ffe082;">
+      <li>Enter a custom model name or config below, or troubleshoot issues in real time.</li>
+      <li>Real-time logs and error output will appear below.</li>
+    </ul>
+    <div style="margin-bottom:1em;">
+      <input id="custom-model-input" class="ollama-select" style="width:60%;" placeholder="Custom model name or config (e.g. llama3:8b)" aria-label="Custom model input">
+      <button class="dashboard-btn" type="button" id="custom-model-btn" style="background:#6c47ff;color:#fff;" title="Pull a custom model or config.">Pull Custom Model</button>
+    </div>
+    <div id="ollama-log-container" style="margin-top:1em;max-height:180px;overflow:auto;background:#111417;padding:1em;border-radius:8px;font-family:monospace;font-size:0.97em;color:#ffe082;">
+      <div id="ollama-log">Waiting for logs...</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+function showAdvancedOllama() {
+  const adv = document.getElementById('ollama-advanced');
+  adv.style.display = adv.style.display === 'block' ? 'none' : 'block';
+}
+
+// --- Real-time status and log updates via SocketIO ---
+const socket = io({transports: ['websocket']});
+socket.on('connect', function() {
+  socket.emit('join', {room: 'ollama-status'});
+});
+
+socket.on('ollama_status', function(data) {
+  // Update status indicators and text
+  if (data && data.status) {
+    const s = data.status;
+    document.querySelectorAll('.status-indicator')[0].classList.toggle('offline', !s.installed);
+    document.querySelectorAll('.status-indicator')[1].classList.toggle('offline', !s.running);
+    document.querySelectorAll('.status-indicator')[2].classList.toggle('offline', !s.model_pulled);
+    document.querySelectorAll('.ollama-status span')[1].innerHTML = '<b>Ollama Installed:</b> <span style="color:'+(s.installed?'#4caf50':'#e53935')+';font-weight:bold;">'+(s.installed?'Yes':'No')+'</span>';
+    document.querySelectorAll('.ollama-status span')[3].innerHTML = '<b>Ollama Running:</b> <span style="color:'+(s.running?'#4caf50':'#e53935')+';font-weight:bold;">'+(s.running?'Yes':'No')+'</span>';
+    document.querySelectorAll('.ollama-status span')[5].innerHTML = '<b>Model Pulled:</b> <span style="color:'+(s.model_pulled?'#4caf50':'#e53935')+';font-weight:bold;">'+(s.model_pulled?'Yes':'No')+'</span>';
+  }
+});
+
+socket.on('ollama_log', function(data) {
+  // Append log lines
+  const logDiv = document.getElementById('ollama-log');
+  if (logDiv && data && data.line) {
+    if (logDiv.innerText === 'Waiting for logs...') logDiv.innerText = '';
+    logDiv.innerText += data.line + '\n';
+    logDiv.scrollTop = logDiv.scrollHeight;
+  }
+});
+
+// --- Persona description update ---
+const personaSelect = document.getElementById('persona-select');
+const personaDesc = document.getElementById('persona-desc');
+if (personaSelect && personaDesc) {
+  function updatePersonaDesc() {
+    const selected = personaSelect.options[personaSelect.selectedIndex];
+    personaDesc.textContent = selected.title || '';
+  }
+  personaSelect.addEventListener('change', updatePersonaDesc);
+  updatePersonaDesc();
+}
+
+// --- Test LLM button ---
+const testBtn = document.getElementById('test-llm-btn');
+if (testBtn) {
+  testBtn.addEventListener('click', function() {
+    const prompt = prompt('Try a quick prompt with the LLM (e.g. "Hello, who are you?")');
+    if (!prompt) return;
+    testBtn.disabled = true;
+    testBtn.textContent = 'Testing...';
+    fetch('/test_llm', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        prompt: prompt,
+        persona: personaSelect ? personaSelect.value : null,
+        model: document.getElementById('model') ? document.getElementById('model').value : null
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      alert(data.success ? 'LLM Response:\n' + data.response : 'Error:\n' + (data.error || 'Unknown error'));
+    })
+    .catch(() => alert('Error: Could not reach server.'))
+    .finally(() => {
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test LLM';
+    });
+  });
+}
+
+// --- Custom model button ---
+const customModelBtn = document.getElementById('custom-model-btn');
+if (customModelBtn) {
+  customModelBtn.addEventListener('click', function() {
+    const val = document.getElementById('custom-model-input').value.trim();
+    if (!val) {
+      alert('Please enter a custom model name or config.');
+      return;
+    }
+    customModelBtn.disabled = true;
+    customModelBtn.textContent = 'Pulling...';
+    fetch('/pull_custom_model', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ model: val })
+    })
+    .then(r => r.json())
+    .then(data => {
+      alert(data.success ? 'Custom model pulled successfully!' : 'Error:\n' + (data.error || 'Unknown error'));
+    })
+    .catch(() => alert('Error: Could not reach server.'))
+    .finally(() => {
+      customModelBtn.disabled = false;
+      customModelBtn.textContent = 'Pull Custom Model';
+    });
+  });
+}
+
+// --- Help button ---
+const helpBtn = document.getElementById('help-btn');
+if (helpBtn) {
+  helpBtn.addEventListener('click', function() {
+    window.open('https://ollama.com/docs', '_blank');
+  });
+}
+</script>
+<style>
+.status-indicator.animated {
+  animation: ollama-pulse 1.2s infinite alternate;
+}
+@keyframes ollama-pulse {
+  0% { box-shadow: 0 0 0 0 #4caf5040; }
+  100% { box-shadow: 0 0 0 8px #4caf5010; }
+}
+</style>
+{% endblock %}
+  padding: 0.5em 1em;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+.ollama-actions {
+  margin-top: 2em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+.ollama-btn {
+  background: linear-gradient(90deg, #4f8cff 0%, #6c47ff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.8em 1.5em;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #0004;
+}
+.ollama-btn:hover {
+  background: linear-gradient(90deg, #6c47ff 0%, #4f8cff 100%);
+  box-shadow: 0 4px 16px #0006;
+}
+.ollama-select {
+  border-radius: 8px;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  margin-right: 1em;
+  background: #181c22;
+  color: #fff;
+  border: 1px solid #444;
+}
+</style>
+{% endblock %}

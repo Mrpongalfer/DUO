@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Quantum Orchestrator Instruction",
+  "description": "Schema for Quantum Orchestrator instructions",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "workflow",
+        "intent",
+        "tool_request"
+      ],
+      "description": "The type of instruction"
+    },
+    "id": {
+      "type": "string",
+      "description": "Optional identifier for the instruction"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "direct"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "handler",
+          "params"
+        ],
+        "properties": {
+          "handler": {
+            "type": "string",
+            "description": "The handler to execute"
+          },
+          "params": {
+            "type": "object",
+            "description": "Parameters for the handler"
+          },
+          "store_result": {
+            "type": "boolean",
+            "description": "Whether to store the result in state"
+          },
+          "result_key": {
+            "type": "string",
+            "description": "Key for storing the result"
+          },
+          "optimize": {
+            "type": "boolean",
+            "description": "Whether to optimize any generated code"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional context for optimization"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "workflow"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "steps"
+        ],
+        "properties": {
+          "steps": {
+            "type": "array",
+            "description": "Steps to execute in the workflow",
+            "items": {
+              "type": "object"
+            }
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Whether to execute steps in parallel"
+          },
+          "fail_fast": {
+            "type": "boolean",
+            "description": "Whether to stop on first failure"
+          },
+          "optimize_workflow": {
+            "type": "boolean",
+            "description": "Whether to optimize workflow execution"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "intent"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "intent"
+        ],
+        "properties": {
+          "intent": {
+            "type": "string",
+            "description": "The intent to execute"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional context for intent resolution"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tool_request"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the tool to generate"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name for the generated tool"
+          },
+          "integrate": {
+            "type": "boolean",
+            "description": "Whether to integrate the generated tool"
+          }
+        }
+      }
+    }
+  ]
+}

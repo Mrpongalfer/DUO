@@ -1,0 +1,16 @@
+---
+# Explicitly defined variables for common role
+common_pkgs:
+  - build-essential
+  - python3-dev
+  - curl
+  - wget
+  - git
+  - vim
+  - tmux
+  - htop
+  - net-tools
+  - dnsutils
+  - unzip
+  - ca-certificates
+  - gnupg

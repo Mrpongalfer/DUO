@@ -1,0 +1,109 @@
+---
+# Playbook to install Docker CE on Ubuntu (Server Target)
+# Run against localhost (the server)
+# Version 1.1 - Added gather_facts
+
+- name: Configure Docker CE Repository and Install Packages
+  hosts: localhost # Target the server itself
+  become: true # Most tasks require root privileges
+  connection: local # Run directly on the machine
+  gather_facts: true # <<< Ensure facts like ansible_lsb.codename are gathered
+  vars:
+    # Define the admin user who needs docker group access here
+    # Ideally, manage this in group_vars/all.yml or inventory later
+    docker_admin_user: "aiseed"
+  tasks:
+    - name: Gather apt package facts # Still useful for the 'when' conditions
+      ansible.builtin.package_facts:
+        manager: apt
+
+    # Uninstall conflicting Ubuntu packages if Docker CE was intended
+    - name: Remove conflicting Ubuntu Docker packages if present
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-doc
+          - docker-compose # Older compose V1
+          - podman-docker # Another potential conflict
+          - containerd
+          - runc
+        state: absent
+        autoremove: true # Remove dependencies too
+        purge: true # Remove config files as well
+      when: "'docker.io' in ansible_facts.packages or 'containerd' in ansible_facts.packages"
+      register: remove_docker_io_result
+      failed_when: remove_docker_io_result.failed and 'Unable to locate package' not in remove_docker_io_result.msg # Don't fail if already gone
+
+    - name: Remove potentially remaining Docker CE if conflicting with desired state
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io # This specific package name comes from Docker repo
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: absent
+        autoremove: true
+        purge: true
+      when: true # Run this always to ensure clean state before installing desired version
+      register: remove_docker_ce_result
+      failed_when: remove_docker_ce_result.failed and 'Unable to locate package' not in remove_docker_ce_result.msg
+
+    - name: Install prerequisites for Docker repository
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - lsb-release # Ensure lsb_release command is available
+        state: present
+        update_cache: yes
+
+    - name: Create directory for Docker GPG key
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker official GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+        force: true # Overwrite if exists to ensure up-to-date key
+
+    - name: Add Docker APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+        state: present
+        filename: docker # Creates /etc/apt/sources.list.d/docker.list
+        update_cache: yes
+      # No longer need vars lookup here as gather_facts should provide ansible_lsb.codename
+
+    - name: Install Docker CE Packages
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io # This specific package name comes from Docker repo
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present # Or specify a version like '5:26.1.4-1~ubuntu.24.04~noble'
+      notify: Start Docker Service # Notify handler to start/enable service
+
+    - name: Ensure docker group exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: Add admin user to docker group
+      ansible.builtin.user:
+        name: "{{ docker_admin_user }}" # Use variable defined above
+        groups: docker
+        append: true
+
+  handlers:
+    - name: Start Docker Service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true

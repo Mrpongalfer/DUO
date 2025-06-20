@@ -1,0 +1,66 @@
+# Basic Goss tests for Chimera setup - Expand as needed
+
+# Check common packages (example: ensure git is installed)
+package:
+  git:
+    installed: true
+  curl:
+    installed: true
+  ufw: # Ensure firewall package is installed
+    installed: true
+
+# Check common services are running and enabled
+service:
+  chrony: # Or chronyd depending on OS/config
+    enabled: true
+    running: true
+  docker:
+    enabled: true
+    running: true
+  node_exporter:
+    enabled: true
+    running: true
+  promtail:
+    enabled: true
+    running: true
+
+# Check firewall status and key ports
+port:
+  # SSH Port (using variable ideally passed from Ansible)
+  tcp:{{ hostvars[inventory_hostname]['security_ssh_port'] | default(22) }}:
+    listening: true
+    ip: ['0.0.0.0', '::'] # Listen on all IPv4 and IPv6 by default
+  # Prometheus Port (ONLY check on server group)
+  tcp:{{ hostvars[inventory_hostname]['prometheus_port'] | default(9091) }}:
+    listening: true
+    ip: ['0.0.0.0', '::']
+  # Loki Port (ONLY check on server group)
+  tcp:{{ hostvars[inventory_hostname]['loki_port'] | default(3100) }}:
+    listening: true
+    ip: ['0.0.0.0', '::']
+  # Node Exporter Port
+  tcp:{{ hostvars[inventory_hostname]['node_exporter_port'] | default(9100) }}:
+    listening: true
+    ip: ['0.0.0.0', '::']
+
+command:
+  # Check UFW is active
+  'ufw status | grep "Status: active"':
+    exit-status: 0
+    stdout: ['Status: active']
+  # Check Prometheus container (on server group) - adjust container name if needed
+  'docker ps --filter name=^/prometheus$ --format "{{.Names}}"':
+    exit-status: 0
+    stdout: ['prometheus']
+    run_opts:
+      when: inventory_hostname in groups['server']
+
+# Add file permission checks, user checks, etc. here
+# Example: Check sshd_config ownership
+file:
+  /etc/ssh/sshd_config:
+    exists: true
+    owner: root
+    group: root
+    mode: "0600"
+

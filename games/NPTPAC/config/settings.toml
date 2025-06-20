@@ -1,0 +1,18 @@
+# Add this section to your NPTPAC/config/settings.toml
+
+[lily_core_memory]
+# IMPORTANT: Set this to the ABSOLUTE path of your LilyCoreMemory directory
+# Example for Linux/macOS:
+base_path = "/home/pong/Projects/games/Lily/LilyCoreMemory"
+# Example for Windows (use forward slashes or escape backslashes):
+# base_path = "C:/Users/Architect/Projects/ner-monorepo/Lily/LilyCoreMemory"
+base_path = "~/Projects/ner-monorepo/Lily/LilyCoreMemory" # Default, will be expanded
+db_name = "lily_intelligent_memory.db"
+db_dir_name = "IntelligentMemoryDB_Placeholder"
+persona_foundation_md = "00_Persona_Foundation.md"
+interaction_principles_md = "01_InteractionPrinciples_Baseline.md"
+key_directives_dir = "KeyDirectives"
+snapshots_dir = "InteractionLog_ContextualSnapshots"
+proposed_updates_dir = "ProposedPersonaUpdates"
+raw_logs_dir = "InteractionArchives_Raw"
+scripts_dir = "Scripts" # Where helper scripts (like the original .py) might reside

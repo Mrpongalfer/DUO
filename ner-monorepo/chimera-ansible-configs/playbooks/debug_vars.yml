@@ -1,0 +1,16 @@
+---
+# Playbook to debug variable loading from group_vars/all.yml
+# Version 1.1 - Added explicit vars_files directive
+
+- name: Debug common_packages_to_install Variable (Explicit Load)
+  hosts: all
+  gather_facts: false # Not needed for this test
+  vars_files:
+    # Explicitly load the group_vars file relative to playbook dir
+    - ../group_vars/all.yml
+  tasks:
+    - name: Print the value of common_packages_to_install
+      ansible.builtin.debug:
+        var: common_packages_to_install
+      ignore_errors: true # Ignore error if var is *still* not defined after explicit load
+

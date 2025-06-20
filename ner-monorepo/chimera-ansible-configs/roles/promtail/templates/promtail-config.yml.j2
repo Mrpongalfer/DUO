@@ -1,0 +1,39 @@
+# /opt/architect_configs/roles/promtail/templates/promtail-config.yml.j2
+# Ansible Managed - Basic Promtail Config
+
+server:
+  http_listen_port: 9081
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/promtail/positions.yaml # Or /var/lib/promtail/positions.yaml if preferred/perms allow
+
+clients:
+  - url: {{ loki_server_url | default('http://127.0.0.1:3100/loki/api/v1/push') }}
+
+scrape_configs:
+# Scrape systemd journal (most common)
+- job_name: journal
+  journal:
+    max_age: 12h
+    # path: /var/log/journal # Check actual path on target systems if needed
+    labels:
+      job: systemd-journal
+      host: "{{ ansible_hostname }}" # Use Ansible fact for hostname
+  relabel_configs:
+    - source_labels: ['__journal__systemd_unit']
+      target_label: 'unit'
+
+# Scrape syslog (fallback/alternative)
+- job_name: syslog
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: syslog
+      host: "{{ ansible_hostname }}"
+      __path__: /var/log/syslog
+
+# Add other scrape configs here later for specific application logs
+# e.g., /var/log/nginx/*.log, /var/log/docker/containers/*.log
+
