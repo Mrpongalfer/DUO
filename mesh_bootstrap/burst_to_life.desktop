@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=gnome-terminal -- bash -c '/media/pop-os/BURST_USB/burst_to_life.sh'
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Mesh Bootstrapper
+Comment=Zero-touch mesh bootstrap
